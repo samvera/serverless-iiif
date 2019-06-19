@@ -46,10 +46,15 @@ Command Line
           --parameters ParameterKey=SourceBucket,ParameterValue=$IMAGE_BUCKET \
           --stack-name $STACK_NAME
 
-3. Open the [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home) to
-   follow the stack's progress.
-4. When all the resources are properly created and configured, the new stack should be in the **CREATE_COMPLETE** stage. If there's an error, it will delete all the resources it created, roll back any changes it made, and eventually reach the **ROLLBACK_COMPLETE** stage.
-5. Select the Stack and click the **Outputs** tab to see (and copy) the IIIF Endpoint URL.
+3. If you're feeling really devoted to the command line, you can run
+
+        aws cloudformation describe-stacks --stack-name $STACK_NAME
+
+   repeatedly until the stack reaches the `CREATE_COMPLETE` stage and displays
+   the IIIF Endpoint in the `Outputs` section.
+
+   Otherwise, open the [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home)
+   and continue from step 6 of the AWS Console instructions above.
 
 ## Source Images
 
