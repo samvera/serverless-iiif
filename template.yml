@@ -13,7 +13,7 @@ Resources:
     Properties:
       LayerName: iiif-dependencies
       Description: Dependencies for IIIF app
-      ContentUri: s3://nul-public/serverless-iiif/serverless-iiif-node-modules-1.0.0.zip
+      ContentUri: s3://nul-public/serverless-iiif/8770c0e07c9549e2356aa10de825ec5a
       CompatibleRuntimes:
         - nodejs8.10
       LicenseInfo: 'Apache-2.0'
