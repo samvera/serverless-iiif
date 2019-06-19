@@ -1,0 +1,362 @@
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:
+  SourceBucket:
+    Type: String
+    Description: Name of bucket containing source images
+  StageName:
+    Type: String
+    Description: Name of the API stage to be deployed
+    Default: latest
+Resources:
+  Dependencies:
+    Type: "AWS::Serverless::LayerVersion"
+    Properties:
+      LayerName: iiif-dependencies
+      Description: Dependencies for IIIF app
+      ContentUri: s3://nul-public/serverless-iiif/serverless-iiif-node-modules-1.0.0.zip
+      CompatibleRuntimes:
+        - nodejs8.10
+      LicenseInfo: 'Apache-2.0'
+  IiifFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: nodejs8.10
+      Handler: index.handler
+      MemorySize: 3008
+      Timeout: 10
+      CodeUri: ./src
+      Layers:
+      - !Ref Dependencies
+      Policies:
+      - AWSLambdaExecute
+      - Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:GetBucketLocation
+            Resource: !Sub "arn:aws:s3:::${SourceBucket}"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectACL
+            Resource: !Sub "arn:aws:s3:::${SourceBucket}/*"
+          - Effect: Allow
+            Action:
+              - s3:ListAllMyBuckets
+            Resource: "*"
+      Environment:
+        Variables:
+          tiffBucket: !Sub "${SourceBucket}"
+      Events:
+        GetId:
+          Type: Api
+          Properties:
+            Path: /iiif/2/{id}
+            Method: GET
+            RestApiId: !Ref IiifApi
+        OptionsId:
+          Type: Api
+          Properties:
+            Path: /iiif/2/{id}
+            Method: OPTIONS
+            RestApiId: !Ref IiifApi
+        GetInfoJson:
+          Type: Api
+          Properties:
+            Path: /iiif/2/{id}/info.json
+            Method: GET
+            RestApiId: !Ref IiifApi
+        OptionsInfoJson:
+          Type: Api
+          Properties:
+            Path: /iiif/2/{id}/info.json
+            Method: OPTIONS
+            RestApiId: !Ref IiifApi
+        GetImage:
+          Type: Api
+          Properties:
+            Path: /iiif/2/{id}/{proxy+}
+            Method: GET
+            RestApiId: !Ref IiifApi
+        OptionsImage:
+          Type: Api
+          Properties:
+            Path: /iiif/2/{id}/{proxy+}
+            Method: OPTIONS
+            RestApiId: !Ref IiifApi
+  IiifApi:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      Name: !Sub "${AWS::StackName}-api"
+      StageName: !Sub "${StageName}"
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "2018-12-14T18:28:00Z"
+        schemes:
+        - "http"
+        - "https"
+        paths:
+          /iiif/2/{id}:
+            get:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "Cookie"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Origin"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Authorization"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "id"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+            options:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "Origin"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Authorization"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "id"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+          /iiif/2/{id}/info.json:
+            get:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "Cookie"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Origin"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Authorization"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "id"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Credentials:
+                      type: "string"
+                    Set-Cookie:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+            options:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "Origin"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Authorization"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "id"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Credentials:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+          /iiif/2/{id}/{proxy+}:
+            get:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "proxy"
+                in: "path"
+                required: true
+                type: "string"
+              - name: "Cookie"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Origin"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Authorization"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "id"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Credentials:
+                      type: "string"
+                    Set-Cookie:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                    contentHandling: "CONVERT_TO_BINARY"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                cacheNamespace: "frz8df"
+                cacheKeyParameters:
+                - "method.request.path.proxy"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+            options:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "proxy"
+                in: "path"
+                required: true
+                type: "string"
+              - name: "Origin"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "Authorization"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "id"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Credentials:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                cacheNamespace: "frz8df"
+                cacheKeyParameters:
+                - "method.request.path.proxy"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+        definitions:
+          Empty:
+            type: "object"
+            title: "Empty Schema"
+        x-amazon-apigateway-binary-media-types:
+        - "*/*"
+Outputs:
+  Endpoint:
+    Description: IIIF Endpoint URL
+    Value: !Sub "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
