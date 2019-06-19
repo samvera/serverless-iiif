@@ -11,7 +11,7 @@ Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
-      LayerName: iiif-dependencies
+      LayerName: !Sub "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
       ContentUri: s3://nul-public/serverless-iiif/8770c0e07c9549e2356aa10de825ec5a
       CompatibleRuntimes:
