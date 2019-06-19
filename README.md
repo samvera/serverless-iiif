@@ -40,9 +40,10 @@ Command Line
 2. Execute the following command, replacing `$IMAGE_BUCKET` with the name of the image bucket
    and `$STACK_NAME` with a unique name for your stack:
 
-        aws cloudformation deploy --capabilities CAPABILITY_IAM \
-          --template-file https://nul-public.s3.amazonaws.com/serverless-iiif/deploy.yaml \
-          --parameter-overrides SourceBucket=$IMAGE_BUCKET \
+        aws cloudformation create-stack \
+          --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+          --template-url https://nul-public.s3.amazonaws.com/serverless-iiif/deploy.yaml \
+          --parameters ParameterKey=SourceBucket,ParameterValue=$IMAGE_BUCKET \
           --stack-name $STACK_NAME
 
 3. Open the [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home) to
