@@ -13,14 +13,14 @@ Resources:
     Properties:
       LayerName: !Sub "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
-      ContentUri: s3://nul-public/serverless-iiif/8770c0e07c9549e2356aa10de825ec5a
+      ContentUri: ./dependencies
       CompatibleRuntimes:
         - nodejs8.10
       LicenseInfo: 'Apache-2.0'
   IiifFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Handler: index.handler
       MemorySize: 3008
       Timeout: 10
@@ -360,3 +360,8 @@ Outputs:
   Endpoint:
     Description: IIIF Endpoint URL
     Value: !Sub "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
+  ApiId:
+    Description: API Gateway ID
+    Value: !Ref IiifApi
+    Export:
+      Name: !Sub "${AWS::StackName}:ApiId"
