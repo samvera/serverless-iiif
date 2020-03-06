@@ -60,6 +60,14 @@ class IIIFLambda {
     }
   }
 
+  includeStage(host) {
+    if ('include_stage' in process.env) {
+      ['true', 'yes'].indexOf(process.env.include_stage.toLowerCase()) > -1
+    } else {
+      host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/)
+    }
+  }
+
   initResource () {
     var scheme = this.event.headers['X-Forwarded-Proto'] || 'http';
     var host = this.event.headers['Host'];
@@ -67,7 +75,7 @@ class IIIFLambda {
     if (!/\.(jpg|tif|gif|png|json)$/.test(path)) {
       path = path + '/info.json';
     }
-    if (process.env.include_stage) {
+    if (this.includeStage(host)) {
       path = '/' + this.event.requestContext.stage + path;
     }
     var uri = `${scheme}://${host}${path}`;
