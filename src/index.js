@@ -32,7 +32,10 @@ class IIIFLambda {
     var content = base64 ? result.body.toString('base64') : result.body;
     var response = {
       statusCode: 200,
-      headers: { 'Content-Type': result.contentType },
+      headers: { 
+        'Content-Type': result.contentType,
+        'Access-Control-Allow-Origin': '*'
+       },
       isBase64Encoded: base64,
       body: content
     };
