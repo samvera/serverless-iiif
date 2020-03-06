@@ -90,6 +90,10 @@ Resources:
     Properties:
       Name: !Sub "${AWS::StackName}-api"
       StageName: !Sub "${StageName}"
+      EndpointConfiguration: "REGIONAL"
+      Cors:
+        AllowMethods: "'GET'"
+        AllowOrigin: "'*'"
       DefinitionBody:
         swagger: "2.0"
         info:
