@@ -24,7 +24,7 @@ class IIIFLambda {
     this.context = context;
     this.respond = callback;
     this.sourceBucket = sourceBucket;
-    this.initResource();
+    this.handled = false;
   }
 
   directResponse (result) {
@@ -42,7 +42,7 @@ class IIIFLambda {
     this.respond(null, response);
   }
 
-  handleError (err, resource) {
+  handleError (err, _resource) {
     if (err.statusCode) {
       this.respond(null, {
         statusCode: err.statusCode,
@@ -60,45 +60,74 @@ class IIIFLambda {
     }
   }
 
-  includeStage(host) {
+  includeStage() {
     if ('include_stage' in process.env) {
-      ['true', 'yes'].indexOf(process.env.include_stage.toLowerCase()) > -1
+      return ['true', 'yes'].indexOf(process.env.include_stage.toLowerCase()) > -1;
     } else {
-      host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/)
+      var host = this.event.headers['Host'];
+      return host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/);
     }
   }
 
-  initResource () {
-    var scheme = this.event.headers['X-Forwarded-Proto'] || 'http';
-    var host = this.event.headers['Host'];
+  fileMissing() {
+    return !/\.(jpg|tif|gif|png|json)$/.test(this.event.path);
+  }
+
+  eventPath() {
+    if ('storedEventPath' in this) return this.storedEventPath;
+
     var path = this.event.path;
-    if (!/\.(jpg|tif|gif|png|json)$/.test(path)) {
-      path = path + '/info.json';
-    }
-    if (this.includeStage(host)) {
+    if (this.includeStage()) {
       path = '/' + this.event.requestContext.stage + path;
     }
-    var uri = `${scheme}://${host}${path}`;
+    this.storedEventPath = path.replace(/\/*$/, '');
+    return this.storedEventPath;
+  }
+
+  checkForOptionsRequest() {
+    if (this.handled) return this;
+    if (this.event.httpMethod === 'OPTIONS') {
+      this.respond(null, { statusCode: 204, body: null });
+      this.handled = true;
+    }
+    return this;
+  }
+
+  checkForInfoJsonRedirect() {
+    if (this.handled) return this;
+    if (this.fileMissing()) {
+      var location = this.eventPath() + '/info.json';
+      this.respond(null, { statusCode: 302, headers: { 'Location': location }, body: "Redirecting to info.json" });
+      this.handled = true;
+    }
+    return this;
+  }
+
+  execute() {
+    if (this.handled) return this;
+
+    var scheme = this.event.headers['X-Forwarded-Proto'] || 'http';
+    var host = this.event.headers['Host'];
+    var uri = `${scheme}://${host}${this.eventPath()}`;
 
     this.resource = new IIIF.Processor(uri, id => this.s3Object(id));
+
+    this.resource
+      .execute()
+      .then(result => this.directResponse(result))
+      .catch(err => this.handleError(err));
+
+    this.handled = true;
+    return this;
   }
 
   processRequest () {
-    if (!/\.(jpg|tif|gif|png|json)$/.test(this.event.path)) {
-      var location = this.event.path.replace(/\/*$/, '/info.json');
-      this.respond(null, { statusCode: 302, headers: { 'Location': location }, body: "Redirecting to info.json" });
-      return true;
-    }
-
     AWS.config.region = this.context.invokedFunctionArn.match(/^arn:aws:lambda:(\w+-\w+-\d+):/)[1];
 
-    if (this.event.httpMethod === 'OPTIONS') {
-      this.respond(null, { statusCode: 204, body: null });
-    } else {
-      this.resource.execute()
-        .then(result => this.directResponse(result))
-        .catch(err => this.handleError(err));
-    }
+    this
+      .checkForOptionsRequest()
+      .checkForInfoJsonRedirect()
+      .execute()
   }
 
   s3Object (id) {
