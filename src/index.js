@@ -84,6 +84,12 @@ class IIIFLambda {
   }
 
   processRequest () {
+    if (!/\.(jpg|tif|gif|png|json)$/.test(this.event.path)) {
+      var location = this.event.path.replace(/\/*$/, '/info.json');
+      this.respond(null, { statusCode: 302, headers: { 'Location': location }, body: "Redirecting to info.json" });
+      return true;
+    }
+
     AWS.config.region = this.context.invokedFunctionArn.match(/^arn:aws:lambda:(\w+-\w+-\d+):/)[1];
 
     if (this.event.httpMethod === 'OPTIONS') {
