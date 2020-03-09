@@ -19,6 +19,7 @@ const handleRequest = (event, context, callback) => {
 };
 
 class IIIFLambda {
+
   constructor (event, context, callback, sourceBucket) {
     this.event = event;
     this.context = context;
@@ -65,7 +66,7 @@ class IIIFLambda {
     var host = this.event.headers['Host'];
     var path = this.event.path;
     if (!/\.(jpg|tif|gif|png|json)$/.test(path)) {
-      path = path + '/info.json';
+      this.redirectToInfoJSON = true;
     }
     if (process.env.include_stage) {
       path = '/' + this.event.requestContext.stage + path;
@@ -80,6 +81,12 @@ class IIIFLambda {
 
     if (this.event.httpMethod === 'OPTIONS') {
       this.respond(null, { statusCode: 204, body: null });
+    } else if (this.redirectToInfoJSON) {
+      this.respond(null, {
+        statusCode: 302,
+        headers: {
+          Location: this.event.path + '/info.json',
+        }});
     } else {
       this.resource.execute()
         .then(result => this.directResponse(result))
