@@ -94,7 +94,8 @@ class IIIFLambda {
         statusCode: 302,
         headers: {
           Location: this.event.path + '/info.json'
-        }});
+        }
+      });
     } else {
       this.resource.execute()
         .then(result => this.directResponse(result))
