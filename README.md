@@ -20,41 +20,17 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
 
 ## Quick Start
 
-There are two ways to install the serverless IIIF application: From the AWS Console, and from the
-Command Line
+`serverless-iiif` is distributed and deployed via the [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/). To deploy it using the AWS Console:
 
-### AWS Console
-
-1. Click to 👉 [Launch the CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?templateURL=https://nul-public.s3.amazonaws.com/serverless-iiif/deploy.yaml) 👈 from the AWS Console.
-2. Click **Next**.
-3. Give your stack a unique name, enter the name of the image bucket, and click **Next**.
-4. Don't bother with anything on the **Configure stack options** page unless you're confident
-   that you know what you're doing. The defaults work just fine. Click **Next**.
-5. Scroll to the bottom of the **Review** page, read and acknowledge the **Capabilities and transforms** section, and click **Create Stack**.
+1. Click to 👉 [Deploy the Serverless Application](https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif) 👈 from the AWS Console.
+2. Make sure your currently selected region (in the console's top navigation bar) is the one you want to deploy to.
+3. Scroll down to the **Application settings** section.
+4. Give your stack a unique name, enter the name of the image bucket, and check the box acknowledging that the
+   app will create an IAM execution role for itself.
+5. Click **Deploy**.
 6. When all the resources are properly created and configured, the new stack should be in the **CREATE_COMPLETE** stage. If there's an error, it will delete all the resources it created, roll back any changes it made, and eventually reach the **ROLLBACK_COMPLETE** stage.
-7. Select the Stack and click the **Outputs** tab to see (and copy) the IIIF Endpoint URL.
-
-### Command Line
-
-1. Install and configure the [AWS Command Line Tools](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html).
-2. Execute the following command, replacing `$IMAGE_BUCKET` with the name of the image bucket
-   and `$STACK_NAME` with a unique name for your stack:
-
-        aws cloudformation create-stack \
-          --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-          --template-url https://nul-public.s3.amazonaws.com/serverless-iiif/deploy.yaml \
-          --parameters ParameterKey=SourceBucket,ParameterValue=$IMAGE_BUCKET \
-          --stack-name $STACK_NAME
-
-3. If you're feeling really devoted to the command line, you can run
-
-        aws cloudformation describe-stacks --stack-name $STACK_NAME
-
-   repeatedly until the stack reaches the `CREATE_COMPLETE` stage and displays
-   the IIIF Endpoint in the `Outputs` section.
-
-   Otherwise, open the [CloudFormation Console](https://console.aws.amazon.com/cloudformation/home)
-   and continue from step 6 of the AWS Console instructions above.
+7. Click the **CloudFormation stack** link.
+8. Click the **Outputs** tab to see (and copy) the IIIF Endpoint URL.
 
 ## Source Images
 

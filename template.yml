@@ -3,7 +3,7 @@ Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif
     Description: IIIF Image API 2.1 server in an AWS Serverless Application
-    Author: Michael B. Klein
+    Author: mbklein
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README.md
