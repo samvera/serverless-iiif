@@ -79,3 +79,9 @@ AWS API Gateway Lamnbda integration has a payload (request/response body) size l
 ## License
 
 This software is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0). Dependencies are subject to their own licenses.
+
+## Contributors
+
+* [Michael B. Klein](https://github.com/mbklein)
+* [Justin Gondron](https://github.com/jgondron)
+* [Edward Silverton](https://github.com/edsilv)

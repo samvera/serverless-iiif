@@ -1,4 +1,16 @@
-Transform: 'AWS::Serverless-2016-10-31'
+Transform: "AWS::Serverless-2016-10-31"
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: serverless-iiif
+    Description: IIIF Image API 2.1 server in an AWS Serverless Application
+    Author: Michael B. Klein
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ["iiif", "image-processing"]
+    HomePageUrl: https://github.com/nulib/serverless-iiif
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/nulib/serverless-iiif
 Parameters:
   SourceBucket:
     Type: String
@@ -15,36 +27,36 @@ Resources:
       Description: Dependencies for IIIF app
       ContentUri: ./dependencies
       CompatibleRuntimes:
-        - nodejs8.10
-      LicenseInfo: 'Apache-2.0'
+        - nodejs12.x
+      LicenseInfo: "Apache-2.0"
   IiifFunction:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
-      Runtime: nodejs10.x
+      Runtime: nodejs12.x
       Handler: index.handler
       MemorySize: 3008
       Timeout: 10
       CodeUri: ./src
       Layers:
-      - !Ref Dependencies
+        - !Ref Dependencies
       Policies:
-      - AWSLambdaExecute
-      - Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:ListBucket
-              - s3:GetBucketLocation
-            Resource: !Sub "arn:aws:s3:::${SourceBucket}"
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:GetObjectACL
-            Resource: !Sub "arn:aws:s3:::${SourceBucket}/*"
-          - Effect: Allow
-            Action:
-              - s3:ListAllMyBuckets
-            Resource: "*"
+        - AWSLambdaExecute
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource: !Sub "arn:aws:s3:::${SourceBucket}"
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:GetObjectACL
+              Resource: !Sub "arn:aws:s3:::${SourceBucket}/*"
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
       Environment:
         Variables:
           tiffBucket: !Sub "${SourceBucket}"
@@ -86,7 +98,7 @@ Resources:
             Method: OPTIONS
             RestApiId: !Ref IiifApi
   IiifApi:
-    Type: 'AWS::Serverless::Api'
+    Type: "AWS::Serverless::Api"
     Properties:
       Name: !Sub "${AWS::StackName}-api"
       StageName: !Sub "${StageName}"
@@ -99,37 +111,37 @@ Resources:
         info:
           version: "2018-12-14T18:28:00Z"
         schemes:
-        - "http"
-        - "https"
+          - "http"
+          - "https"
         paths:
           /iiif/2/{id}:
             get:
               produces:
-              - "application/json"
+                - "application/json"
               parameters:
-              - name: "Cookie"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Origin"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Authorization"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "id"
-                in: "path"
-                required: true
-                type: "string"
+                - name: "Cookie"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Origin"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Authorization"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "id"
+                  in: "path"
+                  required: true
+                  type: "string"
               responses:
-                '200':
+                "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -140,27 +152,27 @@ Resources:
                 type: "aws_proxy"
             options:
               produces:
-              - "application/json"
+                - "application/json"
               parameters:
-              - name: "Origin"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Authorization"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "id"
-                in: "path"
-                required: true
-                type: "string"
+                - name: "Origin"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Authorization"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "id"
+                  in: "path"
+                  required: true
+                  type: "string"
               responses:
-                '200':
+                "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -172,26 +184,26 @@ Resources:
           /iiif/2/{id}/info.json:
             get:
               produces:
-              - "application/json"
+                - "application/json"
               parameters:
-              - name: "Cookie"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Origin"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Authorization"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "id"
-                in: "path"
-                required: true
-                type: "string"
+                - name: "Cookie"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Origin"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Authorization"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "id"
+                  in: "path"
+                  required: true
+                  type: "string"
               responses:
-                '200':
+                "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
@@ -205,7 +217,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -218,22 +230,22 @@ Resources:
                 type: "aws_proxy"
             options:
               produces:
-              - "application/json"
+                - "application/json"
               parameters:
-              - name: "Origin"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Authorization"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "id"
-                in: "path"
-                required: true
-                type: "string"
+                - name: "Origin"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Authorization"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "id"
+                  in: "path"
+                  required: true
+                  type: "string"
               responses:
-                '200':
+                "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
@@ -245,7 +257,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -257,30 +269,30 @@ Resources:
           /iiif/2/{id}/{proxy+}:
             get:
               produces:
-              - "application/json"
+                - "application/json"
               parameters:
-              - name: "proxy"
-                in: "path"
-                required: true
-                type: "string"
-              - name: "Cookie"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Origin"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Authorization"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "id"
-                in: "path"
-                required: true
-                type: "string"
+                - name: "proxy"
+                  in: "path"
+                  required: true
+                  type: "string"
+                - name: "Cookie"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Origin"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Authorization"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "id"
+                  in: "path"
+                  required: true
+                  type: "string"
               responses:
-                '200':
+                "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
@@ -294,7 +306,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -306,31 +318,31 @@ Resources:
                 httpMethod: "POST"
                 cacheNamespace: "frz8df"
                 cacheKeyParameters:
-                - "method.request.path.proxy"
+                  - "method.request.path.proxy"
                 contentHandling: "CONVERT_TO_TEXT"
                 type: "aws_proxy"
             options:
               produces:
-              - "application/json"
+                - "application/json"
               parameters:
-              - name: "proxy"
-                in: "path"
-                required: true
-                type: "string"
-              - name: "Origin"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "Authorization"
-                in: "header"
-                required: false
-                type: "string"
-              - name: "id"
-                in: "path"
-                required: true
-                type: "string"
+                - name: "proxy"
+                  in: "path"
+                  required: true
+                  type: "string"
+                - name: "Origin"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "Authorization"
+                  in: "header"
+                  required: false
+                  type: "string"
+                - name: "id"
+                  in: "path"
+                  required: true
+                  type: "string"
               responses:
-                '200':
+                "200":
                   description: "200 response"
                   schema:
                     $ref: "#/definitions/Empty"
@@ -342,7 +354,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -351,7 +363,7 @@ Resources:
                 httpMethod: "POST"
                 cacheNamespace: "frz8df"
                 cacheKeyParameters:
-                - "method.request.path.proxy"
+                  - "method.request.path.proxy"
                 contentHandling: "CONVERT_TO_TEXT"
                 type: "aws_proxy"
         definitions:
@@ -359,7 +371,7 @@ Resources:
             type: "object"
             title: "Empty Schema"
         x-amazon-apigateway-binary-media-types:
-        - "*/*"
+          - "*/*"
 Outputs:
   Endpoint:
     Description: IIIF Endpoint URL
