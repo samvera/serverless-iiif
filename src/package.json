@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "aws-sdk": "^2.368.0",
-    "iiif-processor": "~0.3.4"
+    "iiif-processor": "~0.3.4",
+    "middy": "^0.19.4"
   }
 }
