@@ -35,7 +35,7 @@ Resources:
       Runtime: nodejs12.x
       Handler: index.handler
       MemorySize: 3008
-      Timeout: 10
+      Timeout: 30
       CodeUri: ./src
       Layers:
         - !Ref Dependencies
