@@ -372,10 +372,73 @@ Resources:
             title: "Empty Schema"
         x-amazon-apigateway-binary-media-types:
           - "*/*"
+  LambdaEdgeFunctionForwardedFor:
+      Type: AWS::Serverless::Function
+      Properties:
+        CodeUri: ./src_edge
+        Role: !GetAtt LambdaEdgeFunctionRole.Arn
+        Runtime: nodejs12.x
+        Handler: index.viewerRequest
+        Timeout: 5
+        AutoPublishAlias: live 
+  CFDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: 'true'
+          Comment: !Sub '${StageName} - CloudFront Cache'
+          Origins:
+            -
+              Id: !Sub '${StageName} - IIIF API Gateway'
+              DomainName: !Sub "${IiifApi}.execute-api.${AWS::Region}.amazonaws.com"
+              OriginPath: !Sub '/${StageName}'
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: https-only
+                OriginSSLProtocols: ['TLSv1']
+          DefaultCacheBehavior:
+            TargetOriginId: !Sub '${StageName} - IIIF API Gateway'
+            LambdaFunctionAssociations:
+              - 
+                EventType: viewer-request
+                LambdaFunctionARN: !Ref LambdaEdgeFunctionForwardedFor.Version
+            ForwardedValues:
+              QueryString: 'false'
+              Headers:
+                - x-forwarded-host
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: allow-all
+            DefaultTTL: 31536000
+            MaxTTL: 31536000
+            MinTTL: 31536000
+
+  LambdaEdgeFunctionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+        Path: "/"
+        ManagedPolicyArns:
+            - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            -
+              Sid: "AllowLambdaServiceToAssumeRole"
+              Effect: "Allow"
+              Action: 
+                - "sts:AssumeRole"
+              Principal:
+                Service: 
+                  - "lambda.amazonaws.com"
+                  - "edgelambda.amazonaws.com"
 Outputs:
   Endpoint:
     Description: IIIF Endpoint URL
     Value: !Sub "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
+  CachedEndpoint:
+    Description: Cached Endpoint URL
+    Value: !Sub "https://${CFDistribution.DomainName}/iiif/2/"
   ApiId:
     Description: API Gateway ID
     Value: !Ref IiifApi
