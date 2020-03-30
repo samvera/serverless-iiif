@@ -64,7 +64,7 @@ class IIIFLambda {
     if ('include_stage' in process.env) {
       return ['true', 'yes'].indexOf(process.env.include_stage.toLowerCase()) > -1;
     } else {
-      var host = this.event.headers['Host'];
+      var host = this.event.headers['X-Forwarded-Host'] || this.event.headers['Host'];
       return host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/);
     }
   }
@@ -107,7 +107,7 @@ class IIIFLambda {
     if (this.handled) return this;
 
     var scheme = this.event.headers['X-Forwarded-Proto'] || 'http';
-    var host = this.event.headers['Host'];
+    var host = this.event.headers['X-Forwarded-Host'] || this.event.headers['Host'];
     var uri = `${scheme}://${host}${this.eventPath()}`;
 
     this.resource = new IIIF.Processor(uri, id => this.s3Object(id));
