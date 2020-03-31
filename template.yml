@@ -19,6 +19,9 @@ Parameters:
     Type: String
     Description: Name of the API stage to be deployed
     Default: latest
+  Alias:
+    Type: String
+    Description: Alias URL
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -381,12 +384,23 @@ Resources:
         Handler: index.viewerRequest
         Timeout: 5
         AutoPublishAlias: live 
+  IiifCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub "${Alias}"
+      ValidationMethod: 'DNS'
   CFDistribution:
       Type: AWS::CloudFront::Distribution
       Properties:
         DistributionConfig:
           Enabled: 'true'
           Comment: !Sub '${StageName} - CloudFront Cache'
+          Aliases:
+            - !Sub "${Alias}"
+          ViewerCertificate:
+            AcmCertificateArn: !Ref IiifCertificate
+            MinimumProtocolVersion: 'TLSv1.2_2018'
+            SslSupportMethod: 'sni-only'
           Origins:
             -
               Id: !Sub '${StageName} - IIIF API Gateway'
