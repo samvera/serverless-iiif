@@ -393,6 +393,11 @@ Resources:
       Type: AWS::CloudFront::Distribution
       Properties:
         DistributionConfig:
+          CustomErrorResponses:
+            - ErrorCode: 502
+              ErrorCachingMinTTL: 1
+            - ErrorCode: 503
+              ErrorCachingMinTTL: 1
           Enabled: 'true'
           Comment: !Sub '${StageName} - CloudFront Cache'
           Aliases:
