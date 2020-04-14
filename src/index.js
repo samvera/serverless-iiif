@@ -64,7 +64,7 @@ class IIIFLambda {
     if ('include_stage' in process.env) {
       return ['true', 'yes'].indexOf(process.env.include_stage.toLowerCase()) > -1;
     } else {
-      var host = this.event.headers['X-Forwarded-Host'] || this.event.headers['Host'];
+      var host = this.event.headers['Host'];
       return host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/);
     }
   }
