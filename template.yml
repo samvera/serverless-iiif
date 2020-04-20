@@ -7,6 +7,10 @@ Parameters:
     Type: String
     Description: Name of the API stage to be deployed
     Default: latest
+  IiifLambdaTimeout:
+    Type: Number
+    Description: The timeout for the iiif lambda
+    Default: 10
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -23,7 +27,7 @@ Resources:
       Runtime: nodejs10.x
       Handler: index.handler
       MemorySize: 3008
-      Timeout: 10
+      Timeout: "${IiifLambdaTimeout}"
       CodeUri: ./src
       Layers:
       - !Ref Dependencies
@@ -125,7 +129,7 @@ Resources:
                   schema:
                     $ref: "#/definitions/Empty"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -156,7 +160,7 @@ Resources:
                   schema:
                     $ref: "#/definitions/Empty"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -201,7 +205,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -241,7 +245,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -290,7 +294,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
@@ -338,7 +342,7 @@ Resources:
                     Access-Control-Allow-Headers:
                       type: "string"
               x-amazon-apigateway-integration:
-                uri: 
+                uri:
                   Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IiifFunction.Arn}/invocations"
                 responses:
                   default:
