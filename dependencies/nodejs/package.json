@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.368.0",
-    "iiif-processor": "tpendragon/node-iiif#inputlimit",
+    "iiif-processor": "tpendragon/node-iiif#inputlimitdimensionfunc",
     "middy": "^0.19.4"
   }
 }
