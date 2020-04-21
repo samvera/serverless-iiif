@@ -255,6 +255,7 @@ Resources:
           tiffBucket:
             Fn::Sub: "${SourceBucket}"
           DD_KMS_API_KEY: "AQICAHjNoNXrp3Thd1UL3np+Y/XCnSL7Qz4WnjX94YIt8xU8swEtnSpn/igd3vmQIASzwzbxAAAAdjB0BgkqhkiG9w0BBwagZzBlAgEAMGAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMRJdyqtfH+l/fCVhMAgEQgDOC6XkoNRyTuE/i4ICJWXqlWwowFpcU5IGyAlReULvVErzUfu1TM9MiaKYGo2vhSbGNjKI="
+          DD_FLUSH_TO_LOG: True
       Events:
         GetId:
           Type: Api
