@@ -393,6 +393,7 @@ Resources:
       Type: AWS::CloudFront::Distribution
       Properties:
         DistributionConfig:
+          HttpVersion: 'http2'
           CustomErrorResponses:
             - ErrorCode: 502
               ErrorCachingMinTTL: 1
