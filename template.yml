@@ -201,6 +201,7 @@ Resources:
       CodeUri: ./src
       Layers:
         - Ref: Dependencies
+        - 'arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Node12-x:22'
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"
@@ -253,6 +254,7 @@ Resources:
               - !Ref AWS::NoValue
           tiffBucket:
             Fn::Sub: "${SourceBucket}"
+          DD_KMS_API_KEY: "AQICAHjNoNXrp3Thd1UL3np+Y/XCnSL7Qz4WnjX94YIt8xU8swEtnSpn/igd3vmQIASzwzbxAAAAdjB0BgkqhkiG9w0BBwagZzBlAgEAMGAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMRJdyqtfH+l/fCVhMAgEQgDOC6XkoNRyTuE/i4ICJWXqlWwowFpcU5IGyAlReULvVErzUfu1TM9MiaKYGo2vhSbGNjKI="
       Events:
         GetId:
           Type: Api
