@@ -61,3 +61,5 @@ This software is licensed under the [Apache License, Version 2.0](https://openso
 * [Michael B. Klein](https://github.com/mbklein)
 * [Justin Gondron](https://github.com/jgondron)
 * [Edward Silverton](https://github.com/edsilv)
+* [Trey Pendragon](https://github.com/tpendragon)
+
