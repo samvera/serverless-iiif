@@ -19,6 +19,10 @@ Parameters:
     Type: String
     Description: Name of the API stage to be deployed
     Default: latest
+  IiifLambdaTimeout:
+    Type: String
+    Description: The timeout for the lambda.
+    Default: 10
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -35,7 +39,7 @@ Resources:
       Runtime: nodejs12.x
       Handler: index.handler
       MemorySize: 3008
-      Timeout: 10
+      Timeout: !Ref IiifLambdaTimeout
       CodeUri: ./src
       Layers:
         - !Ref Dependencies
