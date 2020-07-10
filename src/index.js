@@ -40,9 +40,15 @@ class IIIFLambda {
       isBase64Encoded: base64,
       body: content
     };
-    console.log("base64.length = ", content.length, "original.length = ", result.body.length)
-    this.respond(null, response);
-
+    if (content.length > 6 * 1024 * 1024) {
+        var scheme = this.event.headers['X-Forwarded-Proto'] || 'http';
+        var host = this.event.headers['Host'];
+        var uri = `${scheme}://${host}${this.eventPath()}`;
+        console.log("base64.length = ", content.length, "original.length = ", result.body.length)
+        throw Error ('Content size (' + content.length.toString() + ') exceeds API gateway maximum when calling ' + uri)
+    } else {
+        this.respond(null, response);
+    }
   }
 
   handleError (err, _resource) {
