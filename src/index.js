@@ -107,10 +107,14 @@ class IIIFLambda {
     if (this.handled) return this;
 
     var scheme = this.event.headers['X-Forwarded-Proto'] || 'http';
-    var host = this.event.headers['Host'];
+    var host = this.event.headers['X-Forwarded-Host'] || this.event.headers['Host'];
     var uri = `${scheme}://${host}${this.eventPath()}`;
 
-    this.resource = new IIIF.Processor(uri, id => this.s3Object(id));
+    this.resource = new IIIF.Processor(
+      uri, 
+      (id) => { return this.s3Object(id) }, 
+      (id) => { return this.dimensions(id, this.sourceBucket) }
+    );
 
     this.resource
       .execute()
@@ -128,6 +132,21 @@ class IIIFLambda {
       .checkForOptionsRequest()
       .checkForInfoJsonRedirect()
       .execute()
+  }
+
+  async dimensions (id, bucket) {
+    var s3 = new AWS.S3();
+    const obj = await s3.headObject({
+      Bucket: bucket,
+      Key: `${id}.tif`
+    }).promise()
+    if (obj.Metadata.width && obj.Metadata.height) {
+      return {
+        width: parseInt(obj.Metadata.width, 10),
+        height: parseInt(obj.Metadata.height, 10)
+      }
+    }
+    return null;
   }
 
   s3Object (id) {
