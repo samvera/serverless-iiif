@@ -705,7 +705,8 @@ Outputs:
         - Fn::Sub: "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
   ApiId:
     Description: API Gateway ID
-    Value: !Ref IiifApi
+    Value:
+      Ref: IiifApi
     Export:
       Name: !Sub "${AWS::StackName}:ApiId"
   DistributionId:
