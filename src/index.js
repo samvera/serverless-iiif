@@ -56,6 +56,8 @@ const handleImageRequestFunc = async (event, context, callback) => {
       } else {
         response = makeResponse(result);
       }
+    } catch (err) {
+      return errorHandler.errorHandler(err, event, context, resource, callback);
     }
     return callback(null, response);
   } catch (err) {
