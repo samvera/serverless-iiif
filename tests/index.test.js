@@ -20,7 +20,6 @@ describe('index.handler', () => {
         arg2: arg2,
       }
     };
-    console.log = jest.fn();
   });
 
   it('responds to OPTIONS REQUEST', async () => {

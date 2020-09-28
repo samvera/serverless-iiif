@@ -1,0 +1,18 @@
+env:
+  global:
+    - CI=1
+language: node_js
+node_js:
+  - "14"
+cache: yarn
+before_script:
+  # Do nothing
+script:
+  # Do nothing
+after_script:
+  # Generate test coverage and send to code climate
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+  - npm test -- --coverage
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
