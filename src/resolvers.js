@@ -32,5 +32,5 @@ const dimensionResolver = async (id) => {
 
 module.exports = {
   streamResolver: streamResolver,
-  dimensionResolver: dimensionResolver,
-}
+  dimensionResolver: dimensionResolver
+};

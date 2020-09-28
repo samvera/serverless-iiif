@@ -1,11 +1,12 @@
+/* eslint-env jest */
 const { eventPath, fileMissing, getUri, isBase64, isTooLarge, getRegion } = require('../src/helpers');
 
 describe('helper functions', () => {
   describe('eventPath', () => {
     it('does not includesStage', () => {
-      delete process.env.include_stage
+      delete process.env.include_stage;
       const event = {
-        headers: { 'Host': 'host'},
+        headers: { Host: 'host' },
         path: '/path/'
       };
       expect(eventPath(event)).toEqual('/path');
@@ -13,7 +14,7 @@ describe('helper functions', () => {
     it('includesStage', () => {
       process.env.include_stage = 'true';
       const event = {
-        headers: { 'Host': 'host'},
+        headers: { Host: 'host' },
         requestContext: {
           stage: 'prod'
         },
@@ -26,28 +27,28 @@ describe('helper functions', () => {
   describe('fileMissing', () => {
     it('has a missing file', () => {
       const event = {
-        path: 'http://path',
+        path: 'http://path'
       };
-      expect(fileMissing(event)).toEqual(true)
+      expect(fileMissing(event)).toEqual(true);
     });
     it('does not have a missing file', () => {
       const event = {
-        path: 'http://path/file.json',
+        path: 'http://path/file.json'
       };
-      expect(fileMissing(event)).toEqual(false)
+      expect(fileMissing(event)).toEqual(false);
     });
   });
 
   describe('getUri', () => {
     beforeEach(() => {
-      delete process.env.include_stage
-    })
+      delete process.env.include_stage;
+    });
     it('has X-Forwarded headers', () => {
       const event = {
         headers: {
           'X-Forwarded-Proto': 'https',
           'X-Forwarded-Host': 'forward-host',
-          'Host': 'host'
+          Host: 'host'
         },
         path: '/path'
       };
@@ -56,7 +57,7 @@ describe('helper functions', () => {
     it('does not have X-Forwarded headers', () => {
       const event = {
         headers: {
-          'Host': 'host'
+          Host: 'host'
         },
         path: '/path'
       };
@@ -82,13 +83,13 @@ describe('helper functions', () => {
   describe('isTooLarge', () => {
     it('is > 6MB', () => {
       const content = {
-        length: 6 * 1024 * 1024 + 1,
+        length: 6 * 1024 * 1024 + 1
       };
       expect(isTooLarge(content)).toEqual(true);
     });
     it('is < 6MB', () => {
       const content = {
-        length: 6 * 1024 * 1024 - 1,
+        length: 6 * 1024 * 1024 - 1
       };
       expect(isTooLarge(content)).toEqual(false);
     });
@@ -99,8 +100,7 @@ describe('helper functions', () => {
       const context = {
         invokedFunctionArn: 'arn:aws:lambda:us-west-2:123456789012:function:my-function'
       };
-      expect(getRegion(context)).toEqual('us-west-2')
+      expect(getRegion(context)).toEqual('us-west-2');
     });
   });
-
-})
+});

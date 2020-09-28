@@ -1,0 +1,33 @@
+{
+  "extends" : [
+    "standard"
+  ],
+  "env" : {
+    "browser"               : false
+  },
+  "globals" : {
+    "__DEV__"               : false,
+    "__TEST__"              : false,
+    "__PROD__"              : false,
+    "__COVERAGE__"          : false
+  },
+  "rules" : {
+    "brace-style"           : [2, "1tbs"],
+    "comma-dangle"          : [2, "never"],
+    "indent"                : ["error", 2, {"SwitchCase" : 1}],
+    "key-spacing"           : 0,
+    "max-len"               : [0, 120, 2],
+    "no-unused-vars"        : [1, { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }],
+    "no-var"              : 1,
+    "object-curly-spacing"  : [2, "always"],
+    "prefer-const" : [1, {
+        "destructuring" : "any",
+        "ignoreReadBeforeAssign" : true
+    }],
+    "semi"                  : [2, "always"],
+    "space-in-parens"       : ["error", "never"],
+
+    // This should replicate Code Climate's computational complexity code smells warning. It is actually more strict.
+    "complexity"            : ["warn", 5]
+  }
+}

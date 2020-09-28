@@ -1,3 +1,4 @@
+/* eslint-env jest */
 const destroy = jest.fn();
 const end = jest.fn(() => {
   return {
@@ -7,20 +8,20 @@ const end = jest.fn(() => {
 const abort = jest.fn();
 const S3 = jest.fn().mockImplementation(() => {
   return {
-    getObject: function(params) {
+    getObject: function () {
       return {
         createReadStream: () => {
           return {
             end: end
-          }
+          };
         },
         abort: abort
-      }
+      };
     },
-    headObject: function(params) {
+    headObject: function (params) {
       let md = {};
-      if (params['Key'] === 'dimensions.tif') {
-        md = { width: '100', height: '200'};
+      if (params.Key === 'dimensions.tif') {
+        md = { width: '100', height: '200' };
       };
       return {
         promise: () => {
@@ -30,7 +31,7 @@ const S3 = jest.fn().mockImplementation(() => {
         }
       };
     }
-  }
+  };
 });
 
 module.exports = {
