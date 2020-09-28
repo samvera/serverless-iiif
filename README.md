@@ -48,6 +48,20 @@ The S3 key of any given file, minus the extension, is its IIIF ID. For example, 
 
     convert source_image.tif -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:output_image.tif'
 
+## Testing
+
+If tests are run locally they will start in "watch" mode. If a CI environment is detected they will only run once. From the project root run:
+
+```
+npm test
+```
+
+To generate a code coverage report run:
+
+```
+npm test --coverage
+```
+
 ## Known Limitations
 
 AWS API Gateway Lamnbda integration has a payload (request/response body) size limit of approximately 6MB in both directions. Please see [LAMBDA_LIMIT.md](LAMBDA_LIMIT.md) for details and workarounds.
@@ -62,4 +76,4 @@ This software is licensed under the [Apache License, Version 2.0](https://openso
 * [Justin Gondron](https://github.com/jgondron)
 * [Edward Silverton](https://github.com/edsilv)
 * [Trey Pendragon](https://github.com/tpendragon)
-
+* [Dan Wolfe](https://github.com/danthewolfe)

@@ -14,7 +14,6 @@ const getUri = (event) => {
   const scheme = event.headers['X-Forwarded-Proto'] || 'http';
   const host = event.headers['X-Forwarded-Host'] || event.headers['Host'];
   const uri = `${scheme}://${host}${eventPath(event)}`;
-  console.log('iiif image uri = ', uri);
   return uri;
 };
 

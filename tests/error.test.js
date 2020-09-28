@@ -13,12 +13,6 @@ describe('errorHandler', () => {
   };
 
   beforeEach(() => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation((arg1, arg2) => {
-      return {
-        arg1: arg1,
-        arg2: arg2
-      }
-    });
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   })
   it('has a statusCode', async () => {

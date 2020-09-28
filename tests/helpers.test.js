@@ -42,7 +42,6 @@ describe('helper functions', () => {
     beforeEach(() => {
       delete process.env.include_stage
     })
-    console.log = jest.fn()
     it('has X-Forwarded headers', () => {
       const event = {
         headers: {

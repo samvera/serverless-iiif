@@ -1,7 +1,5 @@
 const errorHandler = async (err, event, context, resource, callback) => {
   console.error(err);
-  console.log('this.event = ', event);
-  console.log('this.context = ', context);
   if (err.statusCode) {
     return await callback(null, {
       statusCode: err.statusCode,

@@ -17,13 +17,11 @@ const handleRequestFunc = async (event, context, callback) => {
 
   // OPTIONS REQUEST
   if (event.httpMethod === 'OPTIONS') {
-    console.log('OPTIONS REQUEST');
     return await callback(null, { statusCode: 204, body: null });
   }
   // INFO.JSON REQUEST
   else if (fileMissing(event)) {
     const location = eventPath(event) + '/info.json';
-    console.log(`INFO.JSON REQUEST: ${location}`);
     return await callback(null, { statusCode: 302, headers: { 'Location': location }, body: 'Redirecting to info.json' });
   }
   // IMAGE REQUEST
@@ -49,7 +47,6 @@ const handleRequestFunc = async (event, context, callback) => {
       };
       if (isTooLarge(content)) {
         const uri = getUri(event);
-        console.log(`base64.length = ${content.length}, original.length =  ${result.body.length}`);
         throw Error (`Content size (${content.length.toString()}) exceeds API gateway maximum when calling ${uri}`);
       } else {
         return await callback(null, response);
