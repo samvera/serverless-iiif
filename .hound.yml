@@ -1,0 +1,5 @@
+eslint:
+  config_file: .eslintrc
+  ignore_file: .eslintignore
+  enabled: true
+  esversion: 6

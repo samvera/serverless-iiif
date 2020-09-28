@@ -6,26 +6,25 @@
 
 const AWS = require('aws-sdk');
 const IIIF = require('iiif-processor');
-const helpers = require('./helpers')
+const helpers = require('./helpers');
 const resolvers = require('./resolvers');
-const errorHandler = require('./error')
+const errorHandler = require('./error');
 
+// eslint-disable-next-line complexity
 const handleRequestFunc = async (event, context, callback) => {
   const { eventPath, fileMissing, getUri, isBase64, isTooLarge, getRegion } = helpers;
   const { streamResolver, dimensionResolver } = resolvers;
   AWS.config.region = getRegion(context);
 
-  // OPTIONS REQUEST
   if (event.httpMethod === 'OPTIONS') {
-    return await callback(null, { statusCode: 204, body: null });
-  }
-  // INFO.JSON REQUEST
-  else if (fileMissing(event)) {
+    // OPTIONS REQUEST
+    return callback(null, { statusCode: 204, body: null });
+  } else if (fileMissing(event)) {
+    // INFO.JSON REQUEST
     const location = eventPath(event) + '/info.json';
-    return await callback(null, { statusCode: 302, headers: { 'Location': location }, body: 'Redirecting to info.json' });
-  }
-  // IMAGE REQUEST
-  else {
+    return callback(null, { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' });
+  } else {
+    // IMAGE REQUEST
     const uri = getUri(event);
     const resource = new IIIF.Processor(
       uri,
@@ -41,15 +40,15 @@ const handleRequestFunc = async (event, context, callback) => {
         headers: {
           'Content-Type': result.contentType,
           'Access-Control-Allow-Origin': '*'
-         },
+        },
         isBase64Encoded: base64,
         body: content
       };
       if (isTooLarge(content)) {
         const uri = getUri(event);
-        throw Error (`Content size (${content.length.toString()}) exceeds API gateway maximum when calling ${uri}`);
+        throw Error(`Content size (${content.length.toString()}) exceeds API gateway maximum when calling ${uri}`);
       } else {
-        return await callback(null, response);
+        return callback(null, response);
       }
     } catch (err) {
       return errorHandler.errorHandler(err, event, context, resource, callback);
@@ -58,5 +57,5 @@ const handleRequestFunc = async (event, context, callback) => {
 };
 
 module.exports = {
-  handler: handleRequestFunc,
+  handler: handleRequestFunc
 };

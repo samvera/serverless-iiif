@@ -1,3 +1,4 @@
+/* eslint-env jest */
 const { errorHandler } = require('../src/error');
 const resource = require('./__mocks/mockResource');
 
@@ -9,14 +10,14 @@ describe('errorHandler', () => {
     return {
       arg1: arg1,
       arg2: arg2
-    }
+    };
   };
 
   beforeEach(() => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-  })
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
   it('has a statusCode', async () => {
-    const err = { statusCode: 404};
+    const err = { statusCode: 404 };
     const resource = {};
     const expected = {
       arg1: null,
@@ -30,7 +31,8 @@ describe('errorHandler', () => {
     expect(result).toEqual(expected);
   });
 
-  it('is an instancof errorClass', async() => {
+  it('is an instancof errorClass', async () => {
+    // eslint-disable-next-line new-cap
     const err = new resource.errorClass('err');
     const expected = {
       arg1: null,
@@ -53,4 +55,4 @@ describe('errorHandler', () => {
     const result = await errorHandler(err, event, context, resource, callback);
     expect(result).toEqual(expected);
   });
-})
+});

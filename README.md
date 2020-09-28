@@ -1,5 +1,7 @@
 # serverless-iiif
 
+[![Build Status](https://travis-ci.org/ndlib/serverless-iiif.svg?branch=master)](https://travis-ci.org/ndlib/serverless-iiif) [![Maintainability](https://api.codeclimate.com/v1/badges/709f9d5c4969f804186d/maintainability)](https://codeclimate.com/github/ndlib/serverless-iiif/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/709f9d5c4969f804186d/test_coverage)](https://codeclimate.com/github/ndlib/serverless-iiif/test_coverage)
+
 ## Description
 
 A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).

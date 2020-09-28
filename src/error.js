@@ -18,5 +18,5 @@ const errorHandler = async (err, event, context, resource, callback) => {
 };
 
 module.exports = {
-  errorHandler: errorHandler,
-}
+  errorHandler: errorHandler
+};

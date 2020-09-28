@@ -1,3 +1,4 @@
+/* eslint-env jest */
 const IIIF = require('iiif-processor');
 const { handler } = require('../src/index');
 const helpers = require('../src/helpers');
@@ -10,15 +11,15 @@ describe('index.handler', () => {
   beforeEach(() => {
     jest.mock('../src/helpers');
     helpers.getRegion = jest.fn().mockImplementation(() => {
-        return 'AWS REGION';
+      return 'AWS REGION';
     });
 
     helpers.eventPath = jest.fn().mockImplementation(() => '[EVENT PATH]');
     callback = (arg1, arg2) => {
       return {
         arg1: arg1,
-        arg2: arg2,
-      }
+        arg2: arg2
+      };
     };
   });
 
@@ -42,11 +43,11 @@ describe('index.handler', () => {
 
     const expected = {
       arg1: null,
-      arg2: { statusCode: 302, headers: { 'Location': '[EVENT PATH]/info.json' }, body: 'Redirecting to info.json' }
+      arg2: { statusCode: 302, headers: { Location: '[EVENT PATH]/info.json' }, body: 'Redirecting to info.json' }
     };
     const result = await handler(event, context, callback);
     expect(result).toEqual(expected);
-  })
+  });
 
   // IMAGE REQUEST
   describe('responds to IMAGE REQUEST', () => {
@@ -63,13 +64,13 @@ describe('index.handler', () => {
 
       IIIF.Processor = jest.fn().mockImplementationOnce(() => {
         return {
-          execute: function() {
+          execute: function () {
             return { body: Buffer.from(body) };
           }
         };
       });
 
-      const expected =  {
+      const expected = {
         arg1: null,
         arg2: {
           statusCode: 200,
@@ -85,8 +86,8 @@ describe('index.handler', () => {
     it('works with nonbase64 image.', async () => {
       IIIF.Processor = jest.fn().mockImplementationOnce(() => {
         return {
-          execute: function() {
-            return { body: body }
+          execute: function () {
+            return { body: body };
           }
         };
       });
@@ -109,15 +110,15 @@ describe('index.handler', () => {
     it('throws an error when file is too large.', async () => {
       helpers.isBase64 = jest.fn().mockImplementationOnce(() => false);
       helpers.isTooLarge = jest.fn().mockImplementationOnce(() => true);
-      errorHandler.errorHandler = jest.fn().mockImplementationOnce(() => null)
+      errorHandler.errorHandler = jest.fn().mockImplementationOnce(() => null);
       IIIF.Processor = jest.fn().mockImplementationOnce(() => {
         return {
-          execute: function() {
+          execute: function () {
             return { body: body };
           }
         };
       });
-      const result = await handler(event, context, callback);
+      await handler(event, context, callback);
       expect(errorHandler.errorHandler).toHaveBeenCalled();
     });
   });
