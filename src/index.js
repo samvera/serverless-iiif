@@ -25,14 +25,16 @@ const handleRequestFunc = async (event, context, callback) => {
     return callback(null, { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' });
   } else {
     // IMAGE REQUEST
-    const uri = getUri(event);
-    const resource = new IIIF.Processor(
-      uri,
-      streamResolver,
-      dimensionResolver
-    );
-    const result = await resource.execute();
+    let resource;
     try {
+      const uri = getUri(event);
+      resource = new IIIF.Processor(
+        uri,
+        streamResolver,
+        dimensionResolver
+      );
+      const result = await resource.execute();
+
       const base64 = isBase64(result);
       const content = base64 ? result.body.toString('base64') : result.body;
       const response = {
