@@ -15,6 +15,8 @@ const handleRequestFunc = async (event, context, callback) => {
   const { eventPath, fileMissing, getUri, isBase64, isTooLarge, getRegion } = helpers;
   const { streamResolver, dimensionResolver } = resolvers;
   AWS.config.region = getRegion(context);
+  
+  context.callbackWaitsForEmptyEventLoop = false;
 
   if (event.httpMethod === 'OPTIONS') {
     // OPTIONS REQUEST

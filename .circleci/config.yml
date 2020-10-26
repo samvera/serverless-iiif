@@ -1,0 +1,27 @@
+---
+version: 2.1
+jobs:
+  build:
+    working_directory: ~/serverless-iiif
+    docker:
+      - image: circleci/node:14
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - node-modules-v1-{{ checksum "package.json" }}-{{ .Branch }}
+            - node-modules-v1-{{ checksum "package.json" }}-
+            - node-modules-v1-
+      - run:
+          name: Install JS Dependencies
+          command: yarn install
+      - save_cache:
+          key: node-modules-v1-{{ checksum "package.json" }}-{{ .Branch }}
+          paths:
+            - ~/serverless-iiif/node_modules
+      - run:
+          name: JS Tests
+          command: yarn test -- --coverage
+      - run:
+          name: Send coverage to Coveralls
+          command: yarn run coveralls < coverage/lcov.info
