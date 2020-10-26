@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/nulib/serverless-iiif
-    SemanticVersion: 1.0.0
+    SemanticVersion: 2.0.0
     SourceCodeUrl: https://github.com/nulib/serverless-iiif
 Parameters:
   SourceBucket:
@@ -34,6 +34,8 @@ Resources:
       CompatibleRuntimes:
         - nodejs12.x
       LicenseInfo: "Apache-2.0"
+    Metadata:
+      BuildMethod: nodejs12.x
   IiifFunction:
     Type: "AWS::Serverless::Function"
     Properties:
@@ -44,8 +46,7 @@ Resources:
         Ref: IiifLambdaTimeout
       CodeUri: ./src
       Layers:
-        -
-          Ref: Dependencies
+        - Ref: Dependencies
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"

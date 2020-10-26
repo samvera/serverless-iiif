@@ -13,6 +13,11 @@ jobs:
             - node-modules-v1-{{ checksum "package.json" }}-
             - node-modules-v1-
       - run:
+          name:  Download cc-test-reporter
+          command: |
+            curl -L -o ./cc-test-reporter https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
+            chmod +x ./cc-test-reporter
+      - run:
           name: Install JS Dependencies
           command: yarn install
       - save_cache:
@@ -21,7 +26,11 @@ jobs:
             - ~/serverless-iiif/node_modules
       - run:
           name: JS Tests
-          command: yarn test -- --coverage
+          command: |
+            ./cc-test-reporter before-build
+            yarn test -- --coverage
+            mv coverage/clover.xml ./clover.xml
+            ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
       - run:
           name: Send coverage to Coveralls
           command: yarn run coveralls < coverage/lcov.info

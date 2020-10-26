@@ -1,6 +1,8 @@
 # serverless-iiif
 
-[![Build Status](https://travis-ci.org/ndlib/serverless-iiif.svg?branch=master)](https://travis-ci.org/ndlib/serverless-iiif) [![Maintainability](https://api.codeclimate.com/v1/badges/709f9d5c4969f804186d/maintainability)](https://codeclimate.com/github/ndlib/serverless-iiif/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/709f9d5c4969f804186d/test_coverage)](https://codeclimate.com/github/ndlib/serverless-iiif/test_coverage)
+[![Build Status](https://circleci.com/gh/nulib/serverless-iiif.svg?style=svg)](https://circleci.com/gh/nulib/serverless-iiif)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c9b1d0ddb5d4ca1d8a00/maintainability)](https://codeclimate.com/github/nulib/serverless-iiif/maintainability)
+[![Test Coverage](https://coveralls.io/repos/github/nulib/serverless-iiif/badge.svg)](https://coveralls.io/github/nulib/serverless-iiif)
 
 ## Description
 
