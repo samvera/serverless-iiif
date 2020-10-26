@@ -1,5 +1,7 @@
 # serverless-iiif
 
+[![Build Status](https://travis-ci.org/ndlib/serverless-iiif.svg?branch=master)](https://travis-ci.org/ndlib/serverless-iiif) [![Maintainability](https://api.codeclimate.com/v1/badges/709f9d5c4969f804186d/maintainability)](https://codeclimate.com/github/ndlib/serverless-iiif/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/709f9d5c4969f804186d/test_coverage)](https://codeclimate.com/github/ndlib/serverless-iiif/test_coverage)
+
 ## Description
 
 A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
@@ -48,6 +50,20 @@ The S3 key of any given file, minus the extension, is its IIIF ID. For example, 
 
     convert source_image.tif -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:output_image.tif'
 
+## Testing
+
+If tests are run locally they will start in "watch" mode. If a CI environment is detected they will only run once. From the project root run:
+
+```
+npm test
+```
+
+To generate a code coverage report run:
+
+```
+npm test --coverage
+```
+
 ## Known Limitations
 
 AWS API Gateway Lamnbda integration has a payload (request/response body) size limit of approximately 6MB in both directions. Please see [LAMBDA_LIMIT.md](LAMBDA_LIMIT.md) for details and workarounds.
@@ -62,4 +78,4 @@ This software is licensed under the [Apache License, Version 2.0](https://openso
 * [Justin Gondron](https://github.com/jgondron)
 * [Edward Silverton](https://github.com/edsilv)
 * [Trey Pendragon](https://github.com/tpendragon)
-
+* [Dan Wolfe](https://github.com/danthewolfe)

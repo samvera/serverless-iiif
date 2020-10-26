@@ -20,14 +20,15 @@ Parameters:
     Description: Name of the API stage to be deployed
     Default: latest
   IiifLambdaTimeout:
-    Type: String
+    Type: Number
     Description: The timeout for the lambda.
     Default: 10
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
-      LayerName: !Sub "${AWS::StackName}-dependencies"
+      LayerName:
+        Fn::Sub: "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
       ContentUri: ./dependencies
       CompatibleRuntimes:
@@ -39,10 +40,12 @@ Resources:
       Runtime: nodejs12.x
       Handler: index.handler
       MemorySize: 3008
-      Timeout: !Ref IiifLambdaTimeout
+      Timeout:
+        Ref: IiifLambdaTimeout
       CodeUri: ./src
       Layers:
-        - !Ref Dependencies
+        -
+          Ref: Dependencies
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"
@@ -51,61 +54,72 @@ Resources:
               Action:
                 - s3:ListBucket
                 - s3:GetBucketLocation
-              Resource: !Sub "arn:aws:s3:::${SourceBucket}"
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}"
             - Effect: Allow
               Action:
                 - s3:GetObject
                 - s3:GetObjectACL
-              Resource: !Sub "arn:aws:s3:::${SourceBucket}/*"
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
             - Effect: Allow
               Action:
                 - s3:ListAllMyBuckets
               Resource: "*"
       Environment:
         Variables:
-          tiffBucket: !Sub "${SourceBucket}"
+          tiffBucket:
+            Fn::Sub: "${SourceBucket}"
       Events:
         GetId:
           Type: Api
           Properties:
             Path: /iiif/2/{id}
             Method: GET
-            RestApiId: !Ref IiifApi
+            RestApiId:
+              Ref: IiifApi
         OptionsId:
           Type: Api
           Properties:
             Path: /iiif/2/{id}
             Method: OPTIONS
-            RestApiId: !Ref IiifApi
+            RestApiId:
+              Ref: IiifApi
         GetInfoJson:
           Type: Api
           Properties:
             Path: /iiif/2/{id}/info.json
             Method: GET
-            RestApiId: !Ref IiifApi
+            RestApiId:
+              Ref: IiifApi
         OptionsInfoJson:
           Type: Api
           Properties:
             Path: /iiif/2/{id}/info.json
             Method: OPTIONS
-            RestApiId: !Ref IiifApi
+            RestApiId:
+              Ref: IiifApi
         GetImage:
           Type: Api
           Properties:
             Path: /iiif/2/{id}/{proxy+}
             Method: GET
-            RestApiId: !Ref IiifApi
+            RestApiId:
+              Ref: IiifApi
         OptionsImage:
           Type: Api
           Properties:
             Path: /iiif/2/{id}/{proxy+}
             Method: OPTIONS
-            RestApiId: !Ref IiifApi
+            RestApiId:
+              Ref: IiifApi
   IiifApi:
     Type: "AWS::Serverless::Api"
     Properties:
-      Name: !Sub "${AWS::StackName}-api"
-      StageName: !Sub "${StageName}"
+      Name:
+        Fn::Sub: "${AWS::StackName}-api"
+      StageName:
+        Fn::Sub: "${StageName}"
       EndpointConfiguration: "REGIONAL"
       Cors:
         AllowMethods: "'GET'"
@@ -379,9 +393,12 @@ Resources:
 Outputs:
   Endpoint:
     Description: IIIF Endpoint URL
-    Value: !Sub "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
+    Value:
+      Fn::Sub: "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
   ApiId:
     Description: API Gateway ID
-    Value: !Ref IiifApi
+    Value:
+      Ref: IiifApi
     Export:
-      Name: !Sub "${AWS::StackName}:ApiId"
+      Name:
+        Fn::Sub: "${AWS::StackName}:ApiId"
