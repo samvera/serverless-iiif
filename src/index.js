@@ -10,12 +10,10 @@ const helpers = require('./helpers');
 const resolvers = require('./resolvers');
 const errorHandler = require('./error');
 
-// eslint-disable-next-line complexity
 const handleRequestFunc = async (event, context, callback) => {
-  const { eventPath, fileMissing, getUri, isBase64, isTooLarge, getRegion } = helpers;
-  const { streamResolver, dimensionResolver } = resolvers;
+  const { eventPath, fileMissing, getRegion } = helpers;
+
   AWS.config.region = getRegion(context);
-  
   context.callbackWaitsForEmptyEventLoop = false;
 
   if (event.httpMethod === 'OPTIONS') {
@@ -27,36 +25,39 @@ const handleRequestFunc = async (event, context, callback) => {
     return callback(null, { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' });
   } else {
     // IMAGE REQUEST
-    let resource;
-    try {
-      const uri = getUri(event);
-      resource = new IIIF.Processor(
-        uri,
-        streamResolver,
-        dimensionResolver
-      );
-      const result = await resource.execute();
+    return await handleImageRequestFunc(event, context, callback);
+  }
+};
 
-      const base64 = isBase64(result);
-      const content = base64 ? result.body.toString('base64') : result.body;
-      const response = {
-        statusCode: 200,
-        headers: {
-          'Content-Type': result.contentType,
-          'Access-Control-Allow-Origin': '*'
-        },
-        isBase64Encoded: base64,
-        body: content
-      };
-      if (isTooLarge(content)) {
-        const uri = getUri(event);
-        throw Error(`Content size (${content.length.toString()}) exceeds API gateway maximum when calling ${uri}`);
-      } else {
-        return callback(null, response);
-      }
-    } catch (err) {
-      return errorHandler.errorHandler(err, event, context, resource, callback);
+const handleImageRequestFunc = async (event, context, callback) => {
+  const { getUri, isBase64, isTooLarge } = helpers;
+  const { streamResolver, dimensionResolver } = resolvers;
+
+  let resource;
+  try {
+    const uri = getUri(event);
+    resource = new IIIF.Processor(uri, streamResolver, dimensionResolver);
+    const result = await resource.execute();
+
+    const base64 = isBase64(result);
+    const content = base64 ? result.body.toString('base64') : result.body;
+    const response = {
+      statusCode: 200,
+      headers: {
+        'Content-Type': result.contentType,
+        'Access-Control-Allow-Origin': '*'
+      },
+      isBase64Encoded: base64,
+      body: content
+    };
+    if (isTooLarge(content)) {
+      const uri = getUri(event);
+      throw Error(`Content size (${content.length.toString()}) exceeds API gateway maximum when calling ${uri}`);
+    } else {
+      return callback(null, response);
     }
+  } catch (err) {
+    return errorHandler.errorHandler(err, event, context, resource, callback);
   }
 };
 
