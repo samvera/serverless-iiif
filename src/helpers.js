@@ -7,7 +7,7 @@ const eventPath = (event) => {
 };
 
 const fileMissing = (event) => {
-  return !/\.(jpg|tif|gif|png|json)$/.test(event.path);
+  return !/\.(jpg|tif|gif|png|webp|json)$/.test(event.path);
 };
 
 const getUri = (event) => {
