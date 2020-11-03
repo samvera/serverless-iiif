@@ -6,6 +6,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.368.0",
-    "iiif-processor": "ndlib/node-iiif#master"
+    "iiif-processor": "~0.3.4"
   }
 }
