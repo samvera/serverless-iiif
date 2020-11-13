@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/nulib/serverless-iiif
-    SemanticVersion: 2.0.2
+    SemanticVersion: 2.0.3
     SourceCodeUrl: https://github.com/nulib/serverless-iiif
 Parameters:
   SourceBucket:
