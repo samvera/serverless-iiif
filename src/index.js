@@ -10,6 +10,10 @@ const cache = require('./cache');
 const helpers = require('./helpers');
 const resolvers = require('./resolvers');
 const errorHandler = require('./error');
+// Restrict width to 2000 to prevent payload limit errors. This number has shown
+// in testing to fix the issues in all existing cases, while still providing a
+// readable download.
+const maxWidth = 2000;
 
 const preflight = process.env.preflight === 'true';
 
