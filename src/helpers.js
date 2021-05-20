@@ -1,5 +1,5 @@
 const eventPath = (event) => {
-  if (includeStage(event)) {
+  if (false) {
     const path = '/' + event.requestContext.stage + event.path;
     return path.replace(/\/*$/, '');
   }
