@@ -6,7 +6,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.368.0",
-    "iiif-processor": "~0.3.4",
-    "middy": "^0.19.4"
+    "iiif-processor": "~0.3.4"
   }
 }

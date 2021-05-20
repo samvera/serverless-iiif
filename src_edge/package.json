@@ -1,0 +1,10 @@
+{
+  "name": "edge-lambda-converter",
+  "version": "0.0.1",
+  "description": "Edge Lambda Converter for IIIF",
+  "author": "Trey Pendragon",
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {
+  }
+}
