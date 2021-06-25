@@ -1,8 +1,8 @@
 # serverless-iiif
 
-[![Build Status](https://circleci.com/gh/nulib/serverless-iiif.svg?style=svg)](https://circleci.com/gh/nulib/serverless-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/c9b1d0ddb5d4ca1d8a00/maintainability)](https://codeclimate.com/github/nulib/serverless-iiif/maintainability)
-[![Test Coverage](https://coveralls.io/repos/github/nulib/serverless-iiif/badge.svg)](https://coveralls.io/github/nulib/serverless-iiif)
+[![Build Status](https://circleci.com/gh/samvera-labs/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera-labs/serverless-iiif)
+[![Maintainability](https://api.codeclimate.com/v1/badges/e23260bc07851b4f8db5/maintainability)](https://codeclimate.com/github/samvera-labs/serverless-iiif/maintainability)
+[![Test Coverage](https://coveralls.io/repos/github/samvera-labs/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera-labs/serverless-iiif)
 
 ## Description
 
@@ -74,7 +74,7 @@ The cache bucket uses an S3 lifecycle rule to expire cached responses in 1 day.
 
 ## License
 
-This software is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0). Dependencies are subject to their own licenses.
+`serverless-iiif` is available under [the Apache 2.0 license](LICENSE).
 
 ## Contributors
 
