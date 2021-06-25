@@ -8,9 +8,9 @@ Metadata:
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
-    HomePageUrl: https://github.com/nulib/serverless-iiif
+    HomePageUrl: https://github.com/samvera-labs/serverless-iiif
     SemanticVersion: 2.0.3
-    SourceCodeUrl: https://github.com/nulib/serverless-iiif
+    SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
 Parameters:
   SourceBucket:
     Type: String
