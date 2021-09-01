@@ -49,6 +49,10 @@ Parameters:
     Type: Number
     Description: The timeout for the lambda.
     Default: 10
+  PreflightFunctionARN:
+    Type: String
+    Description: ARN of the CloudFront Function to use for auth/preflight
+    Default: ""
 Conditions:
   CreateCacheBucket: 
     Fn::Equals: [!Ref UseCacheBucket, "true"]
@@ -56,10 +60,15 @@ Conditions:
     Fn::Or:
       - Fn::Equals: [!Ref UseCloudFront, "true"]
       - Fn::Equals: [!Ref UseCacheBucket, "true"]
+      - Fn::Not:
+          - Fn::Equals: [!Ref PreflightFunctionARN, ""]
   CreateCacheBucketAndDistribution:
     Fn::And:
       - Condition: CreateCacheBucket
       - Condition: CreateDistribution
+  UsePreflightFunction:
+    Fn::Not:
+      - Fn::Equals: [!Ref PreflightFunctionARN, ""]
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -69,10 +78,10 @@ Resources:
       Description: Dependencies for IIIF app
       ContentUri: ./dependencies
       CompatibleRuntimes:
-        - nodejs12.x
+        - nodejs14.x
       LicenseInfo: "Apache-2.0"
     Metadata:
-      BuildMethod: nodejs12.x
+      BuildMethod: nodejs14.x
   CacheBucket:
     Type: "AWS::S3::Bucket"
     Condition: CreateCacheBucket
@@ -102,7 +111,7 @@ Resources:
   IiifFunction:
     Type: "AWS::Serverless::Function"
     Properties:
-      Runtime: nodejs12.x
+      Runtime: nodejs14.x
       Handler: index.handler
       MemorySize: 3008
       Timeout:
@@ -144,7 +153,12 @@ Resources:
             Fn::If: 
               - CreateCacheBucket
               - Fn::Sub: "${AWS::StackName}-cache"
-              - AWS::NoValue
+              - !Ref AWS::NoValue
+          preflight:
+            Fn::If:
+              - UsePreflightFunction
+              - true
+              - !Ref AWS::NoValue
           tiffBucket:
             Fn::Sub: "${SourceBucket}"
       Events:
@@ -509,7 +523,7 @@ Resources:
                         - !Ref CachingIdentity
                 DomainName:
                   Fn::Sub: "${CacheBucket}.s3.${AWS::Region}.amazonaws.com"
-              - AWS::NoValue
+              - !Ref AWS::NoValue
         OriginGroups:
           Quantity: 
             Fn::If: [CreateCacheBucket, 1, 0]
@@ -536,6 +550,12 @@ Resources:
           MinTTL: !Ref CacheMinimumTTL
           MaxTTL: !Ref CacheMaximumTTL
           DefaultTTL: !Ref CacheDefaultTTL
+          FunctionAssociations:
+            Fn::If:
+              - UsePreflightFunction
+              - - EventType: viewer-request
+                  FunctionARN: !Ref PreflightFunctionARN
+              - !Ref AWS::NoValue
 Outputs:
   Endpoint:
     Description: IIIF Endpoint URL

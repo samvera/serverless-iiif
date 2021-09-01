@@ -35,7 +35,7 @@ const S3 = jest.fn().mockImplementation(() => {
 });
 
 const upload = jest.fn((params, callback) => {
-  if (params.Key == "new_cache_key/default.jpg") {
+  if (params.Key === "new_cache_key/default.jpg") {
     callback(null, {});
   } else {
     callback("unknown cache key", null);
@@ -45,7 +45,7 @@ const upload = jest.fn((params, callback) => {
 const S3Cache = jest.fn().mockImplementation(() => {
   return {
     headObject: function (params, callback) {
-      if (params.Key == 'cache_hit/default.jpg') {
+      if (params.Key === 'cache_hit/default.jpg') {
         callback(null, {});
       } else {
         callback("error", null);
