@@ -38,6 +38,22 @@ Parameters:
     Type: Number
     Description: Default TTL (in seconds) for the CloudFront Cache
     Default: 86400
+  CachePriceClass:
+    Type: String
+    Description: Price Class for the CloudFront Cache
+    Default: PriceClass_100
+    AllowedValues:
+      - PriceClass_100
+      - PriceClass_200
+      - PriceClass_All
+  CacheDomainName:
+    Type: String
+    Description: Custom Domain Name for the API Gateway Endpoint or CloudFront Cache
+    Default: ""
+  CacheSSLCertificate:
+    Type: String
+    Description: ARN of the ACM SSL Certification to use for the API Gateway Endpoint or CloudFront Cache
+    Default: ""
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
@@ -66,6 +82,12 @@ Conditions:
     Fn::And:
       - Condition: CreateCacheBucket
       - Condition: CreateDistribution
+  DistributionCustomDomain:
+    Fn::And:
+      - Fn::Not:
+          - Fn::Equals: [!Ref CacheDomainName, ""]
+      - Fn::Not:
+          - Fn::Equals: [!Ref CacheSSLCertificate, ""]
   UsePreflightFunction:
     Fn::Not:
       - Fn::Equals: [!Ref PreflightFunctionARN, ""]
@@ -503,7 +525,19 @@ Resources:
     Properties:
       DistributionConfig:
         Enabled: true
-        PriceClass: PriceClass_100
+        PriceClass: !Ref CachePriceClass
+        Aliases:
+          Fn::If:
+            - DistributionCustomDomain
+            - - !Ref CacheDomainName
+            - !Ref AWS::NoValue
+        ViewerCertificate:
+          Fn::If:
+            - DistributionCustomDomain
+            - AcmCertificateArn: !Ref CacheSSLCertificate
+              MinimumProtocolVersion: 'TLSv1'
+              SslSupportMethod: 'sni-only'
+            - CloudFrontDefaultCertificate: true
         Origins:
           - Id: IiifApi
             CustomOriginConfig:
@@ -562,12 +596,22 @@ Outputs:
     Value:
       Fn::If:
         - CreateDistribution
+        - Fn::If:
+          - DistributionCustomDomain
+          - Fn::Sub: "https://${CacheDomainName}/iiif/2/"
+          - Fn::Sub: "https://${CachingEndpoint.DomainName}/iiif/2/"
         - Fn::Sub: "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
-        - Fn::Sub: "https://${CachingEndpoint.DomainName}/iiif/2/"
   ApiId:
     Description: API Gateway ID
-    Value:
-      Ref: IiifApi
+    Value: !Ref IiifApi
     Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}:ApiId"
+      Name: !Sub "${AWS::StackName}:ApiId"
+  DistributionId:
+    Description: Caching Distribution ID
+    Value: 
+      Fn::If:
+        - CreateDistribution
+        - !Ref CachingEndpoint
+        - AWS::NoValue
+    Export:
+      Name: !Sub "${AWS::StackName}:DistributionId"
