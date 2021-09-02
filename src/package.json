@@ -4,7 +4,9 @@
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "uri-js": "^4.4.1"
+  },
   "devDependencies": {
     "aws-sdk": "^2.368.0",
     "iiif-processor": "~0.3.4"

@@ -66,6 +66,39 @@ To generate a code coverage report run:
 npm test --coverage
 ```
 
+## Advanced Usage
+
+The SAM deploy template takes an optional `PreflightFunctionARN` parameter. This parameter, if provided, refers to a [CloudFront Function](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) (*not* a standard Lambda) that will be associated with the CloudFront distribution at the `viewer-request` stage. This function can perform authentication and authorization functions, or it can change how the S3 file and/or image dimensions are resolved.
+
+### Examples
+
+#### Simple Authorization
+
+```JavaScript
+function handler(event) {
+    if (notAuthorized) { // based on something in the event.request
+       return {
+         statusCode: 403,
+         statusDescription: 'Unauthorized'
+       };
+    };
+    return event.request;
+}
+```
+
+#### Custom File Location / Image Dimensions
+
+```JavaScript
+function handler(event) {
+  const request = event.request;
+  request.headers['x-preflight-location'] = 's3://image-bucket/path/to/correct/image.tif'
+  request.headers['x-preflight-dimensions'] = JSON.stringify({ width: 640, height: 480 });
+  return request;
+}
+```
+
+*Note:* The SAM deploy template adds a `preflight=true` environment variable to the main IIIF Lambda if a preflight function is provided. The function will _only_ look for the preflight headers if this environment variable is `true`. This prevents requests from including those headers directly if no preflight function is present. If you do use a preflight function, make sure it strips out any `x-preflight-location` and `x-preflight-dimensions` headers that it doesn't set itself.
+
 ## Notes
 
 AWS API Gateway Lambda integration has a payload (request/response body) size limit of approximately 6MB in both directions. To overcome this limitation, the API is configured behind an AWS CloudFront distribution with two origins – the API and a cache bucket. Responses larger than 6MB are saved to the cache bucket at the same relative path as the request, and the API returns a `404 Not Found` response to CloudFront. CloudFront then fails over to the second origin (the cache bucket), where it finds the actual response and returns it.

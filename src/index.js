@@ -11,6 +11,8 @@ const helpers = require('./helpers');
 const resolvers = require('./resolvers');
 const errorHandler = require('./error');
 
+const preflight = process.env.preflight === 'true';
+
 const handleRequestFunc = async (event, context, callback) => {
   const { eventPath, fileMissing, getRegion } = helpers;
 
@@ -32,7 +34,7 @@ const handleRequestFunc = async (event, context, callback) => {
 
 const handleImageRequestFunc = async (event, context, callback) => {
   const { getUri, isTooLarge } = helpers;
-  const { streamResolver, dimensionResolver } = resolvers;
+  const { streamResolver, dimensionResolver } = resolvers.resolverFactory(event, preflight);
   const { getCached, makeCache } = cache;
 
   let resource;
