@@ -68,9 +68,11 @@ npm test --coverage
 
 ## Advanced Usage
 
-The SAM deploy template takes an optional `PreflightFunctionARN` parameter. This parameter, if provided, refers to a [CloudFront Function](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) (*not* a standard Lambda) that will be associated with the CloudFront distribution at the `viewer-request` stage. This function can perform authentication and authorization functions, or it can change how the S3 file and/or image dimensions are resolved.
+The SAM deploy template takes an optional `PreflightFunctionARN` parameter. This parameter, if provided, refers to a [CloudFront Function](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or a [Lambda@Edge Function](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) that will be associated with the CloudFront distribution at the `viewer-request` stage. This function can perform authentication and authorization functions, or it can change how the S3 file and/or image dimensions are resolved.
 
 ### Examples
+
+These examples use CloudFront Functions. Lambda@Edge functions are slightly more complicated in terms of the event structure but the basic idea is the same.
 
 #### Simple Authorization
 
@@ -90,9 +92,9 @@ function handler(event) {
 
 ```JavaScript
 function handler(event) {
-  const request = event.request;
-  request.headers['x-preflight-location'] = 's3://image-bucket/path/to/correct/image.tif'
-  request.headers['x-preflight-dimensions'] = JSON.stringify({ width: 640, height: 480 });
+  var request = event.request;
+  request.headers['x-preflight-location'] = {value: 's3://image-bucket/path/to/correct/image.tif'};
+  request.headers['x-preflight-dimensions'] = {value: JSON.stringify({ width: 640, height: 480 })};
   return request;
 }
 ```
