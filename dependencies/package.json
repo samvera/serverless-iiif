@@ -1,6 +1,6 @@
 {
   "name": "serverless-iiif-dependencies",
-  "version": "2.0.3",
+  "version": "3.0.1",
   "description": "Dependencies for serverless IIIF",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",

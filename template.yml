@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 3.0.0
+    SemanticVersion: 3.0.1
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
 Parameters:
   UseCacheBucket:
@@ -69,6 +69,14 @@ Parameters:
     Type: String
     Description: ARN of the CloudFront Function to use for auth/preflight
     Default: ""
+  PreflightFunctionType:
+    Type: String
+    Description: Type of Preflight Function to use (CloudWatch Function or Lambda@Edge)
+    Default: "None"
+    AllowedValues:
+      - CloudWatch Function
+      - Lambda@Edge
+      - None
 Conditions:
   CreateCacheBucket: 
     Fn::Equals: [!Ref UseCacheBucket, "true"]
@@ -89,8 +97,19 @@ Conditions:
       - Fn::Not:
           - Fn::Equals: [!Ref CacheSSLCertificate, ""]
   UsePreflightFunction:
-    Fn::Not:
-      - Fn::Equals: [!Ref PreflightFunctionARN, ""]
+    Fn::And:
+      - Fn::Not:
+          - Fn::Equals: [!Ref PreflightFunctionType, "None"]
+      - Fn::Not:
+          - Fn::Equals: [!Ref PreflightFunctionARN, ""]
+  PreflightCloudWatchFunction:
+    Fn::And:
+      - Condition: UsePreflightFunction
+      - Fn::Equals: [!Ref PreflightFunctionType, "CloudWatch Function"]
+  PreflightLambda:
+    Fn::And:
+      - Condition: UsePreflightFunction
+      - Fn::Equals: [!Ref PreflightFunctionType, "Lambda@Edge"]
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -586,9 +605,16 @@ Resources:
           DefaultTTL: !Ref CacheDefaultTTL
           FunctionAssociations:
             Fn::If:
-              - UsePreflightFunction
+              - PreflightCloudWatchFunction
               - - EventType: viewer-request
                   FunctionARN: !Ref PreflightFunctionARN
+              - !Ref AWS::NoValue
+          LambdaFunctionAssociations:
+            Fn::If:
+              - PreflightLambda
+              - - EventType: viewer-request
+                  LambdaFunctionARN: !Ref PreflightFunctionARN
+                  IncludeBody: false
               - !Ref AWS::NoValue
 Outputs:
   Endpoint:
