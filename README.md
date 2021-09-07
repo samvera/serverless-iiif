@@ -68,7 +68,16 @@ npm test --coverage
 
 ## Advanced Usage
 
-The SAM deploy template takes an optional `PreflightFunctionARN` parameter. This parameter, if provided, refers to a [CloudFront Function](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or a [Lambda@Edge Function](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) that will be associated with the CloudFront distribution at the `viewer-request` stage. This function can perform authentication and authorization functions, or it can change how the S3 file and/or image dimensions are resolved.
+The SAM deploy template takes several optional parameters to enable the association of [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or [Lambda@Edge Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) with the CloudFront distribution. These functions can perform authentication and authorization functions, change how the S3 file and/or image dimensions are resolved, or alter the response from the lambda or cache. These parameters are:
+
+* `OriginRequestARN`: ARN of the Lambda@Edge Function to use at the origin-request stage
+* `OriginResponseARN`: ARN of the Lambda@Edge Function to use at the origin-response stage
+* `ViewerRequestARN`: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
+* `ViewerRequestType`: Type of viewer-request Function to use (`CloudWatch Function` or `Lambda@Edge`)
+* `ViewerResponseARN`: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-response stage
+* `ViewerResponseType`: Type of viewer-response Function to use (`CloudWatch Function` or `Lambda@Edge`)
+
+These functions, if used, must be created, configured, and published before the serverless application is deployed.
 
 ### Examples
 

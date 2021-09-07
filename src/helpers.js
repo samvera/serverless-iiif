@@ -7,19 +7,19 @@ const eventPath = (event) => {
 };
 
 const fileMissing = (event) => {
-  return !/\.(jpg|tif|gif|png|webp|json)$/.test(event.path);
+  return !/\.(jpe?g|tiff?|gif|png|webp|json)$/.test(event.path);
 };
 
 const getUri = (event) => {
   const scheme = event.headers['X-Forwarded-Proto'] || 'http';
-  const host = event.headers['X-Forwarded-Host'] || event.headers.Host;
+  const host = process.env.forceHost || event.headers['X-Forwarded-Host'] || event.headers.Host;
   const uri = `${scheme}://${host}${eventPath(event)}`;
   return uri;
 };
 
 const includeStage = (event) => {
-  if ('include_stage' in process.env) {
-    return ['true', 'yes'].indexOf(process.env.include_stage.toLowerCase()) > -1;
+  if ('includeStage' in process.env) {
+    return ['true', 'yes'].indexOf(process.env.includeStage.toLowerCase()) > -1;
   } else {
     const host = event.headers.Host;
     return host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/);

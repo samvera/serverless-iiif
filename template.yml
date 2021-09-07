@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 3.0.1
+    SemanticVersion: 3.0.10
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
 Parameters:
   UseCacheBucket:
@@ -65,13 +65,33 @@ Parameters:
     Type: Number
     Description: The timeout for the lambda.
     Default: 10
-  PreflightFunctionARN:
+  OriginRequestARN:
     Type: String
-    Description: ARN of the CloudFront Function to use for auth/preflight
+    Description: ARN of the Lambda@Edge Function to use at the origin-request stage
     Default: ""
-  PreflightFunctionType:
+  OriginResponseARN:
     Type: String
-    Description: Type of Preflight Function to use (CloudWatch Function or Lambda@Edge)
+    Description: ARN of the Lambda@Edge Function to use at the origin-response stage
+    Default: ""
+  ViewerRequestARN:
+    Type: String
+    Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
+    Default: ""
+  ViewerRequestType:
+    Type: String
+    Description: Type of viewer-request Function to use (CloudWatch Function or Lambda@Edge)
+    Default: "None"
+    AllowedValues:
+      - CloudWatch Function
+      - Lambda@Edge
+      - None
+  ViewerResponseARN:
+    Type: String
+    Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-response stage
+    Default: ""
+  ViewerResponseType:
+    Type: String
+    Description: Type of viewer-response Function to use (CloudWatch Function or Lambda@Edge)
     Default: "None"
     AllowedValues:
       - CloudWatch Function
@@ -85,31 +105,52 @@ Conditions:
       - Fn::Equals: [!Ref UseCloudFront, "true"]
       - Fn::Equals: [!Ref UseCacheBucket, "true"]
       - Fn::Not:
-          - Fn::Equals: [!Ref PreflightFunctionARN, ""]
+          - Fn::Equals: [!Ref ViewerRequestARN, ""]
   CreateCacheBucketAndDistribution:
     Fn::And:
       - Condition: CreateCacheBucket
       - Condition: CreateDistribution
   DistributionCustomDomain:
     Fn::And:
+      - Condition: CreateDistribution
       - Fn::Not:
           - Fn::Equals: [!Ref CacheDomainName, ""]
       - Fn::Not:
           - Fn::Equals: [!Ref CacheSSLCertificate, ""]
-  UsePreflightFunction:
+  UseOriginRequest:
+    Fn::Not:
+      - Fn::Equals: [!Ref OriginRequestARN, ""]
+  UseOriginResponse:
+    Fn::Not:
+      - Fn::Equals: [!Ref OriginResponseARN, ""]
+  UseViewerRequest:
     Fn::And:
       - Fn::Not:
-          - Fn::Equals: [!Ref PreflightFunctionType, "None"]
+          - Fn::Equals: [!Ref ViewerRequestType, "None"]
       - Fn::Not:
-          - Fn::Equals: [!Ref PreflightFunctionARN, ""]
-  PreflightCloudWatchFunction:
+          - Fn::Equals: [!Ref ViewerRequestARN, ""]
+  UseViewerResponse:
     Fn::And:
-      - Condition: UsePreflightFunction
-      - Fn::Equals: [!Ref PreflightFunctionType, "CloudWatch Function"]
-  PreflightLambda:
+      - Fn::Not:
+          - Fn::Equals: [!Ref ViewerResponseType, "None"]
+      - Fn::Not:
+          - Fn::Equals: [!Ref ViewerResponseARN, ""]
+  ViewerRequestCloudWatchFunction:
     Fn::And:
-      - Condition: UsePreflightFunction
-      - Fn::Equals: [!Ref PreflightFunctionType, "Lambda@Edge"]
+      - Condition: UseViewerRequest
+      - Fn::Equals: [!Ref ViewerRequestType, "CloudWatch Function"]
+  ViewerRequestLambda:
+    Fn::And:
+      - Condition: UseViewerRequest
+      - Fn::Equals: [!Ref ViewerRequestType, "Lambda@Edge"]
+  ViewerResponseCloudWatchFunction:
+    Fn::And:
+      - Condition: UseViewerResponse
+      - Fn::Equals: [!Ref ViewerResponseType, "CloudWatch Function"]
+  ViewerResponseLambda:
+    Fn::And:
+      - Condition: UseViewerResponse
+      - Fn::Equals: [!Ref ViewerResponseType, "Lambda@Edge"]
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -195,9 +236,19 @@ Resources:
               - CreateCacheBucket
               - Fn::Sub: "${AWS::StackName}-cache"
               - !Ref AWS::NoValue
+          forceHost:
+            Fn::If:
+              - DistributionCustomDomain
+              - !Ref CacheDomainName
+              - !Ref AWS::NoValue
+          includeStage:
+            Fn::If:
+              - CreateDistribution
+              - false
+              - !Ref AWS::NoValue
           preflight:
             Fn::If:
-              - UsePreflightFunction
+              - UseViewerRequest
               - true
               - !Ref AWS::NoValue
           tiffBucket:
@@ -598,23 +649,48 @@ Resources:
           TargetOriginId: 
             Fn::If: [CreateCacheBucket, IiifOrigins, IiifApi]
           ViewerProtocolPolicy: https-only
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+          CachedMethods: ["GET", "HEAD"]
           ForwardedValues:
             QueryString: false
           MinTTL: !Ref CacheMinimumTTL
           MaxTTL: !Ref CacheMaximumTTL
           DefaultTTL: !Ref CacheDefaultTTL
           FunctionAssociations:
-            Fn::If:
-              - PreflightCloudWatchFunction
-              - - EventType: viewer-request
-                  FunctionARN: !Ref PreflightFunctionARN
+            - Fn::If:
+              - ViewerRequestCloudWatchFunction
+              - EventType: viewer-request
+                FunctionARN: !Ref ViewerRequestARN
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - ViewerResponseCloudWatchFunction
+              - EventType: viewer-response
+                FunctionARN: !Ref ViewerResponseARN
               - !Ref AWS::NoValue
           LambdaFunctionAssociations:
-            Fn::If:
-              - PreflightLambda
-              - - EventType: viewer-request
-                  LambdaFunctionARN: !Ref PreflightFunctionARN
-                  IncludeBody: false
+            - Fn::If:
+              - ViewerRequestLambda
+              - EventType: viewer-request
+                LambdaFunctionARN: !Ref ViewerRequestARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - UseOriginRequest
+              - EventType: origin-request
+                LambdaFunctionARN: !Ref OriginRequestARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - UseOriginResponse
+              - EventType: origin-response
+                LambdaFunctionARN: !Ref OriginResponseARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - ViewerResponseLambda
+              - EventType: viewer-response
+                LambdaFunctionARN: !Ref ViewerResponseARN
+                IncludeBody: false
               - !Ref AWS::NoValue
 Outputs:
   Endpoint:
@@ -641,3 +717,6 @@ Outputs:
         - AWS::NoValue
     Export:
       Name: !Sub "${AWS::StackName}:DistributionId"
+  LambdaFunction:
+    Description: IIIF Lambda Function Name
+    Value: !Ref IiifFunction

@@ -41,7 +41,7 @@ const handleImageRequestFunc = async (event, context, callback) => {
   try {
     const uri = getUri(event);
     resource = new IIIF.Processor(uri, streamResolver, dimensionResolver);
-    const key = new URL(uri).pathname.replace(/^.+?\/iiif/, 'iiif');
+    const key = new URL(uri).pathname.replace(/^\//, '');
     const cached = resource.filename === 'info.json' ? false : await getCached(key);
 
     let response;
