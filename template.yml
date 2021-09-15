@@ -595,13 +595,18 @@ Resources:
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: "Caching Distribution Identity"
-  CachingEndpoint:
+  CFDistribution:
     Type: "AWS::CloudFront::Distribution"
     Condition: CreateDistribution
     Properties:
       DistributionConfig:
         Enabled: true
-        PriceClass: !Ref CachePriceClass
+        HttpVersion: 'http2'
+        CustomErrorResponses:
+          - ErrorCode: 502
+            ErrorCachingMinTTL: 1
+          - ErrorCode: 503
+            ErrorCachingMinTTL: 1
         Aliases:
           Fn::If:
             - DistributionCustomDomain
@@ -707,7 +712,7 @@ Outputs:
         - Fn::If:
           - DistributionCustomDomain
           - Fn::Sub: "https://${CacheDomainName}/iiif/2/"
-          - Fn::Sub: "https://${CachingEndpoint.DomainName}/iiif/2/"
+          - Fn::Sub: "https://${CFDistribution.DomainName}/iiif/2/"
         - Fn::Sub: "https://${IiifApi}.execute-api.${AWS::Region}.amazonaws.com/${IiifApi.Stage}/iiif/2/"
   ApiId:
     Description: API Gateway ID
@@ -720,7 +725,7 @@ Outputs:
     Value: 
       Fn::If:
         - CreateDistribution
-        - !Ref CachingEndpoint
+        - !Ref CFDistribution
         - AWS::NoValue
     Export:
       Name: !Sub "${AWS::StackName}:DistributionId"

@@ -44,7 +44,7 @@ const handleImageRequestFunc = async (event, context, callback) => {
   let resource;
   try {
     const uri = getUri(event);
-    resource = new IIIF.Processor(uri, streamResolver, dimensionResolver);
+    resource = new IIIF.Processor(uri, streamResolver, dimensionResolver, maxWidth);
     const key = new URL(uri).pathname.replace(/^\//, '');
     const cached = resource.filename === 'info.json' ? false : await getCached(key);
 
@@ -60,8 +60,6 @@ const handleImageRequestFunc = async (event, context, callback) => {
       } else {
         response = makeResponse(result);
       }
-    } catch (err) {
-      return errorHandler.errorHandler(err, event, context, resource, callback);
     }
     return callback(null, response);
   } catch (err) {
