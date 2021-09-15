@@ -29,7 +29,7 @@ Parameters:
   CacheMinimumTTL:
     Type: Number
     Description: Minimum TTL (in seconds) for the CloudFront Cache
-    Default: 0
+    Default: 31536000
   CacheMaximumTTL:
     Type: Number
     Description: Maximum TTL (in seconds) for the CloudFront Cache
@@ -37,7 +37,7 @@ Parameters:
   CacheDefaultTTL:
     Type: Number
     Description: Default TTL (in seconds) for the CloudFront Cache
-    Default: 86400
+    Default: 31536000
   CachePriceClass:
     Type: String
     Description: Price Class for the CloudFront Cache
@@ -64,7 +64,7 @@ Parameters:
   IiifLambdaTimeout:
     Type: Number
     Description: The timeout for the lambda.
-    Default: 10
+    Default: 30
   OriginRequestARN:
     Type: String
     Description: ARN of the Lambda@Edge Function to use at the origin-request stage
@@ -115,8 +115,6 @@ Conditions:
       - Condition: CreateDistribution
       - Fn::Not:
           - Fn::Equals: [!Ref CacheDomainName, ""]
-      - Fn::Not:
-          - Fn::Equals: [!Ref CacheSSLCertificate, ""]
   UseOriginRequest:
     Fn::Not:
       - Fn::Equals: [!Ref OriginRequestARN, ""]
@@ -164,6 +162,11 @@ Resources:
       LicenseInfo: "Apache-2.0"
     Metadata:
       BuildMethod: nodejs14.x
+  IiifCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref CacheDomainName
+      ValidationMethod: 'DNS'
   CacheBucket:
     Type: "AWS::S3::Bucket"
     Condition: CreateCacheBucket
@@ -607,7 +610,7 @@ Resources:
         ViewerCertificate:
           Fn::If:
             - DistributionCustomDomain
-            - AcmCertificateArn: !Ref CacheSSLCertificate
+            - AcmCertificateArn: !Ref IiifCertificate
               MinimumProtocolVersion: 'TLSv1'
               SslSupportMethod: 'sni-only'
             - CloudFrontDefaultCertificate: true
