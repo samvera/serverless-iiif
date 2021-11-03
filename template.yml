@@ -3,13 +3,13 @@ Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif
     Description: IIIF Image API 2.1 server in an AWS Serverless Application
-    Author: mbklein
+    Author: Samvera
     SpdxLicenseId: Apache-2.0
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 3.0.10
+    SemanticVersion: 3.1.1
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
 Parameters:
   UseCacheBucket:
@@ -54,6 +54,11 @@ Parameters:
     Type: String
     Description: ARN of the ACM SSL Certification to use for the API Gateway Endpoint or CloudFront Cache
     Default: ""
+  PixelDensity:
+    Type: Number
+    Description: Hardcoded DPI/Pixel Density/Resolution to encode in output images
+    Default: 0
+    MinValue: 0
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
@@ -151,6 +156,9 @@ Conditions:
     Fn::And:
       - Condition: UseViewerResponse
       - Fn::Equals: [!Ref ViewerResponseType, "Lambda@Edge"]
+  UsePixelDensity:
+    Fn::Not:
+      - Fn::Equals: [!Ref PixelDensity, 0]
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -235,6 +243,11 @@ Resources:
             Fn::If: 
               - CreateCacheBucket
               - Fn::Sub: "${AWS::StackName}-cache"
+              - !Ref AWS::NoValue
+          density:
+            Fn::If:
+              - UsePixelDensity
+              - !Ref PixelDensity
               - !Ref AWS::NoValue
           forceHost:
             Fn::If:

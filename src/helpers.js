@@ -39,6 +39,12 @@ const getRegion = (context) => {
   return context.invokedFunctionArn.match(/^arn:aws:lambda:(\w+-\w+-\d+):/)[1];
 };
 
+const parseDensity = (value) => {
+  const result = Number(value);
+  if (isNaN(result) || result < 0) return undefined;
+  return result;
+};
+
 module.exports = {
   eventPath: eventPath,
   fileMissing: fileMissing,
@@ -46,5 +52,6 @@ module.exports = {
   includeStage: includeStage,
   isBase64: isBase64,
   isTooLarge: isTooLarge,
-  getRegion: getRegion
+  getRegion: getRegion,
+  parseDensity: parseDensity
 };

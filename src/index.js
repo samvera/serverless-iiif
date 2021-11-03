@@ -1,9 +1,3 @@
-/*
- * IMPLEMENTATION NOTE: API Gateway Lambda functions have a
- * ~6MB payload limit. See LAMBDA_LIMIT.md for implications
- * and a workaround.
- */
-
 const AWS = require('aws-sdk');
 const IIIF = require('iiif-processor');
 const cache = require('./cache');
@@ -11,6 +5,7 @@ const helpers = require('./helpers');
 const resolvers = require('./resolvers');
 const errorHandler = require('./error');
 
+const density = helpers.parseDensity(process.env.density);
 const preflight = process.env.preflight === 'true';
 
 const handleRequestFunc = async (event, context, callback) => {
@@ -40,7 +35,7 @@ const handleImageRequestFunc = async (event, context, callback) => {
   let resource;
   try {
     const uri = getUri(event);
-    resource = new IIIF.Processor(uri, streamResolver, dimensionResolver);
+    resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction: dimensionResolver, density: density });
     const key = new URL(uri).pathname.replace(/^\//, '');
     const cached = resource.filename === 'info.json' ? false : await getCached(key);
 
