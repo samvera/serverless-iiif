@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 3.1.1
+    SemanticVersion: 3.1.2
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
 Parameters:
   UseCacheBucket:
@@ -66,6 +66,10 @@ Parameters:
     Type: String
     Description: Name of the API stage to be deployed
     Default: latest
+  IiifLambdaMemory:
+    Type: Number
+    Description: Memory setting for the lambda.
+    Default: 3008
   IiifLambdaTimeout:
     Type: Number
     Description: The timeout for the lambda.
@@ -203,7 +207,7 @@ Resources:
     Properties:
       Runtime: nodejs14.x
       Handler: index.handler
-      MemorySize: 3008
+      MemorySize: !Ref IiifLambdaMemory
       Timeout:
         Ref: IiifLambdaTimeout
       CodeUri: ./src
