@@ -38,7 +38,7 @@ const dimensionRetriever = async (location) => {
 
 // Preflight resolvers
 const parseLocationHeader = (event) => {
-  const locationHeader = event.headers['X-Preflight-Location'] || event.headers['x-preflight-location'];
+  const locationHeader = event.headers['x-preflight-location'];
   if (locationHeader && locationHeader.match(/^s3:\/\//)) {
     const parsedURI = URI.parse(locationHeader);
     return { Bucket: parsedURI.host, Key: parsedURI.path.slice(1) };
@@ -47,7 +47,7 @@ const parseLocationHeader = (event) => {
 };
 
 const parseDimensionsHeader = (event) => {
-  const dimensionsHeader = event.headers['X-Preflight-Dimensions'] || event.headers['x-preflight-dimensions'];
+  const dimensionsHeader = event.headers['x-preflight-dimensions'];
   if (!dimensionsHeader) return null;
   return JSON.parse(dimensionsHeader);
 };

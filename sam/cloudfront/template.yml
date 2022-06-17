@@ -1,0 +1,322 @@
+Transform: "AWS::Serverless-2016-10-31"
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: serverless-iiif-cloudfront
+    Description: IIIF Image API 2.1 server in an AWS Serverless Application (w/CloudFront Caching)
+    Author: mbklein
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: ../../LICENSE.txt
+    ReadmeUrl: ../../README.md
+    Labels: ["iiif", "image-processing"]
+    HomePageUrl: https://github.com/samvera-labs/serverless-iiif
+    SemanticVersion: 4.0.0
+    SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "General Configuration"
+        Parameters:
+          - SourceBucket
+          - IiifLambdaMemory
+          - IiifLambdaTimeout
+          - PixelDensity
+      - Label:
+          default: "Cache Configuration"
+        Parameters:
+          - CacheMinimumTTL
+          - CacheMaximumTTL
+          - CacheDefaultTTL
+          - CachePriceClass
+      - Label:
+          default: "Hostname Configuration"
+        Parameters:
+          - CacheDomainName
+          - CacheSSLCertificate
+      - Label:
+          default: "Function Configuration"
+        Parameters:
+          - OriginRequestARN
+          - OriginResponseARN
+          - ViewerRequestARN
+          - ViewerRequestType
+          - ViewerResponseARN
+          - ViewerResponseType
+Parameters:
+  CacheMinimumTTL:
+    Type: Number
+    Description: Minimum TTL (in seconds) for the CloudFront Cache
+    Default: 0
+  CacheMaximumTTL:
+    Type: Number
+    Description: Maximum TTL (in seconds) for the CloudFront Cache
+    Default: 31536000
+  CacheDefaultTTL:
+    Type: Number
+    Description: Default TTL (in seconds) for the CloudFront Cache
+    Default: 86400
+  CachePriceClass:
+    Type: String
+    Description: Price Class for the CloudFront Cache
+    Default: PriceClass_100
+    AllowedValues:
+      - PriceClass_100
+      - PriceClass_200
+      - PriceClass_All
+  CacheDomainName:
+    Type: String
+    Description: Custom Domain Name for the API Gateway Endpoint or CloudFront Cache
+    Default: ""
+  CacheSSLCertificate:
+    Type: String
+    Description: ARN of the ACM SSL Certification to use for the API Gateway Endpoint or CloudFront Cache
+    Default: ""
+  SourceBucket:
+    Type: String
+    Description: Name of bucket containing source images
+  IiifLambdaMemory:
+    Type: Number
+    Description: The memory provisioned for the lambda.
+    MinValue: 128
+    MaxValue: 10240
+    Default: 3008
+  IiifLambdaTimeout:
+    Type: Number
+    Description: The timeout for the lambda.
+    Default: 10
+  OriginRequestARN:
+    Type: String
+    Description: ARN of the Lambda@Edge Function to use at the origin-request stage
+    Default: ""
+  OriginResponseARN:
+    Type: String
+    Description: ARN of the Lambda@Edge Function to use at the origin-response stage
+    Default: ""
+  PixelDensity:
+    Type: Number
+    Description: Hardcoded DPI/Pixel Density/Resolution to encode in output images
+    Default: 0
+    MinValue: 0
+  ViewerRequestARN:
+    Type: String
+    Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
+    Default: ""
+  ViewerRequestType:
+    Type: String
+    Description: Type of viewer-request Function to use (CloudWatch Function or Lambda@Edge)
+    Default: "None"
+    AllowedValues:
+      - CloudWatch Function
+      - Lambda@Edge
+      - None
+  ViewerResponseARN:
+    Type: String
+    Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-response stage
+    Default: ""
+  ViewerResponseType:
+    Type: String
+    Description: Type of viewer-response Function to use (CloudWatch Function or Lambda@Edge)
+    Default: "None"
+    AllowedValues:
+      - CloudWatch Function
+      - Lambda@Edge
+      - None
+Conditions:
+  DistributionCustomDomain:
+    Fn::And:
+      - Fn::Not:
+          - Fn::Equals: [!Ref CacheDomainName, ""]
+      - Fn::Not:
+          - Fn::Equals: [!Ref CacheSSLCertificate, ""]
+  UseOriginRequest:
+    Fn::Not:
+      - Fn::Equals: [!Ref OriginRequestARN, ""]
+  UseOriginResponse:
+    Fn::Not:
+      - Fn::Equals: [!Ref OriginResponseARN, ""]
+  UseViewerRequest:
+    Fn::And:
+      - Fn::Not:
+          - Fn::Equals: [!Ref ViewerRequestType, "None"]
+      - Fn::Not:
+          - Fn::Equals: [!Ref ViewerRequestARN, ""]
+  UseViewerResponse:
+    Fn::And:
+      - Fn::Not:
+          - Fn::Equals: [!Ref ViewerResponseType, "None"]
+      - Fn::Not:
+          - Fn::Equals: [!Ref ViewerResponseARN, ""]
+  ViewerRequestCloudWatchFunction:
+    Fn::And:
+      - Condition: UseViewerRequest
+      - Fn::Equals: [!Ref ViewerRequestType, "CloudWatch Function"]
+  ViewerRequestLambda:
+    Fn::And:
+      - Condition: UseViewerRequest
+      - Fn::Equals: [!Ref ViewerRequestType, "Lambda@Edge"]
+  ViewerResponseCloudWatchFunction:
+    Fn::And:
+      - Condition: UseViewerResponse
+      - Fn::Equals: [!Ref ViewerResponseType, "CloudWatch Function"]
+  ViewerResponseLambda:
+    Fn::And:
+      - Condition: UseViewerResponse
+      - Fn::Equals: [!Ref ViewerResponseType, "Lambda@Edge"]
+Resources:
+  CacheBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: 
+        Fn::Sub: "${AWS::StackName}-cache"
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 1
+  CacheBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref CacheBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              - Fn::Sub: "arn:aws:s3:::${CacheBucket}/*"
+            Principal:
+              CanonicalUser:
+                Fn::GetAtt: CachingIdentity.S3CanonicalUserId
+  CachingIdentity:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "Caching Distribution Identity"
+  CachingEndpoint:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        PriceClass: !Ref CachePriceClass
+        Aliases:
+          Fn::If:
+            - DistributionCustomDomain
+            - - !Ref CacheDomainName
+            - !Ref AWS::NoValue
+        ViewerCertificate:
+          Fn::If:
+            - DistributionCustomDomain
+            - AcmCertificateArn: !Ref CacheSSLCertificate
+              MinimumProtocolVersion: 'TLSv1'
+              SslSupportMethod: 'sni-only'
+            - CloudFrontDefaultCertificate: true
+        Origins:
+          - Id: IiifLambda
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+            DomainName:
+              Fn::GetAtt: IiifFunction.Outputs.FunctionDomain
+          - Id: IiifCache
+            S3OriginConfig:
+              OriginAccessIdentity: 
+                Fn::Join:
+                  - ''
+                  - - 'origin-access-identity/cloudfront/'
+                    - !Ref CachingIdentity
+            DomainName:
+              Fn::Sub: "${CacheBucket}.s3.${AWS::Region}.amazonaws.com"
+        OriginGroups:
+          Quantity: 1
+          Items:
+            - Id: IiifOrigins
+              Members:
+                Quantity: 2
+                Items:
+                  - OriginId: IiifLambda
+                  - OriginId: IiifCache
+              FailoverCriteria:
+                  StatusCodes:
+                      Items: [404]
+                      Quantity: 1
+        DefaultCacheBehavior:
+          TargetOriginId: IiifOrigins
+          ViewerProtocolPolicy: https-only
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+          CachedMethods: ["GET", "HEAD"]
+          ForwardedValues:
+            QueryString: false
+          MinTTL: !Ref CacheMinimumTTL
+          MaxTTL: !Ref CacheMaximumTTL
+          DefaultTTL: !Ref CacheDefaultTTL
+          FunctionAssociations:
+            - Fn::If:
+              - ViewerRequestCloudWatchFunction
+              - EventType: viewer-request
+                FunctionARN: !Ref ViewerRequestARN
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - ViewerResponseCloudWatchFunction
+              - EventType: viewer-response
+                FunctionARN: !Ref ViewerResponseARN
+              - !Ref AWS::NoValue
+          LambdaFunctionAssociations:
+            - Fn::If:
+              - ViewerRequestLambda
+              - EventType: viewer-request
+                LambdaFunctionARN: !Ref ViewerRequestARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - UseOriginRequest
+              - EventType: origin-request
+                LambdaFunctionARN: !Ref OriginRequestARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - UseOriginResponse
+              - EventType: origin-response
+                LambdaFunctionARN: !Ref OriginResponseARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+            - Fn::If:
+              - ViewerResponseLambda
+              - EventType: viewer-response
+                LambdaFunctionARN: !Ref ViewerResponseARN
+                IncludeBody: false
+              - !Ref AWS::NoValue
+  IiifFunction:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: ../standalone/template.yml
+      Parameters:
+        CacheBucket: !Ref CacheBucket
+        ForceHost:
+          Fn::If:
+            - DistributionCustomDomain
+            - !Ref CacheDomainName
+            - !Ref AWS::NoValue
+        IiifLambdaMemory: !Ref IiifLambdaMemory
+        IiifLambdaTimeout: !Ref IiifLambdaTimeout
+        PixelDensity: !Ref PixelDensity
+        Preflight:
+          Fn::If:
+            - UseViewerRequest
+            - true
+            - false
+        SourceBucket: !Ref SourceBucket
+Outputs:
+  Endpoint:
+    Description: IIIF Endpoint URL
+    Value:
+      Fn::If:
+        - DistributionCustomDomain
+        - Fn::Sub: "https://${CacheDomainName}/iiif/2/"
+        - Fn::Sub: "https://${CachingEndpoint.DomainName}/iiif/2/"
+  DistributionId:
+    Description: Caching Distribution ID
+    Value: 
+      Ref: CachingEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}:DistributionId"
+  LambdaFunction:
+    Description: IIIF Lambda Function Name
+    Value: !Ref IiifFunction
