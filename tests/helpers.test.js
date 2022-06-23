@@ -3,66 +3,51 @@ const { eventPath, fileMissing, getUri, isBase64, isTooLarge, getRegion } = requ
 
 describe('helper functions', () => {
   describe('eventPath', () => {
-    it('does not includesStage', () => {
-      delete process.env.includeStage;
+    it('retrieves the path from the event', () => {
       const event = {
-        headers: { Host: 'host' },
-        path: '/path/'
+        headers: { host: 'host' },
+        requestContext: { http: { path: '/path/' } }
       };
       expect(eventPath(event)).toEqual('/path');
-    });
-    it('includesStage', () => {
-      process.env.includeStage = 'true';
-      const event = {
-        headers: { Host: 'host' },
-        requestContext: {
-          stage: 'prod'
-        },
-        path: '/path/'
-      };
-      expect(eventPath(event)).toEqual('/prod/path');
     });
   });
 
   describe('fileMissing', () => {
     it('has a missing file', () => {
       const event = {
-        path: 'http://path'
+        requestContext: { http: { path: 'http://path' } }
       };
       expect(fileMissing(event)).toEqual(true);
     });
     it('does not have a missing file', () => {
       const event = {
-        path: 'http://path/file.json'
+        requestContext: { http: { path: 'http://path/file.json' } }
       };
       expect(fileMissing(event)).toEqual(false);
     });
   });
 
   describe('getUri', () => {
-    beforeEach(() => {
-      delete process.env.includeStage;
-    });
     afterEach(() => {
       delete process.env.forceHost;
     });
     it('has X-Forwarded headers', () => {
       const event = {
         headers: {
-          'X-Forwarded-Proto': 'https',
-          'X-Forwarded-Host': 'forward-host',
-          Host: 'host'
+          'x-forwarded-proto': 'https',
+          'x-forwarded-host': 'forward-host',
+          host: 'host'
         },
-        path: '/path'
+        requestContext: { http: { path: '/path' } }
       };
       expect(getUri(event)).toEqual('https://forward-host/path');
     });
     it('does not have X-Forwarded headers', () => {
       const event = {
         headers: {
-          Host: 'host'
+          host: 'host'
         },
-        path: '/path'
+        requestContext: { http: { path: '/path' } }
       };
       expect(getUri(event)).toEqual('http://host/path');
     });
@@ -70,11 +55,11 @@ describe('helper functions', () => {
       process.env.forceHost = 'forced-host';
       const event = {
         headers: {
-          'X-Forwarded-Proto': 'https',
-          'X-Forwarded-Host': 'forward-host',
-          Host: 'host'
+          'x-forwarded-proto': 'https',
+          'x-forwarded-host': 'forward-host',
+          host: 'host'
         },
-        path: '/path'
+        requestContext: { http: { path: '/path' } }
       };
       expect(getUri(event)).toEqual('https://forced-host/path');
     });

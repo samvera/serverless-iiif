@@ -1,29 +1,16 @@
 const eventPath = (event) => {
-  if (includeStage(event)) {
-    const path = '/' + event.requestContext.stage + event.path;
-    return path.replace(/\/*$/, '');
-  }
-  return event.path.replace(/\/*$/, '');
+  return event.requestContext?.http?.path.replace(/\/*$/, '');
 };
 
 const fileMissing = (event) => {
-  return !/\.(jpe?g|tiff?|gif|png|webp|json)$/.test(event.path);
+  return !/\.(jpe?g|tiff?|gif|png|webp|json)$/.test(eventPath(event));
 };
 
 const getUri = (event) => {
-  const scheme = event.headers['X-Forwarded-Proto'] || 'http';
-  const host = process.env.forceHost || event.headers['X-Forwarded-Host'] || event.headers.Host;
+  const scheme = event.headers['x-forwarded-proto'] || 'http';
+  const host = process.env.forceHost || event.headers['x-forwarded-host'] || event.headers.host;
   const uri = `${scheme}://${host}${eventPath(event)}`;
   return uri;
-};
-
-const includeStage = (event) => {
-  if ('includeStage' in process.env) {
-    return ['true', 'yes'].indexOf(process.env.includeStage.toLowerCase()) > -1;
-  } else {
-    const host = event.headers.Host;
-    return host.match(/\.execute-api\.\w+?-\w+?-\d+?\.amazonaws\.com$/);
-  }
 };
 
 const isBase64 = (result) => {
@@ -49,7 +36,6 @@ module.exports = {
   eventPath: eventPath,
   fileMissing: fileMissing,
   getUri: getUri,
-  includeStage: includeStage,
   isBase64: isBase64,
   isTooLarge: isTooLarge,
   getRegion: getRegion,

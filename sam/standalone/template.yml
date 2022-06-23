@@ -1,0 +1,187 @@
+Transform: "AWS::Serverless-2016-10-31"
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: serverless-iiif-function
+    Description: IIIF Image API 2.1 server backend Lambda function
+    Author: mbklein
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: ../../LICENSE.txt
+    ReadmeUrl: ../../README.md
+    Labels: ["iiif", "image-processing"]
+    HomePageUrl: https://github.com/samvera-labs/serverless-iiif
+    SemanticVersion: 4.0.0
+    SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "General Configuration"
+        Parameters:
+          - SourceBucket
+          - IiifLambdaMemory
+          - IiifLambdaTimeout
+          - PixelDensity
+      - Label:
+          default: "Internal Use Only – Do Not Change"
+        Parameters:
+          - CacheBucket
+          - ForceHost
+          - Preflight
+Parameters:
+  CacheBucket:
+    Type: String
+    Description: Bucket to use for caching results larger than 6MB
+    Default: ""
+  ForceHost:
+    Type: String
+    Description: Forced hostname to use in responses
+    Default: ""
+  IiifLambdaMemory:
+    Type: Number
+    Description: The memory provisioned for the lambda.
+    MinValue: 128
+    MaxValue: 10240
+    Default: 3008
+  IiifLambdaTimeout:
+    Type: Number
+    Description: The timeout for the lambda.
+    Default: 10
+  PixelDensity:
+    Type: Number
+    Description: Hardcoded DPI/Pixel Density/Resolution to encode in output images
+    Default: 0
+    MinValue: 0
+  Preflight:
+    Type: String
+    Description: Indicates whether the function should expect preflight headers
+    Default: false
+  SourceBucket:
+    Type: String
+    Description: Name of bucket containing source images
+Conditions:
+  UseCacheBucket:
+    Fn::Not:
+      - Fn::Equals: [!Ref CacheBucket, ""]
+  UseForceHost:
+    Fn::Not:
+      - Fn::Equals: [!Ref ForceHost, ""]
+  UsePixelDensity:
+    Fn::Not:
+      - Fn::Equals: [!Ref PixelDensity, 0]
+Resources:
+  Dependencies:
+    Type: "AWS::Serverless::LayerVersion"
+    Properties:
+      LayerName:
+        Fn::Sub: "${AWS::StackName}-dependencies"
+      Description: Dependencies for IIIF app
+      ContentUri: ../../dependencies
+      CompatibleRuntimes:
+        - nodejs16.x
+      LicenseInfo: "Apache-2.0"
+    Metadata:
+      BuildMethod: nodejs16.x
+  IiifFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Runtime: nodejs16.x
+      Handler: index.handler
+      MemorySize:
+        Ref: IiifLambdaMemory
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowCredentials: true
+          AllowHeaders:
+            - "*"
+          AllowMethods:
+            - GET
+          AllowOrigins:
+            - "*"
+          ExposeHeaders: 
+            - content-type
+            - date
+            - x-amz-server-side-encryption
+            - x-amz-request-id
+            - x-amz-id-2
+          MaxAge: 3600
+      Timeout:
+        Ref: IiifLambdaTimeout
+      CodeUri: ../../src
+      Layers:
+        - Ref: Dependencies
+      Policies:
+        - AWSLambdaExecute
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:GetObjectACL
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
+        - Fn::If:
+          - UseCacheBucket
+          - Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource:
+                  - Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+                  - Fn::Sub: "arn:aws:s3:::${CacheBucket}"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - Fn::Sub: "arn:aws:s3:::${CacheBucket}/*"
+          - Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource:
+                  Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+      Environment:
+        Variables:
+          cacheBucket: 
+            Fn::If:
+              - UseCacheBucket
+              - !Ref CacheBucket
+              - !Ref AWS::NoValue
+          density: 
+            Fn::If:
+              - UsePixelDensity
+              - !Ref PixelDensity
+              - !Ref AWS::NoValue
+          forceHost: 
+            Fn::If:
+              - UseForceHost
+              - !Ref ForceHost
+              - !Ref AWS::NoValue
+          preflight: !Ref Preflight
+          tiffBucket: !Ref SourceBucket
+Outputs:
+  Endpoint:
+    Description: IIIF Image API v2 Endpoint
+    Value:
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/2/"
+  FunctionDomain:
+    Description: IIIF Function Domain Name
+    Value:
+      Fn::Select:
+        - 2
+        - Fn::Split:
+          - "/"
+          - Fn::GetAtt: IiifFunctionUrl.FunctionUrl
+  FunctionUrl:
+    Description: IIIF Function URL
+    Value:
+      Fn::GetAtt: IiifFunctionUrl.FunctionUrl

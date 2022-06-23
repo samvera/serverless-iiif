@@ -26,7 +26,11 @@ describe('index.handler', () => {
 
   it('responds to OPTIONS REQUEST', async () => {
     const event = {
-      httpMethod: 'OPTIONS'
+      requestContext: {
+        http: {
+          method: 'OPTIONS'
+        }
+      }
     };
 
     const expected = {

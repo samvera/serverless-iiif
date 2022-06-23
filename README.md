@@ -11,9 +11,9 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
 ## Components
 
 * A simple [Lambda Function](https://aws.amazon.com/lambda/) wrapper for the [iiif-processor](https://www.npmjs.com/package/iiif-processor) module.
+* A [Lambda Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) that is used to invoke the IIIF API via HTTPS.
 * A [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) containing all the dependencies for the Lambda Function.
-* An [API Gateway](https://aws.amazon.com/api-gateway/) interface for the Lambda Function.
-* A [CloudFormation](https://aws.amazon.com/cloudformation/) template describing the resources needed to deploy the application.
+* An optional [CloudFormation](https://aws.amazon.com/cloudformation/) template describing the resources needed to deploy the application.
 
 ## Prerequisites
 
@@ -23,6 +23,18 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
   **Note: The Lambda Function will be granted read access to this bucket.**
 
 ## Quick Start
+
+`serverless-iiif` comes in two flavors: *Standalone (Lambda-only)* and *Caching (CloudFront-enabled)*. The Standalone version is much simpler, but lacks the following features:
+
+- Custom Domain Name
+  - Standalone URLs are in the `lambda-url.AWS_REGION.on.aws` domain (e.g., `https://fu90293j0pj902j902c32j902.lambda-url.us-east-1.on.aws/iiif/2/`)
+  - Caching URLs *without* Custom Domains are in the `cloudfront.net` domain (e.g., `https://d3kmjdzzy1l5t3.cloudfront.net/iiif/2/`)
+- Responses larger than ~6MB
+- CloudFront function support (for pre/post-processing requests and responses)
+
+### Deploying via the AWS Serverless Application Repository
+
+**Note: AWS Serverless Application Repository hasn't yet rolled out support for application templates containing Lambda Function URLs, so the following instructions will deploy the older, monolithic version of `serverless-iiif` with an API Gateway instead of the Lambda Function URL.**
 
 `serverless-iiif` is distributed and deployed via the [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/). To deploy it using the AWS Console:
 
@@ -35,6 +47,29 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
 6. When all the resources are properly created and configured, the new stack should be in the **CREATE_COMPLETE** stage. If there's an error, it will delete all the resources it created, roll back any changes it made, and eventually reach the **ROLLBACK_COMPLETE** stage.
 7. Click the **CloudFormation stack** link.
 8. Click the **Outputs** tab to see (and copy) the IIIF Endpoint URL.
+
+### Deploying via the Command Line
+
+1. Make sure you have the [SAM CLI](https://aws.amazon.com/serverless/sam/) and [AWS CLI](https://aws.amazon.com/cli/) installed.
+2. Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that have sufficient access to manage IAM, S3, Lambda, and (optionally) CloudFront resources.
+3. Clone this repository.
+4. Open a shell in the working copy's `sam/standalone` or `sam/cloudfront` directory, depending on which flavor you would like to install.
+5. Build the application:
+   ```shell
+   $ sam build --use-container
+   ```
+6. Deploy the application:
+   ```shell
+   $ sam deploy --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --guided
+   ```
+   (Note: You may have to use the `--profile PROFILE_NAME` argument if using an AWS CLI profile other than the default)
+
+   You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
+7. Follow the prompts to complete the deployment process and get the resulting endpoint.
+
+### Deleting the application
+
+The easiest way to delete the application is either from the [Lambda Applications Console](https://console.aws.amazon.com/lambda/home#/applications) or by deleting its [CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home#/stacks?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false). If you deployed from the command line, you can also use the `sam delete` command.
 
 ## Source Images
 
@@ -112,7 +147,7 @@ function handler(event) {
 
 ## Notes
 
-AWS API Gateway Lambda integration has a payload (request/response body) size limit of approximately 6MB in both directions. To overcome this limitation, the API is configured behind an AWS CloudFront distribution with two origins – the API and a cache bucket. Responses larger than 6MB are saved to the cache bucket at the same relative path as the request, and the API returns a `404 Not Found` response to CloudFront. CloudFront then fails over to the second origin (the cache bucket), where it finds the actual response and returns it.
+Lambda Function URLs have a payload (request/response body) size limit of approximately 6MB in both directions. To overcome this limitation, the Lambda URL is configured behind an AWS CloudFront distribution with two origins - the API and a cache bucket. Responses larger than 6MB are saved to the cache bucket at the same relative path as the request, and the Lambda returns a `404 Not Found` response to CloudFront. CloudFront then fails over to the second origin (the cache bucket), where it finds the actual response and returns it.
 
 The cache bucket uses an S3 lifecycle rule to expire cached responses in 1 day.
 

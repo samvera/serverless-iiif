@@ -4,7 +4,7 @@ jobs:
   build:
     working_directory: ~/serverless-iiif
     docker:
-      - image: circleci/node:14
+      - image: circleci/node:16
     steps:
       - checkout
       - run:
@@ -18,8 +18,8 @@ jobs:
               [[ -z "$(git branch --all --list master */master)" ]]
       - restore_cache:
           keys:
-            - node-modules-v1-{{ checksum "yarn.lock" }}-{{ .Branch }}
-            - node-modules-v1-{{ checksum "yarn.lock" }}-
+            - node-modules-v1-{{ checksum "package-lock.json" }}-{{ .Branch }}
+            - node-modules-v1-{{ checksum "package-lock.json" }}-
             - node-modules-v1-
       - run:
           name:  Download cc-test-reporter
@@ -28,16 +28,16 @@ jobs:
             chmod +x ./cc-test-reporter
       - run:
           name: Install JS Dependencies
-          command: yarn install
+          command: npm install
       - save_cache:
-          key: node-modules-v1-{{ checksum "yarn.lock" }}-{{ .Branch }}
+          key: node-modules-v1-{{ checksum "package-lock.json" }}-{{ .Branch }}
           paths:
             - ~/serverless-iiif/node_modules
       - run:
           name: JS Tests
           command: |
             ./cc-test-reporter before-build
-            yarn test --coverage
+            npm run-script test-coverage
             mv coverage/clover.xml ./clover.xml
             ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
       - run:

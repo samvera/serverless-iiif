@@ -14,7 +14,7 @@ const handleRequestFunc = async (event, context, callback) => {
   AWS.config.region = getRegion(context);
   context.callbackWaitsForEmptyEventLoop = false;
 
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.requestContext?.http?.method === 'OPTIONS') {
     // OPTIONS REQUEST
     return callback(null, { statusCode: 204, body: null });
   } else if (fileMissing(event)) {
