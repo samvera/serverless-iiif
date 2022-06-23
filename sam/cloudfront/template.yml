@@ -23,9 +23,7 @@ Metadata:
       - Label:
           default: "Cache Configuration"
         Parameters:
-          - CacheMinimumTTL
-          - CacheMaximumTTL
-          - CacheDefaultTTL
+          - CachePolicyID
           - CachePriceClass
       - Label:
           default: "Hostname Configuration"
@@ -42,18 +40,10 @@ Metadata:
           - ViewerResponseARN
           - ViewerResponseType
 Parameters:
-  CacheMinimumTTL:
-    Type: Number
-    Description: Minimum TTL (in seconds) for the CloudFront Cache
-    Default: 0
-  CacheMaximumTTL:
-    Type: Number
-    Description: Maximum TTL (in seconds) for the CloudFront Cache
-    Default: 31536000
-  CacheDefaultTTL:
-    Type: Number
-    Description: Default TTL (in seconds) for the CloudFront Cache
-    Default: 86400
+  CachePolicyID:
+    Type: String
+    Description: The ID of a managed or custom CloudFront Cache Policy to use
+    Default: 658327ea-f89d-4fab-a63d-7e88639e58f6
   CachePriceClass:
     Type: String
     Description: Price Class for the CloudFront Cache
@@ -242,11 +232,7 @@ Resources:
           ViewerProtocolPolicy: https-only
           AllowedMethods: ["GET", "HEAD", "OPTIONS"]
           CachedMethods: ["GET", "HEAD"]
-          ForwardedValues:
-            QueryString: false
-          MinTTL: !Ref CacheMinimumTTL
-          MaxTTL: !Ref CacheMaximumTTL
-          DefaultTTL: !Ref CacheDefaultTTL
+          CachePolicyId: !Ref CachePolicyID
           FunctionAssociations:
             - Fn::If:
               - ViewerRequestCloudWatchFunction
