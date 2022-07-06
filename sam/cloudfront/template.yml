@@ -3,7 +3,7 @@ Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif-cloudfront
     Description: IIIF Image API 2.1 server in an AWS Serverless Application (w/CloudFront Caching)
-    Author: mbklein
+    Author: Samvera
     SpdxLicenseId: Apache-2.0
     LicenseUrl: ../../LICENSE.txt
     ReadmeUrl: ../../README.md
@@ -272,7 +272,12 @@ Resources:
   IiifFunction:
     Type: AWS::Serverless::Application
     Properties:
+      # Swap the comment characters on the two Location properties and update SemanticVersion 
+      # when publishing to SAR
       Location: ../standalone/template.yml
+      # Location:
+      #   ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-function
+      #   SemanticVersion: 4.0.1
       Parameters:
         CacheBucket: !Ref CacheBucket
         ForceHost:

@@ -3,7 +3,7 @@ Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif-function
     Description: IIIF Image API 2.1 server backend Lambda function
-    Author: mbklein
+    Author: Samvera
     SpdxLicenseId: Apache-2.0
     LicenseUrl: ../../LICENSE.txt
     ReadmeUrl: ../../README.md
