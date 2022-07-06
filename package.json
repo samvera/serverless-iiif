@@ -1,6 +1,6 @@
 {
   "name": "serverless-iiif",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",

@@ -75,8 +75,7 @@ const makeResponse = (result) => {
   return {
     statusCode: 200,
     headers: {
-      'Content-Type': result.contentType,
-      'Access-Control-Allow-Origin': '*'
+      'Content-Type': result.contentType
     },
     isBase64Encoded: base64,
     body: content

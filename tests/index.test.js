@@ -59,7 +59,7 @@ describe('index.handler', () => {
       arg1: null, 
       arg2: {
         statusCode: 200,
-        headers: { 'Content-Type': undefined, 'Access-Control-Allow-Origin': '*' },
+        headers: { 'Content-Type': undefined },
         isBase64Encoded: false,
         body: Buffer.from(body)
       }
@@ -107,7 +107,7 @@ describe('index.handler', () => {
         arg1: null,
         arg2: {
           statusCode: 200,
-          headers: { 'Content-Type': undefined, 'Access-Control-Allow-Origin': '*' },
+          headers: { 'Content-Type': undefined },
           isBase64Encoded: true,
           body:  Buffer.from(body).toString('base64')
         }
@@ -132,7 +132,7 @@ describe('index.handler', () => {
         arg1: null,
         arg2: {
           statusCode: 200,
-          headers: { 'Content-Type': undefined, 'Access-Control-Allow-Origin': '*' },
+          headers: { 'Content-Type': undefined },
           isBase64Encoded: false,
           body: body
         }

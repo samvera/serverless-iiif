@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 4.0.0
+    SemanticVersion: 4.0.1
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -90,19 +90,17 @@ Resources:
       FunctionUrlConfig:
         AuthType: NONE
         Cors:
-          AllowCredentials: true
+          AllowCredentials: false
           AllowHeaders:
             - "*"
           AllowMethods:
             - GET
           AllowOrigins:
             - "*"
-          ExposeHeaders: 
+          ExposeHeaders:
+            - content-length
             - content-type
             - date
-            - x-amz-server-side-encryption
-            - x-amz-request-id
-            - x-amz-id-2
           MaxAge: 3600
       Timeout:
         Ref: IiifLambdaTimeout
