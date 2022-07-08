@@ -1,7 +1,7 @@
 Transform: "AWS::Serverless-2016-10-31"
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: serverless-iiif-function
+    Name: serverless-iiif-standalone
     Description: IIIF Image API 2.1 server backend Lambda function
     Author: Samvera
     SpdxLicenseId: Apache-2.0

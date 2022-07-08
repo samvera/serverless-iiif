@@ -34,15 +34,18 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
 
 ### Deploying via the AWS Serverless Application Repository
 
-**Note: AWS Serverless Application Repository hasn't yet rolled out support for application templates containing Lambda Function URLs, so the following instructions will deploy the older, monolithic version of `serverless-iiif` with an API Gateway instead of the Lambda Function URL.**
-
 `serverless-iiif` is distributed and deployed via the [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/). To deploy it using the AWS Console:
 
-1. Click to 👉 [Deploy the Serverless Application](https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif) 👈 from the AWS Console.
+1. Click one of the following links to deploy the desired application from the AWS Console:
+   - [Standalone (Lambda-Only) Version](https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone)
+   - [Caching (CloudFront-Enabled) Version](https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-cloudfront)
 2. Make sure your currently selected region (in the console's top navigation bar) is the one you want to deploy to.
 3. Scroll down to the **Application settings** section.
-4. Give your stack a unique name, enter the name of the image bucket, and check the box acknowledging that the
-   app will create an IAM execution role for itself.
+4. Configure the deploy template:
+   - Give your stack a unique **Application name**
+   - Enter the name of the **SourceBucket** the service will serve images from
+   - Check the box acknowledging that the app will create a custom IAM roles and resource policies (and if deploying the Caching version, that it will also deploy a nested application)
+   - *Optional*: Enter or change any other parameters that apply to your desired configuration.
 5. Click **Deploy**.
 6. When all the resources are properly created and configured, the new stack should be in the **CREATE_COMPLETE** stage. If there's an error, it will delete all the resources it created, roll back any changes it made, and eventually reach the **ROLLBACK_COMPLETE** stage.
 7. Click the **CloudFormation stack** link.
