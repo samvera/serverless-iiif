@@ -8,7 +8,7 @@ const errorHandler = require('./error');
 const density = helpers.parseDensity(process.env.density);
 const preflight = process.env.preflight === 'true';
 
-const handleRequestFunc = async (event, context, callback) => {
+const handleRequestFunc = async (event, context) => {
   const { eventPath, fileMissing, getRegion } = helpers;
 
   AWS.config.region = getRegion(context);
@@ -16,18 +16,18 @@ const handleRequestFunc = async (event, context, callback) => {
 
   if (event.requestContext?.http?.method === 'OPTIONS') {
     // OPTIONS REQUEST
-    return callback(null, { statusCode: 204, body: null });
+    return { statusCode: 204, body: null };
   } else if (fileMissing(event)) {
     // INFO.JSON REQUEST
     const location = eventPath(event) + '/info.json';
-    return callback(null, { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' });
+    return { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' };
   } else {
     // IMAGE REQUEST
-    return await handleImageRequestFunc(event, context, callback);
+    return await handleImageRequestFunc(event, context);
   }
 };
 
-const handleImageRequestFunc = async (event, context, callback) => {
+const handleImageRequestFunc = async (event, context) => {
   const { getUri, isTooLarge } = helpers;
   const { streamResolver, dimensionResolver } = resolvers.resolverFactory(event, preflight);
   const { getCached, makeCache } = cache;
@@ -36,6 +36,18 @@ const handleImageRequestFunc = async (event, context, callback) => {
   try {
     const uri = getUri(event);
     resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction: dimensionResolver, density: density });
+
+    if (resource.id === "" || resource.id === undefined || resource.id === null) {
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        isBase64Encoded: false,
+        body: 'OK'
+      };
+    }
+
     const key = new URL(uri).pathname.replace(/^\//, '');
     const cached = resource.filename === 'info.json' ? false : await getCached(key);
 
@@ -52,9 +64,9 @@ const handleImageRequestFunc = async (event, context, callback) => {
         response = makeResponse(result);
       }
     }
-    return callback(null, response);
+    return response;
   } catch (err) {
-    return errorHandler.errorHandler(err, event, context, resource, callback);
+    return errorHandler(err, event, context, resource);
   }
 };
 

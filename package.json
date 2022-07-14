@@ -1,6 +1,6 @@
 {
   "name": "serverless-iiif",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
@@ -17,7 +17,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "iiif-processor": "~1.0",
+    "iiif-processor": "^3.0.0",
     "jest": "^26.4.2"
   },
   "jest": {

@@ -1,22 +1,24 @@
-const errorHandler = async (err, event, context, resource, callback) => {
-  console.error(err);
+const errorHandler = async (err, _event, _context, resource) => {
   if (err.statusCode) {
-    return await callback(null, {
+    return {
       statusCode: err.statusCode,
       headers: { 'Content-Type': 'text/plain' },
       body: 'Not Found'
-    });
+    };
   } else if (err instanceof resource.errorClass) {
-    return await callback(null, {
+    return {
       statusCode: 400,
       headers: { 'Content-Type': 'text/plain' },
       body: err.toString()
-    });
+    };
   } else {
-    return await callback(err, null);
+    console.error(err);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'text.plain' },
+      body: err.toString()
+    };
   }
 };
 
-module.exports = {
-  errorHandler: errorHandler
-};
+module.exports = errorHandler;
