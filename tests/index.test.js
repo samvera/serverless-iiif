@@ -4,6 +4,7 @@ const { handler } = require('../src/index');
 const cache = require('../src/cache');
 const helpers = require('../src/helpers');
 const error = require('../src/error');
+const resolvers = require('../src/resolvers');
 
 describe('index.handler', () => {
   let callback;
@@ -36,39 +37,73 @@ describe('index.handler', () => {
     expect(result).toEqual(expected);
   });
 
-  it('responds to INFO.JSON REQUEST', async () => {
-    const body = '[INFO JSON]';
-    helpers.fileMissing = jest.fn().mockImplementationOnce(() => false);
-    helpers.getUri = jest.fn().mockImplementationOnce(() => 'https://iiif.example.edu/iiif/2/image_id/info.json');
+  describe("INFO.JSON request", () => {
+    beforeEach(() => {
+      process.env.preflight = 'true';
+    });
 
-    IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-      return {
-        id: 'image_id',
-        filename: 'info.json',
-        execute: async function () {
-          return { content_type: 'application/json', body: Buffer.from(body) };
+    afterEach(() => {
+      delete process.env.preflight;
+    });
+
+    it('responds to INFO.JSON REQUEST', async () => {
+      helpers.fileMissing = jest.fn().mockImplementationOnce(() => false);
+  
+      const event = {
+        headers: {
+          'host': 'iiif.example.edu',
+          'x-preflight-dimensions': '{"width": 1280, "height": 720}'
+        },
+        requestContext: {
+          http: {
+            path: '/iiif/2/image_id/info.json'
+          }
         }
       };
+
+      const { body } = await handler(event, context);
+      const info = JSON.parse(body);
+      expect(info['@id']).toEqual('http://iiif.example.edu/iiif/2/image_id');
+      expect(info.width).toEqual(1280);
+      expect(info.height).toEqual(720);
+      expect(info.sizes.length).toEqual(4);
     });
-    const event = {};
-    const expected = {
-      statusCode: 200,
-      headers: { 'Content-Type': undefined },
-      isBase64Encoded: false,
-      body: Buffer.from(body)
-    };
-    const result = await handler(event, context);
-    expect(result).toEqual(expected);
-  });
 
-  it('redirects to INFO.JSON if filename missing', async () => {
-    helpers.fileMissing = jest.fn().mockImplementationOnce(() => true);
-    
-    const event = {};
+    it('respects the x-forwarded-host header', async () => {
+      helpers.fileMissing = jest.fn().mockImplementationOnce(() => false);
+  
+      const event = {
+        headers: {
+          'host': 'handler.behind.proxy',
+          'x-forwarded-host': 'iiif.example.edu',
+          'x-forwarded-proto': 'https',
+          'x-preflight-dimensions': '{"width": 1280, "height": 720}'
+        },
+        requestContext: {
+          http: {
+            path: '/iiif/2/image_id/info.json'
+          }
+        }
+      };
 
-    const expected = { statusCode: 302, headers: { Location: '[EVENT PATH]/info.json' }, body: 'Redirecting to info.json' };
-    const result = await handler(event, context);
-    expect(result).toEqual(expected);
+      const { body } = await handler(event, context);
+      const info = JSON.parse(body);
+      expect(info['@id']).toEqual('https://iiif.example.edu/iiif/2/image_id');
+      expect(info.width).toEqual(1280);
+      expect(info.height).toEqual(720);
+      expect(info.sizes.length).toEqual(4);
+    });
+
+    it('redirects to INFO.JSON if filename missing', async () => {
+      helpers.eventPath = jest.fn().mockImplementationOnce(() => '/iiif/2/image_id');
+      helpers.fileMissing = jest.fn().mockImplementationOnce(() => true);
+      
+      const event = {};
+  
+      const expected = { statusCode: 302, headers: { Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
+      const result = await handler(event, context);
+      expect(result).toEqual(expected);
+    });  
   });
 
   // IMAGE REQUEST
