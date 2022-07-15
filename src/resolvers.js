@@ -57,11 +57,11 @@ const preflightResolver = (event) => {
   const preflightDimensions = parseDimensionsHeader(event);
 
   return {
-    streamResolver: async ({id, baseUrl}, callback) => {
+    streamResolver: async ({ id }, callback) => {
       const location = preflightLocation || defaultStreamLocation(id);
       return s3Stream(location, callback);
     },
-    dimensionResolver: async ({id, baseUrl}) => {
+    dimensionResolver: async ({ id }) => {
       const location = preflightLocation || defaultStreamLocation(id);
       return preflightDimensions || dimensionRetriever(location);
     }

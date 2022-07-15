@@ -3,7 +3,7 @@ const IIIF = require('iiif-processor');
 const cache = require('./cache');
 const helpers = require('./helpers');
 const resolvers = require('./resolvers');
-const errorHandler = require('./error');
+const { errorHandler } = require('./error');
 
 const density = helpers.parseDensity(process.env.density);
 const preflight = process.env.preflight === 'true';
@@ -36,7 +36,7 @@ const handleImageRequestFunc = async (event, context) => {
   try {
     const uri = getUri(event);
     resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction: dimensionResolver, density: density });
-
+    
     if (resource.id === "" || resource.id === undefined || resource.id === null) {
       return {
         statusCode: 200,

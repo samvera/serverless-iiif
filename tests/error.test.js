@@ -6,13 +6,6 @@ describe('errorHandler', () => {
   const event = {};
   const context = {};
 
-  const callback = (arg1, arg2) => {
-    return {
-      arg1: arg1,
-      arg2: arg2
-    };
-  };
-
   beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -20,14 +13,11 @@ describe('errorHandler', () => {
     const err = { statusCode: 404 };
     const resource = {};
     const expected = {
-      arg1: null,
-      arg2: {
-        statusCode: 404,
-        headers: { 'Content-Type': 'text/plain' },
-        body: 'Not Found'
-      }
+      statusCode: 404,
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'Not Found'
     };
-    const result = await errorHandler(err, event, context, resource, callback);
+    const result = await errorHandler(err, event, context, resource);
     expect(result).toEqual(expected);
   });
 
@@ -35,24 +25,18 @@ describe('errorHandler', () => {
     // eslint-disable-next-line new-cap
     const err = new resource.errorClass('err');
     const expected = {
-      arg1: null,
-      arg2: {
-        statusCode: 400,
-        headers: { 'Content-Type': 'text/plain' },
-        body: 'err'
-      }
+      statusCode: 400,
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'err'
     };
-    const result = await errorHandler(err, event, context, resource, callback);
+    const result = await errorHandler(err, event, context, resource);
     expect(result).toEqual(expected);
   });
 
   it('has a fallback error', async () => {
     const err = new Error('I AM ERROR');
-    const expected = {
-      arg1: err,
-      arg2: null
-    };
-    const result = await errorHandler(err, event, context, resource, callback);
+    const expected = {"body": "Error: I AM ERROR", "headers": {"Content-Type": "text.plain"}, "statusCode": 500};
+    const result = await errorHandler(err, event, context, resource);
     expect(result).toEqual(expected);
   });
 });

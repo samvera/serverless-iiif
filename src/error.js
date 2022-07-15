@@ -21,4 +21,4 @@ const errorHandler = async (err, _event, _context, resource) => {
   }
 };
 
-module.exports = errorHandler;
+module.exports = { errorHandler };
