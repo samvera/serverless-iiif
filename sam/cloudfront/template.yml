@@ -20,6 +20,7 @@ Metadata:
           - IiifLambdaMemory
           - IiifLambdaTimeout
           - PixelDensity
+          - ResolverTemplate
       - Label:
           default: "Cache Configuration"
         Parameters:
@@ -86,6 +87,10 @@ Parameters:
     Description: Hardcoded DPI/Pixel Density/Resolution to encode in output images
     Default: 0
     MinValue: 0
+  ResolverTemplate:
+    Type: String
+    Description: A printf-style format string that determines the location of source image within the bucket given the image ID
+    Default: "%s.tif"
   ViewerRequestARN:
     Type: String
     Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
@@ -293,6 +298,7 @@ Resources:
             - UseViewerRequest
             - true
             - false
+        ResolverTemplate: !Ref ResolverTemplate
         SourceBucket: !Ref SourceBucket
 Outputs:
   Endpoint:

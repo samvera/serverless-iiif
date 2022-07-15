@@ -11,13 +11,30 @@ describe('default resolvers', () => { // eslint-disable-line max-lines-per-funct
   });
 
   describe('streamResolver', () => {
+    const callback = jest.fn(() => {});
+
     it('returns a stream and cleans up', async () => {
-      const callback = jest.fn(() => {});
       await streamResolver({id: 'id'}, callback);
       expect(callback).toHaveBeenCalled();
+      expect(AWSMockS3.checkParams).toHaveBeenCalledWith('S3.getObject', {Bucket: 'test-bucket', Key: 'id.tif'});
       expect(AWSMockS3.end).toHaveBeenCalled();
       expect(AWSMockS3.destroy).toHaveBeenCalled();
       expect(AWSMockS3.abort).toHaveBeenCalled();
+    });
+
+    describe('resolverTemplate', () => {
+      beforeEach(() => {
+        process.env.resolverTemplate = '/path/to/%s/%s-pyramid.tiff';
+      });
+
+      afterEach(() => {
+        delete process.env.resolverTemplate;
+      });
+
+      it('uses the resolverTemplate, if present', async () => {
+        await streamResolver({id: 'id'}, callback);
+        expect(AWSMockS3.checkParams).toHaveBeenCalledWith('S3.getObject', {Bucket: 'test-bucket', Key: '/path/to/id/id-pyramid.tiff'});
+      });  
     });
   });
 
