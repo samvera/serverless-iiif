@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 4.0.2
+    SemanticVersion: 4.0.3
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -20,6 +20,7 @@ Metadata:
           - IiifLambdaMemory
           - IiifLambdaTimeout
           - PixelDensity
+          - ResolverTemplate
       - Label:
           default: "Internal Use Only – Do Not Change"
         Parameters:
@@ -54,6 +55,10 @@ Parameters:
     Type: String
     Description: Indicates whether the function should expect preflight headers
     Default: false
+  ResolverTemplate:
+    Type: String
+    Description: A printf-style format string that determines the location of source image within the bucket given the image ID
+    Default: "%s.tif"
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images

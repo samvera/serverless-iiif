@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 4.0.2
+    SemanticVersion: 4.0.3
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -20,6 +20,7 @@ Metadata:
           - IiifLambdaMemory
           - IiifLambdaTimeout
           - PixelDensity
+          - ResolverTemplate
       - Label:
           default: "Cache Configuration"
         Parameters:
@@ -86,6 +87,10 @@ Parameters:
     Description: Hardcoded DPI/Pixel Density/Resolution to encode in output images
     Default: 0
     MinValue: 0
+  ResolverTemplate:
+    Type: String
+    Description: A printf-style format string that determines the location of source image within the bucket given the image ID
+    Default: "%s.tif"
   ViewerRequestARN:
     Type: String
     Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
@@ -161,6 +166,11 @@ Resources:
         Rules:
           - Status: Enabled
             ExpirationInDays: 1
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls : true
+        BlockPublicPolicy : true
+        IgnorePublicAcls : true
+        RestrictPublicBuckets : true
   CacheBucketPolicy:
     Type: "AWS::S3::BucketPolicy"
     Properties:
@@ -277,7 +287,7 @@ Resources:
       Location: ../standalone/template.yml
       # Location:
       #   ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone
-      #   SemanticVersion: 4.0.2
+      #   SemanticVersion: 4.0.3
       Parameters:
         CacheBucket: !Ref CacheBucket
         ForceHost:
@@ -293,6 +303,7 @@ Resources:
             - UseViewerRequest
             - true
             - false
+        ResolverTemplate: !Ref ResolverTemplate
         SourceBucket: !Ref SourceBucket
 Outputs:
   Endpoint:

@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
-const sourceBucket = process.env.tiffBucket;
 const URI = require('uri-js');
+const util = require('util');
 
 // IIIF RESOLVERS
 
@@ -19,7 +19,12 @@ const s3Stream = async (location, callback) => {
 
 // Compute default stream location from ID
 const defaultStreamLocation = (id) => {
-  const key = id + '.tif';
+  const sourceBucket = process.env.tiffBucket;
+  const resolverTemplate = process.env.resolverTemplate || '%s.tif';
+  const replacementCount = resolverTemplate.match(/%.*?s/g).length;
+  const args = new Array(replacementCount).fill(id);
+  const key = util.format(resolverTemplate, ...args);
+
   return { Bucket: sourceBucket, Key: key };
 };
 
@@ -57,11 +62,11 @@ const preflightResolver = (event) => {
   const preflightDimensions = parseDimensionsHeader(event);
 
   return {
-    streamResolver: async ({id, baseUrl}, callback) => {
+    streamResolver: async ({ id }, callback) => {
       const location = preflightLocation || defaultStreamLocation(id);
       return s3Stream(location, callback);
     },
-    dimensionResolver: async ({id, baseUrl}) => {
+    dimensionResolver: async ({ id }) => {
       const location = preflightLocation || defaultStreamLocation(id);
       return preflightDimensions || dimensionRetriever(location);
     }
