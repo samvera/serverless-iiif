@@ -4,10 +4,8 @@ const { handler } = require('../src/index');
 const cache = require('../src/cache');
 const helpers = require('../src/helpers');
 const error = require('../src/error');
-const resolvers = require('../src/resolvers');
 
 describe('index.handler', () => {
-  let callback;
   const context = {};
 
   beforeEach(() => {

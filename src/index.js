@@ -20,24 +20,21 @@ const handleRequestFunc = async (event, context) => {
     return { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' };
   } else {
     // IMAGE REQUEST
-    return await handleImageRequestFunc(event, context);
+    return await handleResourceRequestFunc(event, context);
   }
 };
 
-const handleImageRequestFunc = async (event, context) => {
+const handleResourceRequestFunc = async (event, context) => {
   const density = helpers.parseDensity(process.env.density);
+  const { getUri } = helpers;
   const preflight = process.env.preflight === 'true';
-
-  const { getUri, isTooLarge } = helpers;
   const { streamResolver, dimensionResolver } = resolvers.resolverFactory(event, preflight);
-  const { getCached, makeCache } = cache;
 
   let resource;
   try {
     const uri = getUri(event);
     resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction: dimensionResolver, density: density });
-    
-    if (resource.id === "" || resource.id === undefined || resource.id === null) {
+    if (resource.id === '' || resource.id === undefined || resource.id === null) {
       return {
         statusCode: 200,
         headers: {
@@ -46,28 +43,35 @@ const handleImageRequestFunc = async (event, context) => {
         isBase64Encoded: false,
         body: 'OK'
       };
-    }
-
-    const key = new URL(uri).pathname.replace(/^\//, '');
-    const cached = resource.filename === 'info.json' ? false : await getCached(key);
-
-    let response;
-    if (cached) {
-      response = forceFailover();
     } else {
-      const result = await resource.execute();
-
-      if (isTooLarge(result.body)) {
-        await makeCache(key, result);
-        response = forceFailover();
-      } else {
-        response = makeResponse(result);
-      }
+      return await handleImageRequestFunc(uri, resource);
     }
-    return response;
   } catch (err) {
     return errorHandler(err, event, context, resource);
   }
+};
+
+const handleImageRequestFunc = async (uri, resource) => {
+  const { isTooLarge } = helpers;
+  const { getCached, makeCache } = cache;
+
+  const key = new URL(uri).pathname.replace(/^\//, '');
+  const cached = resource.filename === 'info.json' ? false : await getCached(key);
+
+  let response;
+  if (cached) {
+    response = forceFailover();
+  } else {
+    const result = await resource.execute();
+
+    if (isTooLarge(result.body)) {
+      await makeCache(key, result);
+      response = forceFailover();
+    } else {
+      response = makeResponse(result);
+    }
+  }
+  return response;
 };
 
 const forceFailover = () => {
