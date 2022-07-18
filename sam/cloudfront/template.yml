@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera-labs/serverless-iiif
-    SemanticVersion: 4.0.2
+    SemanticVersion: 4.0.3
     SourceCodeUrl: https://github.com/samvera-labs/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -287,7 +287,7 @@ Resources:
       Location: ../standalone/template.yml
       # Location:
       #   ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone
-      #   SemanticVersion: 4.0.2
+      #   SemanticVersion: 4.0.3
       Parameters:
         CacheBucket: !Ref CacheBucket
         ForceHost:
