@@ -4,7 +4,7 @@ jobs:
   build:
     working_directory: ~/serverless-iiif
     docker:
-      - image: circleci/node:16
+      - image: cimg/node:lts
     steps:
       - checkout
       - run:
