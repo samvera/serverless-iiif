@@ -130,18 +130,20 @@ Replace `<myapiendpoint>` with the `Endpoint` output from the `sam deploy` comma
     should add such description also if it's already present in bug tracker,
     it should not be necessary to visit a webpage to check the history.
 
-    Include Closes #<issue-number> when relavent.
+    Include Closes #<issue-number> when relevant.
 
     Description can have multiple paragraphs and you can use code examples
     inside, just indent it with 4 spaces:
 
-        class PostsController
-          def index
-            respond_to do |wants|
-              wants.html { render 'index' }
-            end
-          end
-        end
+        function handler(event) {
+            if (notAuthorized) { // based on something in the event.request
+               return {
+                 statusCode: 403,
+                 statusDescription: 'Unauthorized'
+               };
+            };
+            return event.request;
+        }
 
     You can also add bullet points:
 
@@ -176,10 +178,11 @@ Replace `<myapiendpoint>` with the `Endpoint` output from the `sam deploy` comma
 We adopted [Github's Pull Request Review](https://help.github.com/articles/about-pull-request-reviews/) for our repositories.
 Common checks that may occur in our repositories:
 
-1. [CircleCI](https://circleci.com/gh/samvera) - where our automated tests are running
-2. RuboCop/Bixby - where we check for style violations
-3. Approval Required - Github enforces at least one person approve a pull request. Also, all reviewers that have chimed in must approve.
-4. CodeClimate - is our code remaining healthy (at least according to static code analysis)
+1. [CircleCI](https://circleci.com/gh/samvera-labs/serverless-iiif) - where our automated tests are running
+2. [Coveralls](https://coveralls.io/github/samvera-labs/serverless-iiif) - code coverage reports and checks
+3. `eslint` - where we check for style violations
+4. Approval Required - Github enforces at least one person approve a pull request. Also, all reviewers that have chimed in must approve.
+5. [CodeClimate](https://codeclimate.com/github/samvera-labs/serverless-iiif) - is our code remaining healthy (at least according to static code analysis)
 
 If one or more of the required checks failed (or are incomplete), the code should not be merged (and the UI will not allow it). If all of the checks have passed, then anyone on the project (including the pull request submitter) may merge the code.
 
