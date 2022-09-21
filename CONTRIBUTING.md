@@ -56,7 +56,7 @@ further details.
 ### Reporting Issues
 
 * Make sure you have a [GitHub account](https://github.com/signup/free)
-* Submit a [Github issue](https://github.com/samvera/{{library}}/issues/) by:
+* Submit a [Github issue](https://github.com/samvera-labs/serverless-iiif/issues/) by:
   * Clearly describing the issue
     * Provide a descriptive summary
     * Explain the expected behavior
@@ -87,7 +87,7 @@ be considered for inclusion in the code base and history of this repository.
 
 - Some basic knowledge of AWS and [CloudFormation](https://aws.amazon.com/cloudformation/)
 - Requires the [SAM CLI](https://aws.amazon.com/serverless/sam/) and [AWS CLI](https://aws.amazon.com/cli/)
-- Building dependencies with the correct architecture requires [Docker](https://docs.docker.com/get-docker/).
+- Building dependencies with the correct architecture on non-Linux systems requires [Docker](https://docs.docker.com/get-docker/).
 
 #### Deploy
 
