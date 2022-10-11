@@ -154,22 +154,23 @@ Resources:
                   Fn::Sub: "arn:aws:s3:::${SourceBucket}"
       Environment:
         Variables:
-          cacheBucket: 
+          cacheBucket:
             Fn::If:
               - UseCacheBucket
               - !Ref CacheBucket
               - !Ref AWS::NoValue
-          density: 
+          density:
             Fn::If:
               - UsePixelDensity
               - !Ref PixelDensity
               - !Ref AWS::NoValue
-          forceHost: 
+          forceHost:
             Fn::If:
               - UseForceHost
               - !Ref ForceHost
               - !Ref AWS::NoValue
           preflight: !Ref Preflight
+          resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
 Outputs:
   Endpoint:
