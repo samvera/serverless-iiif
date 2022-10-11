@@ -5,7 +5,7 @@ const errorHandler = async (err, _event, _context, resource) => {
       headers: { 'Content-Type': 'text/plain' },
       body: 'Not Found'
     };
-  } else if (err instanceof resource.errorClass) {
+  } else if (resource !== undefined && err instanceof resource.errorClass) {
     return {
       statusCode: 400,
       headers: { 'Content-Type': 'text/plain' },
