@@ -56,29 +56,28 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
 1. Make sure you have the [SAM CLI](https://aws.amazon.com/serverless/sam/) and [AWS CLI](https://aws.amazon.com/cli/) installed.
 2. Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that have sufficient access to manage IAM, S3, Lambda, and (optionally) CloudFront resources.
 3. Clone this repository.
-4. Open a shell in the working copy's `sam/standalone` or `sam/cloudfront` directory, depending on which flavor you would like to install.
+4. Copy .env.example to .env. Update the various values within.
 5. Build the application:
    ```shell
-   $ sam build --use-container
+   $ npm run build
    ```
 6. Deploy the application:
    ```shell
-   $ sam deploy --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --guided
+   $ npm run deploy
    ```
-   (Note: You may have to use the `--profile PROFILE_NAME` argument if using an AWS CLI profile other than the default)
 
-   You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
+  You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
 7. Follow the prompts to complete the deployment process and get the resulting endpoint.
 
 ### Deleting the application
 
-The easiest way to delete the application is either from the [Lambda Applications Console](https://console.aws.amazon.com/lambda/home#/applications) or by deleting its [CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home#/stacks?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false). If you deployed from the command line, you can also use the `sam delete` command.
+The easiest way to delete the application is either from the [Lambda Applications Console](https://console.aws.amazon.com/lambda/home#/applications) or by deleting its [CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home#/stacks?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false). If you deployed from the command line, you can also use the `npm run delete` command.
 
 ## Source Images
 
 The S3 key of any given file, minus the extension, is its IIIF ID. For example, if you want to access the image manifest for the file at `abcdef.tif`, you would get `https://.../iiif/2/abcdef/info.json`. If your key contains slashes, they must be URL-encoded: e.g., `ab/cd/ef/gh.tif` would be at `https://.../iiif/2/ab%2Fcd%2Fef%2Fgh/info.json`. (This limitation could easily be fixed by encoding only the necessary slashes in the incoming URL before handing it off to the IIIF processor, but that's beyond the scope of the demo.)
 
-`iiif-processor` can use any image format _natively_ supported by [libvips](https://libvips.github.io/libvips/), but best results will come from using tiled, multi-resolution TIFFs. The Lambda Function wrapper included in this application assumes a `.tif` extension.
+`iiif-processor` can use any image format _natively_ supported by [libvips](https://libvips.github.io/libvips/), include jp2s, but best results will come from using tiled, multi-resolution TIFFs. The Lambda Function wrapper included in this application assumes a `.tif` extension unless you set ResolverTemplate in your .env file .
 
 ### Creating tiled TIFFs
 
