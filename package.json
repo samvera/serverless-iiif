@@ -5,7 +5,8 @@
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
   "dependencies": {
-    "uri-js": "^4.4.1"
+    "uri-js": "^4.4.1",
+    "dotenv": "^16.0.3"
   },
   "devDependencies": {
     "aws-sdk": "^2.368.0",
@@ -34,6 +35,9 @@
   },
   "scripts": {
     "test": "node scripts/test.js --env=jsdom",
-    "test-coverage": "node scripts/test.js --env=jsdom --coverage"
+    "test-coverage": "node scripts/test.js --env=jsdom --coverage",
+    "build": "./bin/build",
+    "deploy": "./bin/deploy",
+    "delete-stack": "./bin/delete"
   }
 }

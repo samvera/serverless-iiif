@@ -5,3 +5,6 @@ deploy.yaml
 node_modules
 samconfig.toml
 package.yml
+*~undo-tree~
+.DS_Store
+.env

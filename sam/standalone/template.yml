@@ -79,10 +79,11 @@ Resources:
       LayerName:
         Fn::Sub: "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
-      ContentUri: ../../dependencies
+      ContentUri: ../../dependencies/Dependencies.zip
       CompatibleRuntimes:
         - nodejs16.x
       LicenseInfo: "Apache-2.0"
+      RetentionPolicy: Retain
     Metadata:
       BuildMethod: nodejs16.x
   IiifFunction:
@@ -172,6 +173,7 @@ Resources:
           preflight: !Ref Preflight
           resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
+
 Outputs:
   Endpoint:
     Description: IIIF Image API v2 Endpoint
