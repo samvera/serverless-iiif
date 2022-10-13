@@ -103,6 +103,10 @@ To generate a code coverage report run:
 npm test --coverage
 ```
 
+## Custom Sharp Layer
+
+This lambda uses the Sharp layer from https://github.com/samvera-labs/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then copy the file to serverless-iiif/sharp-lambda-layer.x86_64.zip. Then set LOCAL_SHARP=true and build/deploy to use your own version.
+
 ## Advanced Usage
 
 The SAM deploy template takes several optional parameters to enable the association of [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or [Lambda@Edge Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) with the CloudFront distribution. These functions can perform authentication and authorization functions, change how the S3 file and/or image dimensions are resolved, or alter the response from the lambda or cache. These parameters are:

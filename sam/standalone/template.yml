@@ -79,11 +79,22 @@ Resources:
       LayerName:
         Fn::Sub: "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
-      ContentUri: ../../dependencies/Dependencies.zip
+      ContentUri: ../../dependencies
       CompatibleRuntimes:
         - nodejs16.x
       LicenseInfo: "Apache-2.0"
-      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: nodejs16.x
+  CustomSharp:
+    Type: "AWS::Serverless::LayerVersion"
+    Properties:
+      LayerName:
+        Fn::Sub: "${AWS::StackName}-sharp"
+      Description: Sharp with jp2 support
+      ContentUri: s3://bucket_name/sharp-lambda-layer-0.30.7.x86_64.zip
+      CompatibleRuntimes:
+        - nodejs16.x
+      LicenseInfo: "Apache-2.0"
     Metadata:
       BuildMethod: nodejs16.x
   IiifFunction:
@@ -113,6 +124,7 @@ Resources:
       CodeUri: ../../src
       Layers:
         - Ref: Dependencies
+        - Ref: CustomSharp
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"

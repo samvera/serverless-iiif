@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 require('dotenv').config()
 const { exec, spawn } = require("child_process");
+const Setup = require('./setup.js')
 
-var type = process.env.DEPLOY_TYPE || "cloudfront"
+var setup = new Setup();
 
-var cmd = `cd sam/${type} && sam build --use-container`
+var cmd = `cd sam/${setup.type} && sam build --use-container`
 
 console.log(cmd)
 

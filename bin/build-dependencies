@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd dependencies
-docker buildx build --platform linux/amd64 --load -t serverless_iiif_dependencies .
-docker run -v $(pwd):/output serverless_iiif_dependencies

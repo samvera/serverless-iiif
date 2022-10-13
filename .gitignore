@@ -8,3 +8,4 @@ package.yml
 *~undo-tree~
 .DS_Store
 .env
+sharp-lambda-layer.*
