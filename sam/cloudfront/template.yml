@@ -21,6 +21,7 @@ Metadata:
           - IiifLambdaTimeout
           - PixelDensity
           - ResolverTemplate
+          - SharpLayer
       - Label:
           default: "Cache Configuration"
         Parameters:
@@ -91,6 +92,10 @@ Parameters:
     Type: String
     Description: A printf-style format string that determines the location of source image within the bucket given the image ID
     Default: "%s.tif"
+  SharpLayer:
+    Type: String
+    Description: ARN of an AWS Lambda Layer containing the sharp and libvips dependencies (Leave blank for default)
+    Default: ""
   ViewerRequestARN:
     Type: String
     Description: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
@@ -304,6 +309,7 @@ Resources:
             - true
             - false
         ResolverTemplate: !Ref ResolverTemplate
+        SharpLayer: !Ref SharpLayer
         SourceBucket: !Ref SourceBucket
 Outputs:
   Endpoint:

@@ -59,6 +59,10 @@ Parameters:
     Type: String
     Description: A printf-style format string that determines the location of source image within the bucket given the image ID
     Default: "%s.tif"
+  SharpLayer:
+    Type: String
+    Description: ARN of an AWS Lambda Layer containing the sharp and libvips dependencies (Leave blank for default)
+    Default: ""
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
@@ -66,6 +70,8 @@ Conditions:
   UseCacheBucket:
     Fn::Not:
       - Fn::Equals: [!Ref CacheBucket, ""]
+  UseDefaultSharpLayer:
+    Fn::Equals: [!Ref SharpLayer, ""]
   UseForceHost:
     Fn::Not:
       - Fn::Equals: [!Ref ForceHost, ""]
@@ -80,18 +86,6 @@ Resources:
         Fn::Sub: "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
       ContentUri: ../../dependencies
-      CompatibleRuntimes:
-        - nodejs16.x
-      LicenseInfo: "Apache-2.0"
-    Metadata:
-      BuildMethod: nodejs16.x
-  CustomSharp:
-    Type: "AWS::Serverless::LayerVersion"
-    Properties:
-      LayerName:
-        Fn::Sub: "${AWS::StackName}-sharp"
-      Description: Sharp with jp2 support
-      ContentUri: s3://bucket_name/sharp-lambda-layer-0.30.7.x86_64.zip
       CompatibleRuntimes:
         - nodejs16.x
       LicenseInfo: "Apache-2.0"
@@ -124,7 +118,10 @@ Resources:
       CodeUri: ../../src
       Layers:
         - Ref: Dependencies
-        - Ref: CustomSharp
+        - Fn::If:
+          - UseDefaultSharpLayer
+          - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:1"
+          - Ref: SharpLayer
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"
