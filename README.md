@@ -77,7 +77,7 @@ The easiest way to delete the application is either from the [Lambda Application
 
 The S3 key of any given file, minus the extension, is its IIIF ID. For example, if you want to access the image manifest for the file at `abcdef.tif`, you would get `https://.../iiif/2/abcdef/info.json`. If your key contains slashes, they must be URL-encoded: e.g., `ab/cd/ef/gh.tif` would be at `https://.../iiif/2/ab%2Fcd%2Fef%2Fgh/info.json`. (This limitation could easily be fixed by encoding only the necessary slashes in the incoming URL before handing it off to the IIIF processor, but that's beyond the scope of the demo.)
 
-`iiif-processor` can use any image format _natively_ supported by [libvips](https://libvips.github.io/libvips/), include jp2s, but best results will come from using tiled, multi-resolution TIFFs. The Lambda Function wrapper included in this application assumes a `.tif` extension unless you set ResolverTemplate in your .env file .
+`iiif-processor` can use any image format _natively_ supported by [libvips](https://libvips.github.io/libvips/), including JPEG 2000 (`.jp2`), but best results will come from using tiled, multi-resolution TIFFs. The Lambda Function wrapper included in this application assumes a `.tif` extension unless you set ResolverTemplate in your .env file.
 
 ### Creating tiled TIFFs
 
@@ -165,6 +165,7 @@ The cache bucket uses an S3 lifecycle rule to expire cached responses in 1 day.
 
 * [Michael B. Klein](https://github.com/mbklein)
 * [Justin Gondron](https://github.com/jgondron)
+* [Rob Kaufman](https://github.com/orangewolf)
 * [Edward Silverton](https://github.com/edsilv)
 * [Trey Pendragon](https://github.com/tpendragon)
 * [Dan Wolfe](https://github.com/danthewolfe)
