@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+require('dotenv').config()
+const { exec } = require("child_process");
+const Setup = require('setup')
+
+var setup = new Setup();
+
+var keys = [
+  "CachePolicyID",
+  "CachePriceClass",
+  "CacheDomainName",
+  "CacheSSLCertificate",
+  "SourceBucket",
+  "IiifLambdaMemory",
+  "IiifLambdaTimeout",
+  "OriginRequestARN",
+  "OriginResponseARN",
+  "PixelDensity",
+  "ResolverTemplate",
+  "ViewerRequestARN",
+  "ViewerRequestType",
+  "ViewerResponseARN",
+  "ViewerResponseType"
+]
+
+let parameter_overrides = ""
+keys.forEach(element => {
+  if(process.env[element] !== undefined) {
+    parameter_overrides = parameter_overrides + ` ${element}="${process.env[element]}"`
+  }
+})
+
+var cmd = `cd sam/${setup.type} && sam deploy --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --region ${process.env['AWS_REGION']} --profile ${process.env['AWS_PROFILE']} --stack-name ${process.env['AWS_STACK_NAME']} --resolve-s3 --parameter-overrides ${parameter_overrides}`
+console.log(cmd)
+
+exec(cmd, (error, stdout, stderr) => {
+  if (error) {
+    console.log(`error: ${error.message}`);
+    return;
+  }
+  if (stderr) {
+    console.log(`stderr: ${stderr}`);
+  }
+  console.log(`stdout: ${stdout}`);
+});

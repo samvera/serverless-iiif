@@ -3,7 +3,7 @@ const eventPath = (event) => {
 };
 
 const fileMissing = (event) => {
-  return !/\.(jpe?g|tiff?|gif|png|webp|json)$/.test(eventPath(event));
+  return !/\.(jpe?g|tiff?|jp2|gif|png|webp|json)$/.test(eventPath(event));
 };
 
 const getUri = (event) => {
