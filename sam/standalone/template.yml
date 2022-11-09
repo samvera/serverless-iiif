@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
-    SemanticVersion: 4.1.0
+    SemanticVersion: 4.1.1
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
