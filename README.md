@@ -1,7 +1,7 @@
 # serverless-iiif
 
 [![Build Status](https://circleci.com/gh/samvera/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera/serverless-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/e23260bc07851b4f8db5/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
 
 ## Description
