@@ -1,8 +1,8 @@
 # serverless-iiif
 
-[![Build Status](https://circleci.com/gh/samvera-labs/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera-labs/serverless-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/e23260bc07851b4f8db5/maintainability)](https://codeclimate.com/github/samvera-labs/serverless-iiif/maintainability)
-[![Test Coverage](https://coveralls.io/repos/github/samvera-labs/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera-labs/serverless-iiif)
+[![Build Status](https://circleci.com/gh/samvera/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera/serverless-iiif)
+[![Maintainability](https://api.codeclimate.com/v1/badges/e23260bc07851b4f8db5/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
+[![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
 
 ## Description
 
@@ -105,7 +105,7 @@ npm test --coverage
 
 ## Custom Sharp Layer
 
-This lambda uses the Sharp layer from https://github.com/samvera-labs/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then copy the file to serverless-iiif/sharp-lambda-layer.x86_64.zip. Then set LOCAL_SHARP=true and build/deploy to use your own version.
+This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then copy the file to serverless-iiif/sharp-lambda-layer.x86_64.zip. Then set LOCAL_SHARP=true and build/deploy to use your own version.
 
 ## Advanced Usage
 

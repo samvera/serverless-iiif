@@ -56,7 +56,7 @@ further details.
 ### Reporting Issues
 
 * Make sure you have a [GitHub account](https://github.com/signup/free)
-* Submit a [Github issue](https://github.com/samvera-labs/serverless-iiif/issues/) by:
+* Submit a [Github issue](https://github.com/samvera/serverless-iiif/issues/) by:
   * Clearly describing the issue
     * Provide a descriptive summary
     * Explain the expected behavior
@@ -178,11 +178,11 @@ Replace `<myapiendpoint>` with the `Endpoint` output from the `sam deploy` comma
 We adopted [Github's Pull Request Review](https://help.github.com/articles/about-pull-request-reviews/) for our repositories.
 Common checks that may occur in our repositories:
 
-1. [CircleCI](https://circleci.com/gh/samvera-labs/serverless-iiif) - where our automated tests are running
-2. [Coveralls](https://coveralls.io/github/samvera-labs/serverless-iiif) - code coverage reports and checks
+1. [CircleCI](https://circleci.com/gh/samvera/serverless-iiif) - where our automated tests are running
+2. [Coveralls](https://coveralls.io/github/samvera/serverless-iiif) - code coverage reports and checks
 3. `eslint` - where we check for style violations
 4. Approval Required - Github enforces at least one person approve a pull request. Also, all reviewers that have chimed in must approve.
-5. [CodeClimate](https://codeclimate.com/github/samvera-labs/serverless-iiif) - is our code remaining healthy (at least according to static code analysis)
+5. [CodeClimate](https://codeclimate.com/github/samvera/serverless-iiif) - is our code remaining healthy (at least according to static code analysis)
 
 If one or more of the required checks failed (or are incomplete), the code should not be merged (and the UI will not allow it). If all of the checks have passed, then anyone on the project (including the pull request submitter) may merge the code.
 
