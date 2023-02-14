@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
-    SemanticVersion: 4.1.6
+    SemanticVersion: 4.2.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -308,7 +308,7 @@ Resources:
       Location: ../standalone/template.yml
       # Location:
       #   ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone
-      #   SemanticVersion: 4.1.6
+      #   SemanticVersion: 4.2.0
       Parameters:
         CacheBucket: !Ref CacheBucket
         ForceHost:
@@ -331,10 +331,14 @@ Outputs:
   Endpoint:
     Description: IIIF Endpoint URL
     Value:
-      Fn::If:
-        - DistributionCustomDomain
-        - Fn::Sub: "https://${CacheDomainName}/iiif/2/"
-        - Fn::Sub: "https://${CachingEndpoint.DomainName}/iiif/2/"
+      Fn::Join:
+        - ""
+        - - "https://"
+          - Fn::If:
+            - DistributionCustomDomain
+            - !Select [0, !Split [",", !Ref CacheDomainName]]
+            - !GetAtt CachingEndpoint.DomainName
+          - "/iiif/2"
   DistributionId:
     Description: Caching Distribution ID
     Value: 

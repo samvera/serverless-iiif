@@ -13,5 +13,9 @@ for f in $root/package.json $root/src/package.json $root/dependencies/package.js
 done
 
 for f in $root/sam/standalone/template.yml $root/sam/cloudfront/template.yml; do
-  sed -i '' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $f
+  if [[ "$OSTYPE" = "darwin*" ]]; then
+    sed -i '' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $f
+  else
+    sed -i'' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $f
+  fi
 done
