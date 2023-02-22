@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
-    SemanticVersion: 4.2.0
+    SemanticVersion: 4.2.1
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -120,7 +120,7 @@ Resources:
         - Ref: Dependencies
         - Fn::If:
           - UseDefaultSharpLayer
-          - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:1"
+          - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:2"
           - Ref: SharpLayer
       Policies:
         - AWSLambdaExecute
