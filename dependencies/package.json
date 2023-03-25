@@ -1,11 +1,11 @@
 {
   "name": "serverless-iiif-dependencies",
-  "version": "4.2.5",
+  "version": "4.3.0",
   "description": "Dependencies for serverless IIIF",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.368",
-    "iiif-processor": "^3.2.0"
+    "iiif-processor": "^3.2.2"
   }
 }
