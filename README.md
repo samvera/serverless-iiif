@@ -149,6 +149,21 @@ function handler(event) {
 }
 ```
 
+The `x-preflight-dimensions` header can take several shapes:
+
+* `{ width, height }` (or `[{ width, height }]`) - a straightforward, single-resolution image
+* `[{ width, height }, { width, height }, ...]` - a multi-resolution image with pages of the specified sizes
+* `{ width, height, pages }` - a multi-resolution image with the specified number of `pages`, each half the size of the one before
+* `{ width, height, limit }` - a multi-resolution image in which the smallest width and height are both less than the specified `limit`
+
+For example, the following dimension values would all describe the same pyramidal image:
+
+* `[{ width: 2048, height: 1536 }, { width: 1024, height: 768 }, { width: 512, height: 384 }]`
+* `{ width: 2048, height: 1536, pages: 3 }`
+* `{ width: 2048, height: 1536, limit: 480 }`
+
+The `limit` calculator will keep going until both dimensions are _less than_ the limit, not _less than or equal to_. So a `limit: 512` on the third example above would generate a fourth page at `{ width: 256, height: 192 }`.
+
 *Note:* The SAM deploy template adds a `preflight=true` environment variable to the main IIIF Lambda if a preflight function is provided. The function will _only_ look for the preflight headers if this environment variable is `true`. This prevents requests from including those headers directly if no preflight function is present. If you do use a preflight function, make sure it strips out any `x-preflight-location` and `x-preflight-dimensions` headers that it doesn't set itself.
 
 ## Notes

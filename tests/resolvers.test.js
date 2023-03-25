@@ -40,8 +40,20 @@ describe('default resolvers', () => { // eslint-disable-line max-lines-per-funct
 
   describe('dimensionResolver', () => {
     it('has metadata dimensions', async () => {
-      const expected = { width: 100, height: 200 };
+      const expected = [{ width: 2048, height: 1536 }];
       const result = await dimensionResolver({id: 'dimensions'});
+      expect(result).toEqual(expected);
+    });
+
+    it('calculates pyramid info if metadata has pages', async () => {
+      const expected = [
+        { width: 2048, height: 1536 },
+        { width: 1024, height: 768 },
+        { width: 512, height: 384 },
+        { width: 256, height: 192 },
+        { width: 128, height: 96 }
+      ];
+      const result = await dimensionResolver({id: 'paged-dimensions'});
       expect(result).toEqual(expected);
     });
 
@@ -54,8 +66,15 @@ describe('default resolvers', () => { // eslint-disable-line max-lines-per-funct
 });
 
 describe('preflight resolvers', () => { // eslint-disable-line max-lines-per-function
+  let savedEnvironment;
+
   beforeEach(() => {
     AWS.S3 = AWSMockS3.S3;
+    savedEnvironment = { ...process.env };
+  });
+
+  afterEach(() => {
+    process.env = { ...savedEnvironment };
   });
 
   describe('streamResolver', () => {
@@ -71,16 +90,58 @@ describe('preflight resolvers', () => { // eslint-disable-line max-lines-per-fun
   });
 
   describe('dimensionResolver', () => {
-    it('preflight dimensions', async () => {
+    it('preflight dimensions (single)', async () => {
       const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480 }' } }, true);
       const expected = { width: 640, height: 480 };
       const result = await dimensionResolver({id: 'dimensions'});
       expect(result).toEqual(expected);
     });
 
+    it('preflight dimensions (array)', async () => {
+      const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '[{ "width": 640, "height": 480 }]' } }, true);
+      const expected = [{ width: 640, height: 480 }];
+      const result = await dimensionResolver({id: 'dimensions'});
+      expect(result).toEqual(expected);
+    });
+
+    it('preflight dimensions (pages)', async () => {
+      const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480, "pages": 2 }' } }, true);
+      const expected = [
+        { width: 640, height: 480 },
+        { width: 320, height: 240 }
+      ];
+      const result = await dimensionResolver({id: 'dimensions'});
+      expect(result).toEqual(expected);
+    });
+
+    it('preflight dimensions (pages)', async () => {
+      const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480, "limit": 200 }' } }, true);
+      const expected = [
+        { width: 640, height: 480 },
+        { width: 320, height: 240 },
+        { width: 160, height: 120 }
+      ];
+      const result = await dimensionResolver({id: 'dimensions'});
+      expect(result).toEqual(expected);
+    });
+
     it('no preflight dimensions / metadata dimensions', async () => {
       const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }, true);
-      const expected = { width: 100, height: 200 };
+      const expected = [{ width: 2048, height: 1536 }];
+      const result = await dimensionResolver({id: 'dimensions'});
+      expect(result).toEqual(expected);
+    });
+
+    it('no preflight dimensions / metadata dimensions / page size limit', async () => {
+      process.env.PYRAMID_LIMIT = "256";
+      const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }, true);
+      const expected = [
+        { width: 2048, height: 1536 },
+        { width: 1024, height: 768 },
+        { width: 512, height: 384 },
+        { width: 256, height: 192 },
+        { width: 128, height: 96 },
+      ];
       const result = await dimensionResolver({id: 'dimensions'});
       expect(result).toEqual(expected);
     });

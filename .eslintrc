@@ -19,7 +19,7 @@
     "key-spacing"           : 0,
     "max-len"               : [0, 120, 2],
     "max-lines-per-function": ["warn", {"max": 30, "skipBlankLines": true, "skipComments": true}],
-    "no-unused-vars"        : [1, { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }],
+    "no-unused-vars"        : [1, { "vars": "all", "args": "after-used", "ignoreRestSiblings": false, "argsIgnorePattern": "^_" }],
     "no-var"                : 1,
     "object-curly-spacing"  : [2, "always"],
     "prefer-const" : [1, {

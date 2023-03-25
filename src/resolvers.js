@@ -28,15 +28,46 @@ const defaultStreamLocation = (id) => {
   return { Bucket: sourceBucket, Key: key };
 };
 
+const calculatePage = ({ width, height }, page) => {
+  const scale = 1 / 2 ** page;
+  return {
+    width: Math.floor(width * scale),
+    height: Math.floor(height * scale)
+  };
+};
+
+const reduceByPages = ({ width, height, pages }) => {
+  const result = [{ width, height }];
+  for (let page = 1; page < pages; page++) {
+    result.push(calculatePage(result[0], page));
+  }
+  return result;
+};
+
+const reduceToLimit = ({ width, height, limit }) => {
+  const result = [{ width, height }];
+  let page = 1;
+  let currentPage = result[result.length - 1];
+  while (currentPage.width >= limit || currentPage.height >= limit) {
+    const nextPage = calculatePage(result[0], page++);
+    result.push(nextPage);
+    currentPage = result[result.length - 1];
+  }
+  return result;
+};
+
 // Retrieve dimensions from S3 metadata
 const dimensionRetriever = async (location) => {
   const s3 = new AWS.S3();
   const obj = await s3.headObject(location).promise();
   if (obj.Metadata.width && obj.Metadata.height) {
-    return {
+    const result = {
       width: parseInt(obj.Metadata.width, 10),
       height: parseInt(obj.Metadata.height, 10)
     };
+    if (obj.Metadata.pages) return reduceByPages({ ...result, pages: parseInt(obj.Metadata.pages) });
+    if (process.env.PYRAMID_LIMIT) return reduceToLimit({ ...result, limit: parseInt(process.env.PYRAMID_LIMIT) });
+    return [result];
   }
   return null;
 };
@@ -54,7 +85,11 @@ const parseLocationHeader = (event) => {
 const parseDimensionsHeader = (event) => {
   const dimensionsHeader = event.headers['x-preflight-dimensions'];
   if (!dimensionsHeader) return null;
-  return JSON.parse(dimensionsHeader);
+
+  const result = JSON.parse(dimensionsHeader);
+  if (result.pages) return reduceByPages(result);
+  if (result.limit) return reduceToLimit(result);
+  return result;
 };
 
 const preflightResolver = (event) => {
@@ -76,10 +111,10 @@ const preflightResolver = (event) => {
 // Standard (non-preflight) resolvers
 const standardResolver = () => {
   return {
-    streamResolver: async ({id, baseUrl}, callback) => {
+    streamResolver: async ({ id }, callback) => {
       return s3Stream(defaultStreamLocation(id), callback);
     },
-    dimensionResolver: async ({id, baseUrl}) => {
+    dimensionResolver: async ({ id }) => {
       return dimensionRetriever(defaultStreamLocation(id));
     }
   };

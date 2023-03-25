@@ -25,14 +25,17 @@ const S3 = jest.fn().mockImplementation(() => {
       checkParams('S3.headObject', params);
       let md = {};
       if (params.Key === 'dimensions.tif') {
-        md = { width: '100', height: '200' };
-      };
+        md = { width: '2048', height: '1536' };
+      }
+      if (params.Key === 'paged-dimensions.tif') {
+        md = { width: '2048', height: '1536', pages: '5' };
+      }
       return {
         promise: () => {
           return {
             Metadata: md
           };
-        }
+        },
       };
     }
   };
@@ -40,10 +43,10 @@ const S3 = jest.fn().mockImplementation(() => {
 
 const upload = jest.fn((params, callback) => {
   checkParams('upload', params);
-  if (params.Key === "new_cache_key/default.jpg") {
+  if (params.Key === 'new_cache_key/default.jpg') {
     callback(null, {});
   } else {
-    callback("unknown cache key", null);
+    callback('unknown cache key', null);
   }
 });
 
@@ -54,7 +57,7 @@ const S3Cache = jest.fn().mockImplementation(() => {
       if (params.Key === 'cache_hit/default.jpg') {
         callback(null, {});
       } else {
-        callback("error", null);
+        callback('error', null);
       }
     },
     getSignedUrl: function (params) {
