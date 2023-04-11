@@ -22,6 +22,14 @@ Metadata:
           - PixelDensity
           - ResolverTemplate
       - Label:
+          default: "CORS Configuration"
+        Parameters:
+          - CorsAllowCredentials
+          - CorsAllowHeaders
+          - CorsAllowOrigin
+          - CorsExposeHeaders
+          - CorsMaxAge
+      - Label:
           default: "Internal Use Only – Do Not Change"
         Parameters:
           - CacheBucket
@@ -32,6 +40,36 @@ Parameters:
     Type: String
     Description: Bucket to use for caching results larger than 6MB
     Default: ""
+  CorsAllowCredentials:
+    Type: String
+    Description: |
+      Value of the CORS `Access-Control-Allow-Credentials` response header.
+      Must be `true` to allow requests with `Authorization` and/or
+      `Cookie` headers.
+    AllowedValues:
+      - false
+      - true
+    Default: false
+  CorsAllowHeaders:
+    Type: String
+    Description: Value of the CORS `Access-Control-Allow-Headers` response header
+    Default: "*"
+  CorsAllowOrigin:
+    Type: String
+    Description: |
+      Value of the CORS `Access-Control-Allow-Origin` response header.
+      Use the special value `REFLECT_ORIGIN` to copy the value from the
+      `Origin` request header (required to emulate `*` for XHR requests
+      using `Authorization` and/or `Cookie` headers).
+    Default: "*"
+  CorsExposeHeaders:
+    Type: String
+    Description: Value of the CORS `Access-Control-Expose-Headers` response header
+    Default: cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma
+  CorsMaxAge:
+    Type: Number
+    Description: Value of the CORS `Access-Control-MaxAge` response header
+    Default: 3600
   ForceHost:
     Type: String
     Description: Forced hostname to use in responses
@@ -100,19 +138,6 @@ Resources:
         Ref: IiifLambdaMemory
       FunctionUrlConfig:
         AuthType: NONE
-        Cors:
-          AllowCredentials: false
-          AllowHeaders:
-            - "*"
-          AllowMethods:
-            - GET
-          AllowOrigins:
-            - "*"
-          ExposeHeaders:
-            - content-length
-            - content-type
-            - date
-          MaxAge: 3600
       Timeout:
         Ref: IiifLambdaTimeout
       CodeUri: ../../src
@@ -169,6 +194,11 @@ Resources:
               - UseCacheBucket
               - !Ref CacheBucket
               - !Ref AWS::NoValue
+          corsAllowCredentials: !Ref CorsAllowCredentials
+          corsAllowOrigin: !Ref CorsAllowOrigin
+          corsAllowHeaders: !Ref CorsAllowHeaders
+          corsExposeHeaders: !Ref CorsExposeHeaders
+          corsMaxAge: !Ref CorsMaxAge
           density:
             Fn::If:
               - UsePixelDensity
