@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
-    SemanticVersion: 4.3.1
+    SemanticVersion: 4.3.2
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -249,6 +249,24 @@ Resources:
             - x-preflight-dimensions
         QueryStringsConfig:
           QueryStringBehavior: none
+  ResponseHeaderPolicy:
+    Type: "AWS::CloudFront::ResponseHeadersPolicy"
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-allow-cors-response-headers"
+        Comment: Allows IIIF CORS response headers
+        CorsConfig:
+          AccessControlAllowCredentials: false
+          AccessControlAllowHeaders:
+            Items: ["*"]
+          AccessControlAllowMethods:
+            Items: ["GET", "OPTIONS"]
+          AccessControlAllowOrigins:
+            Items: ["*"]
+          AccessControlExposeHeaders:
+            Items: ["cache-control", "content-language", "content-length", "content-type", "date", "expires", "last-modified", "pragma"]
+          AccessControlMaxAgeSec: 3600
+          OriginOverride: false
   CachingEndpoint:
     Type: "AWS::CloudFront::Distribution"
     Properties:
@@ -302,6 +320,7 @@ Resources:
           CachedMethods: ["GET", "HEAD"]
           CachePolicyId: !Ref CachePolicyID
           OriginRequestPolicyId: !Ref OriginRequestPolicy
+          ResponseHeadersPolicyId: !Ref ResponseHeaderPolicy
           FunctionAssociations:
             - Fn::If:
               - ViewerRequestCloudWatchFunction
@@ -346,7 +365,7 @@ Resources:
       Location: ../standalone/template.yml
       # Location:
       #   ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone
-      #   SemanticVersion: 4.3.1
+      #   SemanticVersion: 4.3.2
       Parameters:
         CacheBucket: !Ref CacheBucket
         CorsAllowCredentials: !Ref CorsAllowCredentials
