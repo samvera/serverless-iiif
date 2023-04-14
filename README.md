@@ -109,6 +109,20 @@ This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sh
 
 ## Advanced Usage
 
+### Cross-Origin Request Sharing (CORS)
+
+For security reasons, web browsers have built in limits on what sort of requests can be made to a given domain from a page hosted under a different domain. Since this is a common use case for IIIF (resources embedded in pages whose domains differ from that of the server), IIIF interactions are particularly susceptible to these limits. The mechanism for determining which of these requests should be allowed or blocked is known as Cross-Origin Resource Sharing, or [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS). A full explanation of CORS is beyond the scope of this project, but the SAM deploy template contains five parameters relating to how the IIIF server handles CORS:
+
+* `CorsAllowCredentials` contains the value that will be returned in the `Access-Control-Allow-Credentials` response header.
+* `CorsAllowHeaders` contains the value that will be returned in the `Access-Control-Allow-Headers` response header.
+* `CorsAllowOrigin` contains the value that will be returned in the `Access-Control-Allow-Origin` response header. In addition, a special value, `REFLECT_ORIGIN`, instructs the IIIF server to copy the value of the incoming request's `Origin` header into the `Access-Control-Allow-Origin` response header.
+* `CorsExposeHeaders` contains the value that will be returned in the `Access-Control-Expose-Headers` response header.
+* `CorsMaxAge` contains the value that will be returned in the `Access-Control-Max-Age` response header.
+
+The default values will work in most circumstances, but if you need the IIIF server to accept requests that include credentials or other potentially sensitive information (e.g., `Authorization` and/or `Cookie` headers), you'll need to set `CorsAllowOrigin` to `REFLECT_ORIGIN` and `CorsAllowCredentials` to `true`. Other settings allow further customization.
+
+### Request/Response Functions
+
 The SAM deploy template takes several optional parameters to enable the association of [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or [Lambda@Edge Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) with the CloudFront distribution. These functions can perform authentication and authorization functions, change how the S3 file and/or image dimensions are resolved, or alter the response from the lambda or cache. These parameters are:
 
 * `OriginRequestARN`: ARN of the Lambda@Edge Function to use at the origin-request stage
@@ -120,11 +134,11 @@ The SAM deploy template takes several optional parameters to enable the associat
 
 These functions, if used, must be created, configured, and published before the serverless application is deployed.
 
-### Examples
+#### Examples
 
 These examples use CloudFront Functions. Lambda@Edge functions are slightly more complicated in terms of the event structure but the basic idea is the same.
 
-#### Simple Authorization
+##### Simple Authorization
 
 ```JavaScript
 function handler(event) {
@@ -138,7 +152,7 @@ function handler(event) {
 }
 ```
 
-#### Custom File Location / Image Dimensions
+##### Custom File Location / Image Dimensions
 
 ```JavaScript
 function handler(event) {

@@ -32,7 +32,7 @@ describe('index.handler', () => {
 
     const expected = { statusCode: 204, body: null };
     const result = await handler(event, context);
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   describe("INFO.JSON request", () => {
@@ -100,7 +100,7 @@ describe('index.handler', () => {
   
       const expected = { statusCode: 302, headers: { Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
       const result = await handler(event, context);
-      expect(result).toEqual(expected);
+      expect(result).toMatchObject(expected);
     });  
   });
 
@@ -134,7 +134,7 @@ describe('index.handler', () => {
         body:  Buffer.from(body).toString('base64')
       };
       const result = await handler(event, context);
-      expect(result).toEqual(expected);
+      expect(result).toMatchObject(expected);
     });
 
     it('works with nonbase64 image.', async () => {
@@ -157,7 +157,7 @@ describe('index.handler', () => {
         body: body
       };
       const result = await handler(event, context);
-      expect(result).toEqual(expected);
+      expect(result).toMatchObject(expected);
     });
 
     it('returns 404 to force failover when cached file exists', async () => {
@@ -178,7 +178,7 @@ describe('index.handler', () => {
         body: ''
       };
       const result = await handler(event, context);
-      expect(result).toEqual(expected);
+      expect(result).toMatchObject(expected);
     });
 
     it('caches file and returns 404 to force failover when result is too large to return directly', async () => {
@@ -203,7 +203,7 @@ describe('index.handler', () => {
       };
       const result = await handler(event, context);
       expect(cache.makeCache).toHaveBeenCalled();
-      expect(result).toEqual(expected);
+      expect(result).toMatchObject(expected);
     });
 
     it('handles errors that arise during processing', async () => {
@@ -224,7 +224,7 @@ describe('index.handler', () => {
         statusCode: 500,
       };
       result = await handler(event, context);
-      expect(result).toEqual(expected);
+      expect(result).toMatchObject(expected);
     });
   });
 });

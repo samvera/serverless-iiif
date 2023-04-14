@@ -6,22 +6,24 @@ const resolvers = require('./resolvers');
 const { errorHandler } = require('./error');
 
 const handleRequestFunc = async (event, context) => {
-  const { eventPath, fileMissing, getRegion } = helpers;
+  const { addCorsHeaders, eventPath, fileMissing, getRegion } = helpers;
 
   AWS.config.region = getRegion(context);
   context.callbackWaitsForEmptyEventLoop = false;
 
+  let response;
   if (event.requestContext?.http?.method === 'OPTIONS') {
     // OPTIONS REQUEST
-    return { statusCode: 204, body: null };
+    response = { statusCode: 204, body: null };
   } else if (fileMissing(event)) {
     // INFO.JSON REQUEST
     const location = eventPath(event) + '/info.json';
-    return { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' };
+    response = { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' };
   } else {
     // IMAGE REQUEST
-    return await handleResourceRequestFunc(event, context);
+    response = await handleResourceRequestFunc(event, context);
   }
+  return addCorsHeaders(event, response);
 };
 
 const handleResourceRequestFunc = async (event, context) => {
