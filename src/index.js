@@ -17,8 +17,14 @@ const handleRequestFunc = async (event, context) => {
     response = { statusCode: 204, body: null };
   } else if (fileMissing(event)) {
     // INFO.JSON REQUEST
-    const location = eventPath(event) + '/info.json';
-    response = { statusCode: 302, headers: { Location: location }, body: 'Redirecting to info.json' };
+    response = {
+      statusCode: 302,
+      headers: {
+        'Cache-Control': 'no-store',
+        Location: eventPath(event) + '/info.json'
+      },
+      body: 'Redirecting to info.json'
+    };
   } else {
     // IMAGE REQUEST
     response = await handleResourceRequestFunc(event, context);
@@ -57,8 +63,9 @@ const handleImageRequestFunc = async (uri, resource) => {
   const { isTooLarge } = helpers;
   const { getCached, makeCache } = cache;
 
+  const cacheable = resource.filename !== 'info.json';
   const key = new URL(uri).pathname.replace(/^\//, '');
-  const cached = resource.filename === 'info.json' ? false : await getCached(key);
+  const cached = cacheable && await getCached(key);
 
   let response;
   if (cached) {
@@ -72,6 +79,9 @@ const handleImageRequestFunc = async (uri, resource) => {
     } else {
       response = makeResponse(result);
     }
+  }
+  if (!cacheable) {
+    response.headers['Cache-Control'] = 'no-store';
   }
   return response;
 };

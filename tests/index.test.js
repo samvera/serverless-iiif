@@ -59,7 +59,8 @@ describe('index.handler', () => {
         }
       };
 
-      const { body } = await handler(event, context);
+      const { headers, body } = await handler(event, context);
+      expect(headers['Cache-Control']).toEqual('no-store');
       const info = JSON.parse(body);
       expect(info['@id']).toEqual('http://iiif.example.edu/iiif/2/image_id');
       expect(info.width).toEqual(1280);
@@ -98,7 +99,7 @@ describe('index.handler', () => {
       
       const event = {};
   
-      const expected = { statusCode: 302, headers: { Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
+      const expected = { statusCode: 302, headers: { 'Cache-Control': 'no-store', Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
       const result = await handler(event, context);
       expect(result).toMatchObject(expected);
     });  
@@ -134,6 +135,7 @@ describe('index.handler', () => {
         body:  Buffer.from(body).toString('base64')
       };
       const result = await handler(event, context);
+      expect(result.headers['Cache-Control']).toBeUndefined();
       expect(result).toMatchObject(expected);
     });
 
@@ -157,6 +159,7 @@ describe('index.handler', () => {
         body: body
       };
       const result = await handler(event, context);
+      expect(result.headers["Cache-Control"]).toBeUndefined();      
       expect(result).toMatchObject(expected);
     });
 
@@ -178,6 +181,7 @@ describe('index.handler', () => {
         body: ''
       };
       const result = await handler(event, context);
+      expect(result.headers["Cache-Control"]).toBeUndefined();
       expect(result).toMatchObject(expected);
     });
 
@@ -203,6 +207,7 @@ describe('index.handler', () => {
       };
       const result = await handler(event, context);
       expect(cache.makeCache).toHaveBeenCalled();
+      expect(result.headers["Cache-Control"]).toBeUndefined();
       expect(result).toMatchObject(expected);
     });
 
