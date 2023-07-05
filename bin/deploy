@@ -25,12 +25,12 @@ var keys = [
 
 let parameter_overrides = ""
 keys.forEach(element => {
-  if(process.env[element] !== undefined) {
+  if (process.env[element] !== undefined) {
     parameter_overrides = parameter_overrides + ` ${element}="${process.env[element]}"`
   }
 })
 
-var cmd = `cd sam/${setup.type} && sam deploy --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --region ${process.env['AWS_REGION']} --profile ${process.env['AWS_PROFILE']} --stack-name ${process.env['AWS_STACK_NAME']} --resolve-s3 --parameter-overrides ${parameter_overrides}`
+var cmd = `sam deploy --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND --region ${process.env['AWS_REGION']} --profile ${process.env['AWS_PROFILE']} --stack-name ${process.env['AWS_STACK_NAME']} --resolve-s3 --parameter-overrides ${parameter_overrides}`
 console.log(cmd)
 
 exec(cmd, (error, stdout, stderr) => {

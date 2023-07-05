@@ -4,9 +4,15 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
 
+## Upgrade Note
+
+Previous versions of this application featured an optional [CloudFront](https://aws.amazon.com/cloudfront/) distribution that provided caching, custom domain/hostname mapping, and request/response pre/post-processing. However, the primary motivation for including this feature in the past was that it provided a complicated but effective way to skirt the hard 6 megabyte limit for Lambda function response payloads. Since then, AWS has introduced [AWS Lambda response streaming](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/), which uses chunked responses to bypass the 6 megabyte limit. As this is a much more elegant solution to the problem, there's nothing about the CloudFront template that's specific to this project any more. Ongoing development and maintenance will therefore focus on the IIIF Lambda itself rather than the large, complicated template required for a flexible, customizable CloudFront deployment.
+
+While the CloudFront-enabled version of the application is no longer available in the Serverless Application Repository, the newly created [`examples`](./examples/README.md) directory includes sample [CloudFormation](https://aws.amazon.com/cloudformation/) templates and [Terraform](https://terraform.io/) manifests showing how to deploy the IIIF service as part of a larger application/infrastructure stack.
+
 ## Description
 
-A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
+A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image/3.0/) Image API compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
 
 ## Components
 

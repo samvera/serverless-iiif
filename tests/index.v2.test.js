@@ -1,24 +1,39 @@
 /* eslint-env jest */
 const IIIF = require('iiif-processor');
 const { handler } = require('../src/index');
-const cache = require('../src/cache');
 const helpers = require('../src/helpers');
-const error = require('../src/error');
+const callHandler = require("./stream-handler");
 
-describe('index.handler', () => {
+describe('index.handler /iiif/2', () => {
   const context = {};
 
   beforeEach(() => {
     jest.mock('../src/helpers');
-    beforeEach(() => {
-      jest.spyOn(console, 'error').mockImplementation(() => {});
-    });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   
     helpers.getRegion = jest.fn().mockImplementation(() => {
       return 'AWS REGION';
     });
 
     helpers.eventPath = jest.fn().mockImplementation(() => '[EVENT PATH]');
+  });
+
+  it('reports an OK status', async () => {
+    const event = {
+      headers: {
+        host: "iiif.example.edu",
+      },
+      requestContext: {
+        http: {
+          method: "GET",
+          path: "/iiif/2",
+        },
+      },
+    };
+
+    const expected = { statusCode: 200, body: "OK" };
+    const result = await callHandler(handler, event, context);
+    expect(result).toMatchObject(expected);
   });
 
   it('responds to OPTIONS REQUEST', async () => {
@@ -30,8 +45,8 @@ describe('index.handler', () => {
       }
     };
 
-    const expected = { statusCode: 204, body: null };
-    const result = await handler(event, context);
+    const expected = { statusCode: 204, body: '' };
+    const result = await callHandler(handler, event, context);
     expect(result).toMatchObject(expected);
   });
 
@@ -59,7 +74,7 @@ describe('index.handler', () => {
         }
       };
 
-      const { body } = await handler(event, context);
+      const { body } = await callHandler(handler, event, context);
       const info = JSON.parse(body);
       expect(info['@id']).toEqual('http://iiif.example.edu/iiif/2/image_id');
       expect(info.width).toEqual(1280);
@@ -84,7 +99,7 @@ describe('index.handler', () => {
         }
       };
 
-      const { body } = await handler(event, context);
+      const { body } = await callHandler(handler, event, context);
       const info = JSON.parse(body);
       expect(info['@id']).toEqual('https://iiif.example.edu/iiif/2/image_id');
       expect(info.width).toEqual(1280);
@@ -99,7 +114,7 @@ describe('index.handler', () => {
       const event = {};
   
       const expected = { statusCode: 302, headers: { Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
-      const result = await handler(event, context);
+      const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });  
   });
@@ -113,96 +128,31 @@ describe('index.handler', () => {
       helpers.getUri = jest.fn().mockImplementationOnce(() => 'https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg');
     });
 
-    it('works with base64 image.', async () => {
-      cache.getCached = jest.fn().mockImplementationOnce(async () => null);
-      helpers.isBase64 = jest.fn().mockImplementationOnce(() => true);
-      helpers.isTooLarge = jest.fn().mockImplementationOnce(() => false);
-
+    it('does not use base64 encoding when streaming', async () => {
       IIIF.Processor = jest.fn().mockImplementationOnce(() => {
         return {
           id: 'image_id',
           execute: async function () {
-            return { body: Buffer.from(body) };
+            return { 
+              body: body,
+              canonicalLink: 'https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg',
+              profileLink: 'http://iiif.io/api/image/2/level2.json'
+            };
           }
         };
       });
-
-      const expected = {
-        statusCode: 200,
-        headers: { 'Content-Type': undefined },
-        isBase64Encoded: true,
-        body:  Buffer.from(body).toString('base64')
-      };
-      const result = await handler(event, context);
-      expect(result).toMatchObject(expected);
-    });
-
-    it('works with nonbase64 image.', async () => {
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            return { body: body };
-          }
-        };
-      });
-      cache.getCached = jest.fn().mockImplementationOnce(async () => null);
       helpers.isBase64 = jest.fn().mockImplementationOnce(() => false);
       helpers.isTooLarge = jest.fn().mockImplementationOnce(() => false);
 
     const expected = {
         statusCode: 200,
-        headers: { 'Content-Type': undefined },
         isBase64Encoded: false,
-        body: body
+        body: body,
+        headers: {
+          Link: '<https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg>; rel=canonical,<http://iiif.io/api/image/2/level2.json>; rel=profile'
+        }
       };
-      const result = await handler(event, context);
-      expect(result).toMatchObject(expected);
-    });
-
-    it('returns 404 to force failover when cached file exists', async () => {
-      cache.getCached = jest.fn().mockImplementationOnce(async () => '[PRESIGNED CACHE URL]');
-
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            return { body: body };
-          }
-        };
-      });
-
-      const expected = {
-        statusCode: 404,
-        isBase64Encoded: false,
-        body: ''
-      };
-      const result = await handler(event, context);
-      expect(result).toMatchObject(expected);
-    });
-
-    it('caches file and returns 404 to force failover when result is too large to return directly', async () => {
-      cache.getCached = jest.fn().mockImplementationOnce(async () => null);
-      cache.makeCache = jest.fn().mockImplementationOnce(async () => '[PRESIGNED CACHE URL]');
-      helpers.isBase64 = jest.fn().mockImplementationOnce(() => false);
-      helpers.isTooLarge = jest.fn().mockImplementationOnce(() => true);
-      error.errorHandler = jest.fn().mockImplementationOnce(() => null);
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            return { body: body };
-          }
-        };
-      });
-
-      const expected = {
-        statusCode: 404,
-        isBase64Encoded: false,
-        body: ''
-      };
-      const result = await handler(event, context);
-      expect(cache.makeCache).toHaveBeenCalled();
+      const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });
 
@@ -213,7 +163,7 @@ describe('index.handler', () => {
           execute: async function () {
             throw new Error('ERROR');
           },
-          errorClass: IIIF.IIIFError
+          errorClass: IIIF.Error
         };
       });
       const expected = {
@@ -223,7 +173,7 @@ describe('index.handler', () => {
         },
         statusCode: 500,
       };
-      result = await handler(event, context);
+      result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });
   });

@@ -4,6 +4,7 @@ const withNextra = require('nextra')({
 });
 
 module.exports = withNextra({
+  basePath: process.env.NEXTJS_BASE_PATH || '',
   output: 'export',
   images: {
     unoptimized: true

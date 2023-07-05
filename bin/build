@@ -5,7 +5,7 @@ const Setup = require('./setup.js')
 
 var setup = new Setup();
 
-var cmd = `cd sam/${setup.type} && sam build --use-container`
+var cmd = `cd sam && sam build --use-container`
 
 console.log(cmd)
 
