@@ -4,9 +4,15 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
 
+## Upgrade Note
+
+Previous versions of this application featured an optional [CloudFront](https://aws.amazon.com/cloudfront/) distribution that provided caching, custom domain/hostname mapping, and request/response pre/post-processing. However, the primary motivation for including this feature in the past was that it provided a complicated but effective way to skirt the hard 6 megabyte limit for Lambda function response payloads. Since then, AWS has introduced [AWS Lambda response streaming](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/), which uses chunked responses to bypass the 6 megabyte limit. As this is a much more elegant solution to the problem, there's nothing about the CloudFront template that's specific to this project any more. Ongoing development and maintenance will therefore focus on the IIIF Lambda itself rather than the large, complicated template required for a flexible, customizable CloudFront deployment.
+
+While the CloudFront-enabled version of the application is no longer available in the Serverless Application Repository, the newly created [`examples`](./examples/README.md) directory includes sample [CloudFormation](https://aws.amazon.com/cloudformation/) templates and [Terraform](https://terraform.io/) manifests showing how to deploy the IIIF service as part of a larger application/infrastructure stack.
+
 ## Description
 
-A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
+A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image/3.0/) Image API compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
 
 ## Components
 
@@ -56,7 +62,7 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
 1. Make sure you have the [SAM CLI](https://aws.amazon.com/serverless/sam/) and [AWS CLI](https://aws.amazon.com/cli/) installed.
 2. Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that have sufficient access to manage IAM, S3, Lambda, and (optionally) CloudFront resources.
 3. Clone this repository.
-4. Copy .env.example to .env. Update the various values within.
+4. Copy deploy.yml.example to deploy.yml
 5. Build the application:
    ```shell
    $ npm run build
@@ -65,9 +71,9 @@ A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written 
    ```shell
    $ npm run deploy
    ```
-
-  You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
 7. Follow the prompts to complete the deployment process and get the resulting endpoint.
+
+If you'd repfer you can run `npm run deploy-guided`. You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
 
 ### Deleting the application
 
@@ -105,7 +111,7 @@ npm test --coverage
 
 ## Custom Sharp Layer
 
-This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then copy the file to serverless-iiif/sharp-lambda-layer.x86_64.zip. Then set LOCAL_SHARP=true and build/deploy to use your own version.
+This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then deploy your own layer and set that layer in your SAM template.
 
 ## Advanced Usage
 

@@ -1,76 +1,63 @@
 import { Callout } from 'nextra/components';
 
-# Request/Response Functions
+### Request/Response Functions
 
-The SAM deploy template takes several optional parameters to enable the association of [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or [Lambda@Edge Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) with the CloudFront distribution. These functions can perform authentication and authorization functions, change how the S3 file and/or image dimensions are resolved, or alter the response from the lambda or cache. These parameters are:
+The IIIF service can be heavily customized through the use of [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html) or [Lambda@Edge Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-at-the-edge.html) attached to a CloudFront distribution in front of the service. It's important to understand the four stages of CloudFront processing in order to know where a given type of customization belongs.
 
-- `OriginRequestARN`: ARN of the Lambda@Edge Function to use at the origin-request stage
-- `OriginResponseARN`: ARN of the Lambda@Edge Function to use at the origin-response stage
-- `ViewerRequestARN`: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-request stage
-- `ViewerRequestType`: Type of viewer-request Function to use (`CloudWatch Function` or `Lambda@Edge`)
-- `ViewerResponseARN`: ARN of the CloudFront or Lambda@Edge Function to use at the viewer-response stage
-- `ViewerResponseType`: Type of viewer-response Function to use (`CloudWatch Function` or `Lambda@Edge`)
+- A `viewer-request` function will be called on every request, cached or not. This is the appropriate place to attach 
+  a function that performs authorization, authentication, or anything else whose result should *not* be cached.
+- An `origin-request` function will only be called when CloudFront refreshes the content from the origin (e.g., the IIIF server).
+  It's the appropriate place to attach a function that *should* be cached, such as S3 file resolution or the retrieval of
+  image dimensions.
+- Similarly, the `origin-response` and `viewer-response` functions are called after the IIIF server returns its response
+  and before CloudFront passes it on to the viewer, respectively. They can be used to alter the response in a way that is
+  either cached or ephemeral.
 
-These functions, if used, must be created, configured, and published before the serverless application is deployed.
-
-## Examples
+#### Examples
 
 These examples use CloudFront Functions. Lambda@Edge functions are slightly more complicated in terms of the event structure but the basic idea is the same.
 
-### Simple Authorization
+##### Simple Authorization
 
-```javascript
+```JavaScript
 function handler(event) {
-  if (notAuthorized) {
-    // based on something in the event.request
-    return {
-      statusCode: 403,
-      statusDescription: 'Unauthorized'
+    if (notAuthorized) { // based on something in the event.request
+       return {
+         statusCode: 403,
+         statusDescription: 'Unauthorized'
+       };
     };
-  }
-  return event.request;
+    return event.request;
 }
 ```
 
-### Custom File Location / Image Dimensions
+##### Custom File Location / Image Dimensions
 
-```javascript
+```JavaScript
 function handler(event) {
   var request = event.request;
-  request.headers['x-preflight-location'] = {
-    value: 's3://image-bucket/path/to/correct/image.tif'
-  };
-  request.headers['x-preflight-dimensions'] = {
-    value: JSON.stringify({ width: 640, height: 480 })
-  };
+  request.headers['x-preflight-location'] = {value: 's3://image-bucket/path/to/correct/image.tif'};
+  request.headers['x-preflight-dimensions'] = {value: JSON.stringify({ width: 640, height: 480 })};
   return request;
 }
 ```
 
 The `x-preflight-dimensions` header can take several shapes:
 
-- `{ width, height }` (or `[{ width, height }]`) - a straightforward, single-resolution image
-- `[{ width, height }, { width, height }, ...]` - a multi-resolution image with pages of the specified sizes
-- `{ width, height, pages }` - a multi-resolution image with the specified number of `pages`, each half the size of the one before
-- `{ width, height, limit }` - a multi-resolution image in which the smallest width and height are both less than the specified `limit`
+* `{ width, height }` (or `[{ width, height }]`) - a straightforward, single-resolution image
+* `[{ width, height }, { width, height }, ...]` - a multi-resolution image with pages of the specified sizes
+* `{ width, height, pages }` - a multi-resolution image with the specified number of `pages`, each half the size of the one before
+* `{ width, height, limit }` - a multi-resolution image in which the smallest width and height are both less than the specified `limit`
 
 For example, the following dimension values would all describe the same pyramidal image:
 
-- `[{ width: 2048, height: 1536 }, { width: 1024, height: 768 }, { width: 512, height: 384 }]`
-- `{ width: 2048, height: 1536, pages: 3 }`
-- `{ width: 2048, height: 1536, limit: 480 }`
+* `[{ width: 2048, height: 1536 }, { width: 1024, height: 768 }, { width: 512, height: 384 }]`
+* `{ width: 2048, height: 1536, pages: 3 }`
+* `{ width: 2048, height: 1536, limit: 480 }`
 
 The `limit` calculator will keep going until both dimensions are _less than_ the limit, not _less than or equal to_. So a `limit: 512` on the third example above would generate a fourth page at `{ width: 256, height: 192 }`.
 
 <Callout>
-  The SAM deploy template adds a `preflight=true` environment variable to the
-  main IIIF Lambda if a preflight function is provided. The function will _only_
-  look for the preflight headers if this environment variable is `true`. This
-  prevents requests from including those headers directly if no preflight
-  function is present.
-
-If you do use a preflight function, make sure it strips
-out any `x-preflight-location` and `x-preflight-dimensions` headers that it
-doesn't set itself.
+If you plan to use CloudFront functions to add either of the above `x-preflight-` headers to incoming requests, you *must* set the value of the `Preflight` parameter to `true` when deploying `serverless-iiif`. The function will _only_ look for the preflight headers if this environment variable is `true`. This prevents requests from including those headers directly if no preflight function is present. If you do use a preflight function, make sure it strips out any `x-preflight-location` and `x-preflight-dimensions` headers that it doesn't set itself.
 
 </Callout>

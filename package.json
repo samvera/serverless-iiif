@@ -1,6 +1,6 @@
 {
   "name": "serverless-iiif",
-  "version": "4.3.4",
+  "version": "5.0.0",
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
@@ -9,7 +9,9 @@
     "uri-js": "^4.4.1"
   },
   "devDependencies": {
-    "aws-sdk": "^2.368.0",
+    "@aws-sdk/client-s3": "^3.395.0",
+    "aws-sdk-client-mock": "^3.0.0",
+    "aws-sdk-client-mock-jest": "^3.0.0",
     "coveralls": "^3.1.0",
     "eslint": "^7.10.0",
     "eslint-config-standard": "^14.1.1",
@@ -18,8 +20,10 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "iiif-processor": "^3.2.0",
-    "jest": "^26.4.2"
+    "iiif-processor": "^4.0.0",
+    "jest": "^26.4.2",
+    "lambda-stream": "^0.4.0",
+    "yaml": "^2.3.1"
   },
   "jest": {
     "collectCoverageFrom": [
@@ -38,8 +42,9 @@
     "lint-fix": "eslint --fix src/*.js",
     "test": "node scripts/test.js --env=jsdom",
     "test-coverage": "node scripts/test.js --env=jsdom --coverage",
-    "build": "./bin/build",
-    "deploy": "./bin/deploy",
-    "delete-stack": "./bin/delete"
+    "build": "sam build -t sam/template.yml --use-container",
+    "deploy": "sam deploy --config-file ./deploy.yml",
+    "deploy-guided": "sam deploy --config-file ./deploy.yml --guided",
+    "delete-stack": "sam delete --config-file ./deploy.yml"
   }
 }

@@ -2,5 +2,6 @@
   "index": "Options",
   "deployment-sam": "Deploying via the AWS Serverless Application Repository",
   "deployment-command-line": "Deploying via the Command Line",
+  "infrastructure": "Deploying via Infrastructure Tools",
   "deleting-the-app": "Deleting the App"
 }

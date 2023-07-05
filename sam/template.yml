@@ -1,15 +1,15 @@
 Transform: "AWS::Serverless-2016-10-31"
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: serverless-iiif-standalone
+    Name: serverless-iiif
     Description: IIIF Image API 2.1 server backend Lambda function
     Author: Samvera
     SpdxLicenseId: Apache-2.0
-    LicenseUrl: ../../LICENSE.txt
-    ReadmeUrl: ../../README.md
+    LicenseUrl: ../LICENSE.txt
+    ReadmeUrl: ../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
-    SemanticVersion: 4.3.4
+    SemanticVersion: 5.0.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -30,16 +30,11 @@ Metadata:
           - CorsExposeHeaders
           - CorsMaxAge
       - Label:
-          default: "Internal Use Only – Do Not Change"
+          default: "Advanced Options"
         Parameters:
-          - CacheBucket
           - ForceHost
           - Preflight
 Parameters:
-  CacheBucket:
-    Type: String
-    Description: Bucket to use for caching results larger than 6MB
-    Default: ""
   CorsAllowCredentials:
     Type: String
     Description: |
@@ -92,6 +87,9 @@ Parameters:
   Preflight:
     Type: String
     Description: Indicates whether the function should expect preflight headers
+    AllowedValues:
+      - false
+      - true
     Default: false
   ResolverTemplate:
     Type: String
@@ -99,15 +97,12 @@ Parameters:
     Default: "%s.tif"
   SharpLayer:
     Type: String
-    Description: ARN of an AWS Lambda Layer containing the sharp and libvips dependencies (Leave blank for default)
+    Description: ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies
     Default: ""
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
 Conditions:
-  UseCacheBucket:
-    Fn::Not:
-      - Fn::Equals: [!Ref CacheBucket, ""]
   UseDefaultSharpLayer:
     Fn::Equals: [!Ref SharpLayer, ""]
   UseForceHost:
@@ -123,29 +118,30 @@ Resources:
       LayerName:
         Fn::Sub: "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
-      ContentUri: ../../dependencies
+      ContentUri: ../dependencies
       CompatibleRuntimes:
-        - nodejs16.x
+        - nodejs18.x
       LicenseInfo: "Apache-2.0"
     Metadata:
-      BuildMethod: nodejs16.x
+      BuildMethod: nodejs18.x
   IiifFunction:
     Type: "AWS::Serverless::Function"
     Properties:
-      Runtime: nodejs16.x
+      Runtime: nodejs18.x
       Handler: index.handler
       MemorySize:
         Ref: IiifLambdaMemory
       FunctionUrlConfig:
         AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
       Timeout:
         Ref: IiifLambdaTimeout
-      CodeUri: ../../src
+      CodeUri: ../src
       Layers:
         - Ref: Dependencies
         - Fn::If:
           - UseDefaultSharpLayer
-          - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:3"
+          - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:4"
           - Ref: SharpLayer
       Policies:
         - AWSLambdaExecute
@@ -161,39 +157,16 @@ Resources:
                 - s3:GetObjectACL
               Resource:
                 Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
-        - Fn::If:
-          - UseCacheBucket
-          - Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                  - s3:GetBucketLocation
-                Resource:
-                  - Fn::Sub: "arn:aws:s3:::${SourceBucket}"
-                  - Fn::Sub: "arn:aws:s3:::${CacheBucket}"
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:DeleteObject
-                Resource:
-                  - Fn::Sub: "arn:aws:s3:::${CacheBucket}/*"
-          - Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                  - s3:GetBucketLocation
-                Resource:
-                  Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}"
       Environment:
         Variables:
-          cacheBucket:
-            Fn::If:
-              - UseCacheBucket
-              - !Ref CacheBucket
-              - !Ref AWS::NoValue
           corsAllowCredentials: !Ref CorsAllowCredentials
           corsAllowOrigin: !Ref CorsAllowOrigin
           corsAllowHeaders: !Ref CorsAllowHeaders
@@ -212,12 +185,15 @@ Resources:
           preflight: !Ref Preflight
           resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
-
 Outputs:
-  Endpoint:
+  EndpointV2:
     Description: IIIF Image API v2 Endpoint
     Value:
-      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/2/"
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/2"
+  EndpointV3:
+    Description: IIIF Image API v3 Endpoint
+    Value:
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/3"
   FunctionDomain:
     Description: IIIF Function Domain Name
     Value:

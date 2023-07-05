@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IIIF Image server w/CloudFront Caching & Custom Hostname
+Parameters:
+  CacheDomainName:
+    Type: String
+    Description: Custom Domain Name for the CloudFront Cache
+  CacheHostName:
+    Type: String
+    Description: Custom Hostname for the CloudFront Cache
+  CacheSSLCertificate:
+    Type: String
+    Description: >-
+      ARN of the ACM SSL Certification to use for the API Gateway Endpoint or
+      CloudFront Cache
+  IiifSourceBucket:
+    Type: String
+    Description: Name of bucket containing source images
+Resources:
+  ServerlessIiif:
+    Type: 'AWS::Serverless::Application'
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone-dev
+        SemanticVersion: 5.0.0
+      Parameters:
+        SourceBucket: !Ref IiifSourceBucket
+  ResponseHeaderPolicy:
+    Type: 'AWS::CloudFront::ResponseHeadersPolicy'
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub '${AWS::StackName}-allow-cors-response-headers'
+        Comment: Allows IIIF CORS response headers
+        CorsConfig:
+          AccessControlAllowCredentials: false
+          AccessControlAllowHeaders:
+            Items:
+              - '*'
+          AccessControlAllowMethods:
+            Items:
+              - GET
+              - OPTIONS
+          AccessControlAllowOrigins:
+            Items:
+              - '*'
+          AccessControlExposeHeaders:
+            Items:
+              - cache-control
+              - content-language
+              - content-length
+              - content-type
+              - date
+              - expires
+              - last-modified
+              - pragma
+          AccessControlMaxAgeSec: 3600
+          OriginOverride: false
+  CachingEndpoint:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        PriceClass: PriceClass_100
+        Aliases:
+          - !Sub '${CacheHostName}.${CacheDomainName}'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CacheSSLCertificate
+          MinimumProtocolVersion: TLSv1
+          SslSupportMethod: sni-only
+        Origins:
+          - Id: IiifLambda
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+            DomainName: !GetAtt ServerlessIiif.Outputs.FunctionDomain
+        DefaultCacheBehavior:
+          TargetOriginId: IiifLambda
+          ViewerProtocolPolicy: https-only
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref ResponseHeaderPolicy
+  Route53Record:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      Name: !Sub '${CacheHostName}.${CacheDomainName}'
+      HostedZoneName: !Sub '${CacheDomainName}.'
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CachingEndpoint.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+Outputs:
+  EndpointV2:
+    Description: IIIFv2 Endpoint URL
+    Value: !Sub 'https://${CacheHostName}.${CacheDomainName}/iiif/2'
+  EndpointV3:
+    Description: IIIFv3 Endpoint URL
+    Value: !Sub 'https://${CacheHostName}.${CacheDomainName}/iiif/3'
+  DistributionId:
+    Description: Caching Distribution ID
+    Value:
+      Ref: CachingEndpoint
+    Export:
+      Name: !Sub '${AWS::StackName}:DistributionId'

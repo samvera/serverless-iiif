@@ -42,6 +42,6 @@
     "space-in-parens": ["error", "never"],
 
     // This should replicate Code Climate's computational complexity code smells warning. It is actually more strict.
-    "complexity": ["warn", 5]
+    "complexity": ["warn", 6]
   }
 }

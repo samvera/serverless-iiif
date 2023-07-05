@@ -14,10 +14,13 @@
   "license": "ISC",
   "dependencies": {
     "next": "^13.4.10",
+    "next-mdx-remote": "^4.4.1",
     "nextra": "^2.10.0",
     "nextra-theme-docs": "^2.10.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sass": "^1.64.2",
+    "yaml": "^2.3.1"
   },
   "devDependencies": {
     "eslint-config-next": "^13.4.12"
