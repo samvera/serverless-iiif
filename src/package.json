@@ -1,10 +1,11 @@
 {
   "name": "serverless-iiif",
-  "version": "4.3.2",
+  "version": "5.0.0",
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
   "dependencies": {
+    "lambda-stream": "^0.4.0",
     "uri-js": "^4.4.1"
   },
   "devDependencies": {

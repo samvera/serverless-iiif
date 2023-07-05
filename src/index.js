@@ -1,11 +1,11 @@
 const AWS = require('aws-sdk');
 const IIIF = require('iiif-processor');
-const cache = require('./cache');
 const helpers = require('./helpers');
 const resolvers = require('./resolvers');
 const { errorHandler } = require('./error');
+const { streamifyResponse } = require('./streamify');
 
-const handleRequestFunc = async (event, context) => {
+const handleRequestFunc = streamifyResponse(async (event, context) => {
   const { addCorsHeaders, eventPath, fileMissing, getRegion } = helpers;
 
   AWS.config.region = getRegion(context);
@@ -24,7 +24,7 @@ const handleRequestFunc = async (event, context) => {
     response = await handleResourceRequestFunc(event, context);
   }
   return addCorsHeaders(event, response);
-};
+});
 
 const handleResourceRequestFunc = async (event, context) => {
   const density = helpers.parseDensity(process.env.density);
@@ -46,42 +46,12 @@ const handleResourceRequestFunc = async (event, context) => {
         body: 'OK'
       };
     } else {
-      return await handleImageRequestFunc(uri, resource);
+      const result = await resource.execute();
+      return makeResponse(result);
     }
   } catch (err) {
     return errorHandler(err, event, context, resource);
   }
-};
-
-const handleImageRequestFunc = async (uri, resource) => {
-  const { isTooLarge } = helpers;
-  const { getCached, makeCache } = cache;
-
-  const key = new URL(uri).pathname.replace(/^\//, '');
-  const cached = resource.filename === 'info.json' ? false : await getCached(key);
-
-  let response;
-  if (cached) {
-    response = forceFailover();
-  } else {
-    const result = await resource.execute();
-
-    if (isTooLarge(result.body)) {
-      await makeCache(key, result);
-      response = forceFailover();
-    } else {
-      response = makeResponse(result);
-    }
-  }
-  return response;
-};
-
-const forceFailover = () => {
-  return {
-    statusCode: 404, // Use 404 to force CloudFront to fail over to the cache
-    isBase64Encoded: false,
-    body: ''
-  };
 };
 
 const makeResponse = (result) => {

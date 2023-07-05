@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
-    SemanticVersion: 4.3.2
+    SemanticVersion: 5.0.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -32,14 +32,9 @@ Metadata:
       - Label:
           default: "Internal Use Only – Do Not Change"
         Parameters:
-          - CacheBucket
           - ForceHost
           - Preflight
 Parameters:
-  CacheBucket:
-    Type: String
-    Description: Bucket to use for caching results larger than 6MB
-    Default: ""
   CorsAllowCredentials:
     Type: String
     Description: |
@@ -105,9 +100,6 @@ Parameters:
     Type: String
     Description: Name of bucket containing source images
 Conditions:
-  UseCacheBucket:
-    Fn::Not:
-      - Fn::Equals: [!Ref CacheBucket, ""]
   UseDefaultSharpLayer:
     Fn::Equals: [!Ref SharpLayer, ""]
   UseForceHost:
@@ -138,6 +130,7 @@ Resources:
         Ref: IiifLambdaMemory
       FunctionUrlConfig:
         AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
       Timeout:
         Ref: IiifLambdaTimeout
       CodeUri: ../../src
@@ -161,39 +154,16 @@ Resources:
                 - s3:GetObjectACL
               Resource:
                 Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
-        - Fn::If:
-          - UseCacheBucket
-          - Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                  - s3:GetBucketLocation
-                Resource:
-                  - Fn::Sub: "arn:aws:s3:::${SourceBucket}"
-                  - Fn::Sub: "arn:aws:s3:::${CacheBucket}"
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:DeleteObject
-                Resource:
-                  - Fn::Sub: "arn:aws:s3:::${CacheBucket}/*"
-          - Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:ListBucket
-                  - s3:GetBucketLocation
-                Resource:
-                  Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}"
       Environment:
         Variables:
-          cacheBucket:
-            Fn::If:
-              - UseCacheBucket
-              - !Ref CacheBucket
-              - !Ref AWS::NoValue
           corsAllowCredentials: !Ref CorsAllowCredentials
           corsAllowOrigin: !Ref CorsAllowOrigin
           corsAllowHeaders: !Ref CorsAllowHeaders

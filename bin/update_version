@@ -12,10 +12,8 @@ for f in $root/package.json $root/src/package.json $root/dependencies/package.js
   jq --arg v "$version" '.version = $v' <<< $content > $f
 done
 
-for f in $root/sam/standalone/template.yml $root/sam/cloudfront/template.yml; do
-  if [[ "$OSTYPE" = "darwin*" ]]; then
-    sed -i '' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $f
-  else
-    sed -i'' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $f
-  fi
-done
+if [[ "$OSTYPE" = "darwin*" ]]; then
+  sed -i '' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $root/sam/template.yml
+else
+  sed -i'' -E "s/SemanticVersion: .+/SemanticVersion: $version/" $root/sam/template.yml
+fi

@@ -1,9 +1,19 @@
 /* eslint-env jest */
 const IIIF = require('iiif-processor');
 const { handler } = require('../src/index');
-const cache = require('../src/cache');
 const helpers = require('../src/helpers');
 const error = require('../src/error');
+const { ResponseStream } = require('lambda-stream');
+
+async function callHandler(handler, event, context) {
+  const responseStream = new ResponseStream();
+  const result = await handler(event, responseStream, context);
+  expect(result.statusCode).toEqual(200);
+  expect(result.headers['content-type']).toEqual('application/vnd.awslambda.http-integration-response');
+  const payload = responseStream.getBufferedData().toString('UTF-8');
+  const [prelude, body] = payload.split(/\u0000{8}/);
+  return { ...JSON.parse(prelude), body };
+}
 
 describe('index.handler', () => {
   const context = {};
@@ -30,8 +40,8 @@ describe('index.handler', () => {
       }
     };
 
-    const expected = { statusCode: 204, body: null };
-    const result = await handler(event, context);
+    const expected = { statusCode: 204, body: '' };
+    const result = await callHandler(handler, event, context);
     expect(result).toMatchObject(expected);
   });
 
@@ -59,7 +69,7 @@ describe('index.handler', () => {
         }
       };
 
-      const { body } = await handler(event, context);
+      const { body } = await callHandler(handler, event, context);
       const info = JSON.parse(body);
       expect(info['@id']).toEqual('http://iiif.example.edu/iiif/2/image_id');
       expect(info.width).toEqual(1280);
@@ -84,7 +94,7 @@ describe('index.handler', () => {
         }
       };
 
-      const { body } = await handler(event, context);
+      const { body } = await callHandler(handler, event, context);
       const info = JSON.parse(body);
       expect(info['@id']).toEqual('https://iiif.example.edu/iiif/2/image_id');
       expect(info.width).toEqual(1280);
@@ -99,7 +109,7 @@ describe('index.handler', () => {
       const event = {};
   
       const expected = { statusCode: 302, headers: { Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
-      const result = await handler(event, context);
+      const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });  
   });
@@ -114,7 +124,6 @@ describe('index.handler', () => {
     });
 
     it('works with base64 image.', async () => {
-      cache.getCached = jest.fn().mockImplementationOnce(async () => null);
       helpers.isBase64 = jest.fn().mockImplementationOnce(() => true);
       helpers.isTooLarge = jest.fn().mockImplementationOnce(() => false);
 
@@ -129,11 +138,10 @@ describe('index.handler', () => {
 
       const expected = {
         statusCode: 200,
-        headers: { 'Content-Type': undefined },
         isBase64Encoded: true,
         body:  Buffer.from(body).toString('base64')
       };
-      const result = await handler(event, context);
+      const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });
 
@@ -146,63 +154,15 @@ describe('index.handler', () => {
           }
         };
       });
-      cache.getCached = jest.fn().mockImplementationOnce(async () => null);
       helpers.isBase64 = jest.fn().mockImplementationOnce(() => false);
       helpers.isTooLarge = jest.fn().mockImplementationOnce(() => false);
 
     const expected = {
         statusCode: 200,
-        headers: { 'Content-Type': undefined },
         isBase64Encoded: false,
         body: body
       };
-      const result = await handler(event, context);
-      expect(result).toMatchObject(expected);
-    });
-
-    it('returns 404 to force failover when cached file exists', async () => {
-      cache.getCached = jest.fn().mockImplementationOnce(async () => '[PRESIGNED CACHE URL]');
-
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            return { body: body };
-          }
-        };
-      });
-
-      const expected = {
-        statusCode: 404,
-        isBase64Encoded: false,
-        body: ''
-      };
-      const result = await handler(event, context);
-      expect(result).toMatchObject(expected);
-    });
-
-    it('caches file and returns 404 to force failover when result is too large to return directly', async () => {
-      cache.getCached = jest.fn().mockImplementationOnce(async () => null);
-      cache.makeCache = jest.fn().mockImplementationOnce(async () => '[PRESIGNED CACHE URL]');
-      helpers.isBase64 = jest.fn().mockImplementationOnce(() => false);
-      helpers.isTooLarge = jest.fn().mockImplementationOnce(() => true);
-      error.errorHandler = jest.fn().mockImplementationOnce(() => null);
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            return { body: body };
-          }
-        };
-      });
-
-      const expected = {
-        statusCode: 404,
-        isBase64Encoded: false,
-        body: ''
-      };
-      const result = await handler(event, context);
-      expect(cache.makeCache).toHaveBeenCalled();
+      const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });
 
@@ -223,7 +183,7 @@ describe('index.handler', () => {
         },
         statusCode: 500,
       };
-      result = await handler(event, context);
+      result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });
   });
