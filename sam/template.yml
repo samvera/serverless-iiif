@@ -5,8 +5,8 @@ Metadata:
     Description: IIIF Image API 2.1 server backend Lambda function
     Author: Samvera
     SpdxLicenseId: Apache-2.0
-    LicenseUrl: ../../LICENSE.txt
-    ReadmeUrl: ../../README.md
+    LicenseUrl: ../LICENSE.txt
+    ReadmeUrl: ../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://github.com/samvera/serverless-iiif
     SemanticVersion: 5.0.0
@@ -115,7 +115,7 @@ Resources:
       LayerName:
         Fn::Sub: "${AWS::StackName}-dependencies"
       Description: Dependencies for IIIF app
-      ContentUri: ../../dependencies
+      ContentUri: ../dependencies
       CompatibleRuntimes:
         - nodejs16.x
       LicenseInfo: "Apache-2.0"
@@ -133,7 +133,7 @@ Resources:
         InvokeMode: RESPONSE_STREAM
       Timeout:
         Ref: IiifLambdaTimeout
-      CodeUri: ../../src
+      CodeUri: ../src
       Layers:
         - Ref: Dependencies
         - Fn::If:

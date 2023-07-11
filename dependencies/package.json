@@ -6,6 +6,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "aws-sdk": "^2.368",
-    "iiif-processor": "^3.2.3"
+    "iiif-processor": "samvera/node-iiif#image-api-v3"
   }
 }

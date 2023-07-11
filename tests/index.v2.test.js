@@ -2,7 +2,6 @@
 const IIIF = require('iiif-processor');
 const { handler } = require('../src/index');
 const helpers = require('../src/helpers');
-const error = require('../src/error');
 const { ResponseStream } = require('lambda-stream');
 
 async function callHandler(handler, event, context) {
@@ -15,7 +14,7 @@ async function callHandler(handler, event, context) {
   return { ...JSON.parse(prelude), body };
 }
 
-describe('index.handler', () => {
+describe('index.handler /iiif/2', () => {
   const context = {};
 
   beforeEach(() => {
@@ -173,7 +172,7 @@ describe('index.handler', () => {
           execute: async function () {
             throw new Error('ERROR');
           },
-          errorClass: IIIF.IIIFError
+          errorClass: IIIF.Error
         };
       });
       const expected = {
