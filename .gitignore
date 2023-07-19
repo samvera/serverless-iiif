@@ -1,11 +1,26 @@
+# AWS SAM
 .aws
 .aws-sam
-coverage
 deploy.yaml
-node_modules
-samconfig.toml
 package.yml
+samconfig.toml
+
+# NodeJS Build
+coverage
+node_modules
+
+# Secrets
+.env
+env.json
+
+# Terraform
+.terraform*
+*.tfstate*
+*.tfvars
+
+# Misc
+.vscode
 *~undo-tree~
 .DS_Store
-.env
 sharp-lambda-layer.*
+*.log
