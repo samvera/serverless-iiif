@@ -1,0 +1,19 @@
+# Source Images
+
+The S3 key of any given file, minus the extension, is its IIIF ID. For example, if you want to access the image manifest for the file at `abcdef.tif`, you would get `https://.../iiif/2/abcdef/info.json`. If your key contains slashes, they must be URL-encoded: e.g., `ab/cd/ef/gh.tif` would be at `https://.../iiif/2/ab%2Fcd%2Fef%2Fgh/info.json`. (This limitation could easily be fixed by encoding only the necessary slashes in the incoming URL before handing it off to the IIIF processor, but that's beyond the scope of the demo.)
+
+`iiif-processor` can use any image format _natively_ supported by [libvips](https://libvips.github.io/libvips/), including JPEG 2000 (`.jp2`), but best results will come from using tiled, multi-resolution TIFFs. The Lambda Function wrapper included in this application assumes a `.tif` extension unless you set ResolverTemplate in your .env file.
+
+## Creating tiled TIFFs
+
+### Using VIPS
+
+```bash
+vips tiffsave source_image.tif output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256
+```
+
+### Using ImageMagick
+
+```bash
+convert source_image.tif -define tiff:tile-geometry=256x256 -compress jpeg 'ptif:output_image.tif'
+```

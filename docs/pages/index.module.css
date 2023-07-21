@@ -1,0 +1,21 @@
+.button {
+  padding: 0.5rem 1rem;
+  border: 1px solid;
+}
+
+.headline {
+  font-size: min(4.375rem, max(8vw, 2.5rem));
+  font-weight: 700;
+  font-feature-settings: initial;
+  letter-spacing: -0.12rem;
+  margin-left: -0.2rem;
+  margin-top: 3.4rem;
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-size: min(1.3rem, max(3.5vw, 1.2rem));
+  font-feature-settings: initial;
+  line-height: 1.6;
+  margin-top: 1.5em;
+}
