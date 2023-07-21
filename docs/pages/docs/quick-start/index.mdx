@@ -1,0 +1,9 @@
+# Options
+
+`serverless-iiif` comes in two flavors: _Standalone (Lambda-only)_ and _Caching (CloudFront-enabled)_. The Standalone version is much simpler, but lacks the following features:
+
+- Custom Domain Name
+  - Standalone URLs are in the `lambda-url.AWS_REGION.on.aws` domain (e.g., `https://fu90293j0pj902j902c32j902.lambda-url.us-east-1.on.aws/iiif/2/`)
+  - Caching URLs _without_ Custom Domains are in the `cloudfront.net` domain (e.g., `https://d3kmjdzzy1l5t3.cloudfront.net/iiif/2/`)
+- Responses larger than ~6MB
+- CloudFront function support (for pre/post-processing requests and responses)

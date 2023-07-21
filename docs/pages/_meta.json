@@ -1,0 +1,27 @@
+{
+  "index": {
+    "type": "page",
+    "title": "Serverless IIIF",
+    "display": "hidden",
+    "theme": {
+      "layout": "raw"
+    }
+  },
+  "docs": {
+    "type": "page",
+    "title": "Documentation"
+  },
+  "about": {
+    "type": "page",
+    "title": "About",
+    "theme": {
+      "typesetting": "article"
+    }
+  },
+  "contact": {
+    "title": "IIIF Image API ↗",
+    "type": "page",
+    "href": "https://iiif.io/api/image/2.1/",
+    "newWindow": true
+  }
+}

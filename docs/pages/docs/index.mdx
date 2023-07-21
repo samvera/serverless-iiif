@@ -1,0 +1,43 @@
+import classNames from './index.module.css';
+import { Callout } from 'nextra/components';
+
+# serverless-iiif
+
+<ul className={classNames.projectStats}>
+  <li>
+    [![Build
+    Status](https://circleci.com/gh/samvera/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera/serverless-iiif)
+  </li>
+  <li>
+    [![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
+  </li>
+  <li>
+    [![Test
+    Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
+  </li>
+</ul>
+
+## Description
+
+A [IIIF 2.1 Image API](https://iiif.io/api/image/2.1/) compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
+
+## Components
+
+- A simple [Lambda Function](https://aws.amazon.com/lambda/) wrapper for the [iiif-processor](https://www.npmjs.com/package/iiif-processor) module.
+- A [Lambda Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) that is used to invoke the IIIF API via HTTPS.
+- A [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) containing all the dependencies for the Lambda Function.
+- An optional [CloudFormation](https://aws.amazon.com/cloudformation/) template describing the resources needed to deploy the application.
+
+## Prerequisites
+
+- Some basic knowledge of AWS.
+- An Amazon Web Services account with permissions to create resources via the console and/or command line.
+- An [Amazon S3](https://aws.amazon.com/s3/) bucket to hold the source images to be served via IIIF.
+
+<Callout>
+  Note: The Lambda Function will be granted read access to this bucket.
+</Callout>
+
+## License
+
+`serverless-iiif` is available under [the Apache 2.0 license](LICENSE).

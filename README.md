@@ -197,7 +197,7 @@ The cache bucket uses an S3 lifecycle rule to expire cached responses in 1 day.
 * [Rob Kaufman](https://github.com/orangewolf)
 * [Edward Silverton](https://github.com/edsilv)
 * [Trey Pendragon](https://github.com/tpendragon)
-* [Dan Wolfe](https://github.com/danthewolfe)
+* [Theia Wolfe](https://github.com/theiawolfe)
 
 ## Contributing
 
