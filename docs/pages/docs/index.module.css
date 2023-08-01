@@ -1,0 +1,7 @@
+.projectStats {
+  display: flex;
+  margin-top: 0.5rem;
+}
+.projectStats li {
+  padding-right: 1rem;
+}

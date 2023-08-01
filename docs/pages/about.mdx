@@ -1,0 +1,45 @@
+import Solution from '../components/Solution';
+
+# About
+
+## IIIF in the Cloud
+
+- Access is bursty by nature
+- Tile requests are at least an order of magnitude burstier
+- Very hard to scale a server-based solution in a way that can handle the bursts without wasting capacity (and money)
+
+## Solution
+
+<Solution />
+
+## Under the Hood
+
+### libvips
+
+“A demand-driven, horizontally threaded image processing library”
+
+- Very fast and extremely lightweight
+- Can perform more than 300 different image manipulation operations
+- Supports a large number of image formats
+- Most importantly (for our purposes), it supports multi-resolution images
+  and tiling
+- [Documentation ↗](https://libvips.github.io/libvips/)
+
+### sharp
+
+- Fast native Node.js wrapper for libvips
+- Supports seeking and streaming of image data without making a local copy
+- [Documentation ↗](https://sharp.pixelplumbing.com)
+
+## Contributors
+
+- [Michael B. Klein](https://github.com/mbklein) - Northwestern University Libraries
+- [Justin Gondron](https://github.com/jgondron)
+- [Rob Kaufman](https://github.com/orangewolf) - Notch 8
+- [Edward Silverton](https://github.com/edsilv) - Mnemoscene
+- [Trey Pendragon](https://github.com/tpendragon) - Princeton University Libraries
+- [Theia Wolfe](https://github.com/theiawolfe)
+
+## License
+
+Serverless IIIF is available under [the Apache 2.0 license](LICENSE).

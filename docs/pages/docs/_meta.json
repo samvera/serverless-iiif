@@ -1,0 +1,16 @@
+{
+  "index": "Introduction",
+  "quick-start": "Quick Start",
+  "source-images": "Source Images",
+  "custom-sharp-layer": "Custom Sharp Layer",
+  "advanced-usage": "Advanced Usage",
+  "notes": "Notes",
+  "-- Contributing": {
+    "type": "separator",
+    "title": "Contributing"
+  },
+  "how-to-contribute": "Guide",
+  "testing": "Testing",
+  "contributors": "Contributors",
+  "communities": "Communities"
+}

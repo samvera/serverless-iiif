@@ -1,0 +1,21 @@
+.header {
+  max-width: 90rem;
+  margin: 0 auto;
+  padding: 0 1rem 5rem;
+}
+
+.headline {
+  display: inline-flex;
+  font-size: 3.8rem;
+  font-weight: 800;
+  letter-spacing: -0.12rem;
+  line-height: 1;
+  padding: 1em 0 0.5em 0;
+}
+
+.subtitle {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  opacity: 0.8;
+  margin-bottom: 2rem;
+}
