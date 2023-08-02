@@ -11,7 +11,7 @@ Navigate to the `/docs` directory, and run
 npm install
 
 # Start the app
-npm dev
+npm run dev
 ```
 
 ## Generate static site docs
