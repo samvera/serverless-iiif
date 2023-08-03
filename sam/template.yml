@@ -87,6 +87,9 @@ Parameters:
   Preflight:
     Type: String
     Description: Indicates whether the function should expect preflight headers
+    AllowedValues:
+      - false
+      - true
     Default: false
   ResolverTemplate:
     Type: String

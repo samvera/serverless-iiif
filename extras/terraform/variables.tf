@@ -69,11 +69,6 @@ variable "pixel_density" {
     type          = number
     description   = "Hardcoded DPI/Pixel Density/Resolution to encode in output images"
     default       = 0
-
-    validation {
-      condition       = var.pixel_density >= 0
-      error_message   = "pixel_density must be >= 0"
-    }
 }
 
 variable "preflight" {

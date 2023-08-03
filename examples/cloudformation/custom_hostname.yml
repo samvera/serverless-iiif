@@ -86,7 +86,7 @@ Resources:
   Route53Record:
     Type: 'AWS::Route53::RecordSet'
     Properties:
-      Name: !Ref '${CacheHostName}.${CacheDomainName}'
+      Name: !Sub '${CacheHostName}.${CacheDomainName}'
       HostedZoneName: !Sub '${CacheDomainName}.'
       Type: A
       AliasTarget:

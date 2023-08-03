@@ -9,6 +9,7 @@ Terraform module which deploys a [serverless-iiif](https://github.com/samvera/se
 ```
 module "serverless_iiif" {
   source          = "github.com/samvera/serverless-iiif//extras/terraform"
+
   source_bucket   = "iiif-images"
   stack_name      = "my-iiif-service"
 }
@@ -19,6 +20,7 @@ module "serverless_iiif" {
 ```
 module "serverless_iiif" {
   source                    = "github.com/samvera/serverless-iiif//extras/terraform"
+
   source_bucket             = "iiif-images"
   stack_name                = "my-iiif-service"
   cors_allow_credentials    = true
@@ -60,14 +62,13 @@ module "serverless_iiif" {
 
 ## Outputs
 
-| Name                      | Description                                           |
-|---------------------------|-------------------------------------------------------|
-| `stack_id`                | The ID of the serverless-iiif application stack       |
-| `outputs`                 | A map of outputs from the serverless-iiif application |
-| `outputs.EndpointV2`      | IIIF Image API v2 Endpoint                            |
-| `outputs.EndpointV3`      | IIIF Image API v3 Endpoint                            |
-| `outputs.FunctionDomain`  | IIIF Function Domain Name                             |
-| `outputs.FunctionUrl`     | IIIF Function URL                                     |
+| Name                               | Description                                           |
+|------------------------------------|-------------------------------------------------------|
+| `stack_id`                         | The ID of the serverless-iiif application stack       |
+| `serverless_iiif_endpoint_v2`      | IIIF Image API v2 Endpoint                            |
+| `serverless_iiif_endpoint_v3`      | IIIF Image API v3 Endpoint                            |
+| `serverless_iiif_function_domain`  | IIIF Function Domain Name                             |
+| `serverless_iiif_function_url`     | IIIF Function URL                                     |
 
 ## License
 
