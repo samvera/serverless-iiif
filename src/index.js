@@ -67,7 +67,7 @@ const handleImageRequestFunc = async (uri, resource) => {
     const result = await resource.execute();
 
     if (isTooLarge(result.body)) {
-      await makeCache(key, result);
+      await makeCache(key, result.body);
       response = forceFailover();
     } else {
       response = makeResponse(result);

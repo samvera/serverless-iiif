@@ -28,7 +28,7 @@ const makeCache = (key, image) => {
 
   return new Promise((resolve, reject) => {
     if (!cacheConfigured()) {
-      reject(new Error(`Content size (${image.length.toString()}) exceeds API gateway maximum`));
+      reject(new Error(`Content size (${image?.length?.toString()}) exceeds API gateway maximum`));
     }
 
     const s3 = new AWS.S3();

@@ -2,6 +2,9 @@
 .aws
 .aws-sam
 deploy.yaml
+node_modules
+samconfig.toml
+env.json
 package.yml
 samconfig.toml
 
@@ -24,3 +27,4 @@ env.json
 .DS_Store
 sharp-lambda-layer.*
 *.log
+.vscode
