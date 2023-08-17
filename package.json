@@ -40,8 +40,9 @@
     "lint-fix": "eslint --fix src/*.js",
     "test": "node scripts/test.js --env=jsdom",
     "test-coverage": "node scripts/test.js --env=jsdom --coverage",
-    "build": "./bin/build",
-    "deploy": "./bin/deploy",
-    "delete-stack": "./bin/delete"
+    "build": "sam build -t sam/template.yml --use-container",
+    "deploy": "sam deploy -t sam/template.yml --config-file ../deploy.yml",
+    "deploy-guided": "sam deploy -t sam/template.yml --config-file ../deploy.yml --guided",
+    "delete-stack": "sam delete -t sam/template.yml --config-file ../deploy.yml"
   }
 }

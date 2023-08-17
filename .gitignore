@@ -1,12 +1,14 @@
 # AWS SAM
 .aws
 .aws-sam
+deploy.yml
 deploy.yaml
 node_modules
 samconfig.toml
 env.json
 package.yml
-samconfig.toml
+package.yaml
+samconfig.*
 
 # NodeJS Build
 coverage
