@@ -40,6 +40,8 @@ jobs:
         run: npm install
       - name: Build with Next.js
         run: npx --no-install next build
+        env:
+          NEXTJS_BASE_PATH: "/serverless-iiif"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
