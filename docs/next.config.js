@@ -5,10 +5,10 @@ const withNextra = require('nextra')({
 
 module.exports = withNextra({
   basePath: process.env.NEXTJS_BASE_PATH || '',
-  output: 'export',
   images: {
     unoptimized: true
-  }
+  },
+  output: 'export'
 });
 
 // If you have other Next.js configurations, you can pass them as the parameter:
