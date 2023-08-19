@@ -62,7 +62,7 @@ A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image
 1. Make sure you have the [SAM CLI](https://aws.amazon.com/serverless/sam/) and [AWS CLI](https://aws.amazon.com/cli/) installed.
 2. Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that have sufficient access to manage IAM, S3, Lambda, and (optionally) CloudFront resources.
 3. Clone this repository.
-4. Copy .env.example to .env. Update the various values within.
+4. Copy deploy.yml.example to deploy.yml
 5. Build the application:
    ```shell
    $ npm run build
@@ -71,9 +71,9 @@ A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image
    ```shell
    $ npm run deploy
    ```
-
-  You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
 7. Follow the prompts to complete the deployment process and get the resulting endpoint.
+
+If you'd repfer you can run `npm run deploy-guided`. You'll be prompted for various configuration parameters, confirmations, and acknowledgments of specific issues (particularly the creation of IAM resources and the deployment of an open/unauthenticated Lambda Function URL).
 
 ### Deleting the application
 
@@ -111,7 +111,7 @@ npm test --coverage
 
 ## Custom Sharp Layer
 
-This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then copy the file to serverless-iiif/sharp-lambda-layer.x86_64.zip. Then set LOCAL_SHARP=true and build/deploy to use your own version.
+This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then deploy your own layer and set that layer in your SAM template.
 
 ## Advanced Usage
 
