@@ -1,4 +1,3 @@
-const AWS = require('aws-sdk');
 const IIIF = require('iiif-processor');
 const helpers = require('./helpers');
 const resolvers = require('./resolvers');
@@ -8,7 +7,6 @@ const { streamifyResponse } = require('./streamify');
 const handleRequestFunc = streamifyResponse(async (event, context) => {
   const { addCorsHeaders, eventPath, fileMissing, getRegion } = helpers;
 
-  AWS.config.region = getRegion(context);
   context.callbackWaitsForEmptyEventLoop = false;
 
   let response;

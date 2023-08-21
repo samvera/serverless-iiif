@@ -1,4 +1,6 @@
-const AWS = require('aws-sdk');
+const {
+  S3
+} = require("@aws-sdk/client-s3");
 const URI = require('uri-js');
 const util = require('util');
 
@@ -6,7 +8,7 @@ const util = require('util');
 
 // Create input stream from S3 location
 const s3Stream = async (location, callback) => {
-  const s3 = new AWS.S3();
+  const s3 = new S3();
   const request = s3.getObject(location);
   const stream = request.createReadStream();
   try {
@@ -58,8 +60,8 @@ const reduceToLimit = ({ width, height, limit }) => {
 
 // Retrieve dimensions from S3 metadata
 const dimensionRetriever = async (location) => {
-  const s3 = new AWS.S3();
-  const obj = await s3.headObject(location).promise();
+  const s3 = new S3();
+  const obj = await s3.headObject(location);
   if (obj.Metadata.width && obj.Metadata.height) {
     const result = {
       width: parseInt(obj.Metadata.width, 10),
