@@ -1,6 +1,4 @@
-const {
-  S3
-} = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 const URI = require('uri-js');
 const util = require('util');
 
@@ -8,15 +6,10 @@ const util = require('util');
 
 // Create input stream from S3 location
 const s3Stream = async (location, callback) => {
-  const s3 = new S3();
-  const request = s3.getObject(location);
-  const stream = request.createReadStream();
-  try {
-    return await callback(stream);
-  } finally {
-    stream.end().destroy();
-    request.abort();
-  }
+  const s3 = new S3Client();
+  const cmd = new GetObjectCommand(location);
+  const { Body } = await s3.send(cmd);
+  return await callback(Body);
 };
 
 // Compute default stream location from ID
@@ -60,14 +53,16 @@ const reduceToLimit = ({ width, height, limit }) => {
 
 // Retrieve dimensions from S3 metadata
 const dimensionRetriever = async (location) => {
-  const s3 = new S3();
-  const obj = await s3.headObject(location);
-  if (obj.Metadata.width && obj.Metadata.height) {
+  const s3 = new S3Client();
+  const cmd = new HeadObjectCommand(location);
+  const response = await s3.send(cmd);
+  const { Metadata } = response;
+  if (Metadata.width && Metadata.height) {
     const result = {
-      width: parseInt(obj.Metadata.width, 10),
-      height: parseInt(obj.Metadata.height, 10)
+      width: parseInt(Metadata.width, 10),
+      height: parseInt(Metadata.height, 10)
     };
-    if (obj.Metadata.pages) return reduceByPages({ ...result, pages: parseInt(obj.Metadata.pages) });
+    if (Metadata.pages) return reduceByPages({ ...result, pages: parseInt(Metadata.pages) });
     if (process.env.PYRAMID_LIMIT) return reduceToLimit({ ...result, limit: parseInt(process.env.PYRAMID_LIMIT) });
     return [result];
   }

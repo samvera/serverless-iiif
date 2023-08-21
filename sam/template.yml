@@ -185,7 +185,6 @@ Resources:
           preflight: !Ref Preflight
           resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
-
 Outputs:
   EndpointV2:
     Description: IIIF Image API v2 Endpoint
