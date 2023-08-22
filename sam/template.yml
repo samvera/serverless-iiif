@@ -20,6 +20,7 @@ Metadata:
           - IiifLambdaMemory
           - IiifLambdaTimeout
           - PixelDensity
+          - PyramidLimit
           - ResolverTemplate
       - Label:
           default: "CORS Configuration"
@@ -91,26 +92,40 @@ Parameters:
       - false
       - true
     Default: false
+  PyramidLimit:
+    Type: Number
+    Description: Smallest pyramid image dimension. Set to 0 to prevent server from auto-calculating pyramid page sizes.
+    MinValue: 0
+    Default: 256
   ResolverTemplate:
     Type: String
     Description: A printf-style format string that determines the location of source image within the bucket given the image ID
     Default: "%s.tif"
   SharpLayer:
     Type: String
-    Description: ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies
-    Default: ""
+    Description: |
+      ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies. Use the special value `JP2` 
+      to use the managed JPEG2000-compatible layer, or `INTERNAL` to use the built-in dependencies (without JPEG2000
+      support).
+    AllowedPattern: "^INTERNAL$|^JP2$|^arn:aws:lambda:.*:.*:layer:.+:\\d+$"
+    Default: "JP2"
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
 Conditions:
-  UseDefaultSharpLayer:
-    Fn::Equals: [!Ref SharpLayer, ""]
+  UseBuiltInDependencies:
+    Fn::Equals: [!Ref SharpLayer, "INTERNAL"]
+  UseJP2SharpLayer:
+    Fn::Equals: [!Ref SharpLayer, "JP2"]
   UseForceHost:
     Fn::Not:
       - Fn::Equals: [!Ref ForceHost, ""]
   UsePixelDensity:
     Fn::Not:
       - Fn::Equals: [!Ref PixelDensity, 0]
+  UsePyramidLimit:
+    Fn::Not:
+      - Fn::Equals: [!Ref PyramidLimit, 0]
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -140,9 +155,12 @@ Resources:
       Layers:
         - Ref: Dependencies
         - Fn::If:
-          - UseDefaultSharpLayer
-          - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:4"
-          - Ref: SharpLayer
+          - UseBuiltInDependencies
+          - !Ref AWS::NoValue
+          - Fn::If:
+            - UseJP2SharpLayer
+            - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:4"
+            - Ref: SharpLayer
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"
@@ -183,6 +201,11 @@ Resources:
               - !Ref ForceHost
               - !Ref AWS::NoValue
           preflight: !Ref Preflight
+          pyramidLimit:
+            Fn::If:
+              - UsePyramidLimit
+              - !Ref PyramidLimit
+              - !Ref AWS::NoValue
           resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
 Outputs:

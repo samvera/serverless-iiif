@@ -63,7 +63,7 @@ const dimensionRetriever = async (location) => {
       height: parseInt(Metadata.height, 10)
     };
     if (Metadata.pages) return reduceByPages({ ...result, pages: parseInt(Metadata.pages) });
-    if (process.env.PYRAMID_LIMIT) return reduceToLimit({ ...result, limit: parseInt(process.env.PYRAMID_LIMIT) });
+    if (process.env.pyramidLimit) return reduceToLimit({ ...result, limit: parseInt(process.env.pyramidLimit) });
     return [result];
   }
   return null;

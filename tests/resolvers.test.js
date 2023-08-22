@@ -5,8 +5,6 @@ const { S3Client, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/clie
 const mockStream = require('./__mocks/mockStream');
 const resolvers = require('../src/resolvers');
 
-const util = require('util');
-
 describe('resolvers', () => { // eslint-disable-line max-lines-per-function
   let s3Mock;
 
@@ -145,7 +143,7 @@ describe('resolvers', () => { // eslint-disable-line max-lines-per-function
       });
 
       it('no preflight dimensions / metadata dimensions / page size limit', async () => {
-        process.env.PYRAMID_LIMIT = "256";
+        process.env.pyramidLimit = "256";
         const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }, true);
         const expected = [
           { width: 2048, height: 1536 },
