@@ -13,6 +13,7 @@ function getParameters() {
 }
 
 async function getPropertyList(opts = {}) {
+  opts = { descPrefix: '', ...opts };
   const { compileMdx } = await import('nextra/compile');
 
   const result = getParameters();

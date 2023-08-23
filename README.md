@@ -10,6 +10,12 @@ Previous versions of this application featured an optional [CloudFront](https://
 
 While the CloudFront-enabled version of the application is no longer available in the Serverless Application Repository, the newly created [`examples`](./examples/README.md) directory includes sample [CloudFormation](https://aws.amazon.com/cloudformation/) templates and [Terraform](https://terraform.io/) manifests showing how to deploy the IIIF service as part of a larger application/infrastructure stack.
 
+### Breaking Changes from Version 4.x
+
+- The value of the `SharpLayer` variable must now be one of `INTERNAL`, `JP2`, or a valid Lambda layer ARN in the same region the 
+  application is being deployed in. The new default is `JP2`, which behaves the same as the former default (empty string). The new
+  value, `INTERNAL`, uses the `sharp` and `libvips` dependencies compiled into the application itself.
+
 ## Description
 
 A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image/3.0/) Image API compliant server written as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/).
@@ -19,7 +25,6 @@ A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image
 * A simple [Lambda Function](https://aws.amazon.com/lambda/) wrapper for the [iiif-processor](https://www.npmjs.com/package/iiif-processor) module.
 * A [Lambda Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) that is used to invoke the IIIF API via HTTPS.
 * A [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) containing all the dependencies for the Lambda Function.
-* An optional [CloudFormation](https://aws.amazon.com/cloudformation/) template describing the resources needed to deploy the application.
 
 ## Prerequisites
 
@@ -111,7 +116,7 @@ npm test --coverage
 
 ## Custom Sharp Layer
 
-This lambda uses the Sharp layer from https://github.com/samvera/lambda-layer-sharp-jp2/releases in order to get a version of Sharp with jp2 support. You can build your own local version using that code and then deploy your own layer and set that layer in your SAM template.
+By default, the application uses a [custom sharp layer](https://github.com/samvera/lambda-layer-sharp-jp2/releases) built with JPEG2000 support. You can supply the ARN of another custom sharp/libvips Lambda layer, or, if you don't need JP2 support, use the value `INTERNAL` to use the precompiled sharp binaries from NPM.
 
 ## Advanced Usage
 

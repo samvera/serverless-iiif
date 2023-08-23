@@ -2,13 +2,13 @@ Transform: "AWS::Serverless-2016-10-31"
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif
-    Description: IIIF Image API 2.1 server backend Lambda function
+    Description: IIIF Image API 2.1 and 3.0 Service Lambda Function
     Author: Samvera
     SpdxLicenseId: Apache-2.0
     LicenseUrl: ../LICENSE.txt
     ReadmeUrl: ../README.md
     Labels: ["iiif", "image-processing"]
-    HomePageUrl: https://github.com/samvera/serverless-iiif
+    HomePageUrl: https://samvera.github.io/serverless-iiif
     SemanticVersion: 5.0.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
@@ -38,7 +38,7 @@ Metadata:
 Parameters:
   CorsAllowCredentials:
     Type: String
-    Description: |
+    Description: >
       Value of the CORS `Access-Control-Allow-Credentials` response header.
       Must be `true` to allow requests with `Authorization` and/or
       `Cookie` headers.
@@ -52,7 +52,7 @@ Parameters:
     Default: "*"
   CorsAllowOrigin:
     Type: String
-    Description: |
+    Description: >
       Value of the CORS `Access-Control-Allow-Origin` response header.
       Use the special value `REFLECT_ORIGIN` to copy the value from the
       `Origin` request header (required to emulate `*` for XHR requests
@@ -94,7 +94,7 @@ Parameters:
     Default: false
   PyramidLimit:
     Type: Number
-    Description: Smallest pyramid image dimension. Set to 0 to prevent server from auto-calculating pyramid page sizes.
+    Description: Smallest pyramid image dimension. Set to `0` to prevent server from auto-calculating pyramid page sizes.
     MinValue: 0
     Default: 256
   ResolverTemplate:
@@ -103,7 +103,7 @@ Parameters:
     Default: "%s.tif"
   SharpLayer:
     Type: String
-    Description: |
+    Description: >
       ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies. Use the special value `JP2` 
       to use the managed JPEG2000-compatible layer, or `INTERNAL` to use the built-in dependencies (without JPEG2000
       support).

@@ -1,7 +1,8 @@
 const functionTags = {
   '!GetAtt': { type: 'string', quoted: false },
   '!Sub': { type: 'string', quoted: true },
-  '!Ref': { type: 'string', quoted: false }
+  '!Ref': { type: 'string', quoted: false },
+  '!Split': { type: 'array', quoted: false }
 };
 
 module.exports = Object.entries(functionTags).map(([tag, { quoted }]) => {
