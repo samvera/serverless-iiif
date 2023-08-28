@@ -1,17 +1,26 @@
-name: Deploy docs to GitHub Pages
+name: Deploy doc previews to GitHub Pages
 on:
-  push:
-    branches: ["main"]
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+    paths: 
+      - .github/workflows/doc-preview.yml
+      - docs/**
+      - sam/template.yml
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
+  pull-requests: write
 concurrency:
-  group: "pages"
+  group: "preview-${{ github.ref }}"
   cancel-in-progress: false
 jobs:
-  deploy-pages:
+  deploy-preview:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,10 +33,6 @@ jobs:
         with:
           node-version: 16
           cache: npm
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-        with:
-          static_site_generator: next
       - name: Restore cache
         uses: actions/cache@v3
         with:
@@ -41,11 +46,8 @@ jobs:
       - name: Build with Next.js
         run: npx --no-install next build
         env:
-          NEXTJS_BASE_PATH: "/serverless-iiif"
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+          NEXTJS_BASE_PATH: "/serverless-iiif/pr-preview/pr-${{ github.event.number }}"
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
         with:
-          clean-exclude: |
-            .nojekyll
-            pr-preview/
-          folder: ./docs/out
+          source-dir: ./docs/out/
