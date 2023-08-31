@@ -1,0 +1,9 @@
+# serverless-iiif-standalone
+
+**Note: This application has been republished simply as [`serverless-iiif`](https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif). Please use that link for deployment.**
+
+## Standalone Version: Deprecation Notice
+
+This standalone version of the application was originally created to distinguish it from the CloudFront-enabled version, which was written to provide a complicated but effective way to skirt the hard 6 megabyte limit for Lambda function response payloads. Since then, AWS has introduced [AWS Lambda response streaming](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/), which uses chunked responses to bypass the 6 megabyte limit. As this is a much more elegant solution to the problem, there's nothing about the CloudFront template that's specific to this project any more. Ongoing development and maintenance will therefore focus on the IIIF Lambda itself rather than the large, complicated template required for a flexible, customizable CloudFront deployment.
+
+With the deprecation of the CloudFront version, we have removed the `-standalone` suffix from the core application. The application is therefore published simply as [`serverless-iiif`](https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif). Please see the [documentation](https://samvera.github.io/serverless-iiif/docs/quick-start/infrastructure) and [examples](https://github.com/samvera/serverless-iiif/tree/main/examples) of [CloudFormation](https://aws.amazon.com/cloudformation/) templates and [Terraform](https://terraform.io/) manifests to deploy the standalone function as part of a larger application/infrastructure stack.

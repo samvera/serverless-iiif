@@ -1,5 +1,7 @@
 # Deleting the application
 
-The easiest way to delete the application is either from the [Lambda Applications Console](https://console.aws.amazon.com/lambda/home#/applications) or by deleting its [CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home#/stacks?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false).
+If you deployed the application on its own, the easiest way to delete the application is either from the [Lambda Applications Console](https://console.aws.amazon.com/lambda/home#/applications) or by deleting its [CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home#/stacks?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false).
 
 If you deployed from the command line, you can also use the `npm run delete` command.
+
+If you deployed using an [infrastructure tool](deployment-infrastructure.mdx) such as AWS CloudFormation or Terraform, you should use that tool's destroy/teardown functionality to remove the IIIF stack as well.

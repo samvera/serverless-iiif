@@ -8,10 +8,13 @@ const HomepageHeader = () => {
     <div className={classNames.header}>
       <h1 className={classNames.headline}>Fast, zoomable images without servers</h1>
       <p className={classNames.subtitle}>
-       A cost-effective, infinitely scalable IIIF 2.1 image api compliant service packaged as an AWS Serverless Application with minimum setup and no maintenance. Suitable for large institutional collections or small digital humanities projects. 
-      <br />Community Driven. Open Source.  
+       A cost-effective, infinitely scalable <a href="https://iiif.io/api/image/3.0">IIIF Image API v2.1</a> and <a href="https://iiif.io/api/image/3.0">v3.0</a> compliant service packaged
+       as an AWS Serverless Application with minimum setup and no maintenance. Suitable for large institutional collections or
+       small digital humanities projects.
+        <br/>Community Driven. Open Source.
       </p>
-      <CallToAction href='/docs' text='Get started' />
+      <CallToAction newTab={true} href='https://console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif' text='Deploy Now' />
+      &nbsp;<CallToAction href='/docs' text='Read the Docs' />
 
       <Image
         src={lightDiagram}

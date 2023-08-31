@@ -1,0 +1,45 @@
+.cfAttribute {
+  line-height: 1.5rem;
+
+  dt>code {
+    font-size: 1rem;
+    font-weight: 500;
+    background-color: rgba(255,255,255,var(--tw-bg-opacity));
+    border: none;
+    padding-left: 0;
+  }
+
+  p {
+    margin: 0 1em 0.5em 1em;
+  }
+}
+
+.tfAttribute {
+  h3 {
+    font-size: 1rem;
+
+    .tfAttributeType {
+      align-items: center;
+      background-color: rgba(244,244,244,var(--tw-bg-opacity));
+      border-radius: 4px;
+      color: rgba(73,73,73,var(--tw-bg-opacity));
+      font-size: .75rem;
+      display: inline-flex;
+      padding: 0 .75rem;
+    }
+  }
+}
+
+html[class~=dark] {
+  .cfAttribute {
+    dt>code {
+      background-color: rgba(0,0,0,var(--tw-bg-opacity));
+    }
+  }
+
+  .tfAttribute {
+    h3 .tfAttributeType {
+      background-color: rgba(11,11,11,var(--tw-bg-opacity));
+    }
+  }
+}

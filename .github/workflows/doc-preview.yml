@@ -1,0 +1,53 @@
+name: Deploy doc previews to GitHub Pages
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+    paths: 
+      - .github/workflows/doc-preview.yml
+      - docs/**
+      - sam/template.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+concurrency:
+  group: "preview-${{ github.ref }}"
+  cancel-in-progress: false
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./docs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: npm
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            docs/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('docs/**/package-lock.json') }}-${{ hashFiles('docs/**.[jt]s', 'docs/**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('docs/**/package-lock.json') }}-
+      - name: Install dependencies
+        run: npm install
+      - name: Build with Next.js
+        run: npx --no-install next build
+        env:
+          NEXTJS_BASE_PATH: "/serverless-iiif/pr-preview/pr-${{ github.event.number }}"
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./docs/out/

@@ -19,20 +19,19 @@ import { Callout } from 'nextra/components';
 
 ## Description
 
-A cost-effective, infinitely scalable [IIIF 2.1](https://iiif.io/api/image/2.1/) image api compliant service packaged as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/) with minimum setup and no maintenance. Suitable for large institutional collections or small digital humanities projects. 
+A cost-effective, infinitely scalable [IIIF 2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image/3.0/) image API compliant service packaged as an [AWS Serverless Application](https://aws.amazon.com/serverless/sam/) with minimum setup and no maintenance. Suitable for large institutional collections or small digital humanities projects. 
 
 ## Components
 
-- A simple [Lambda Function](https://aws.amazon.com/lambda/) wrapper for the [iiif-processor](https://www.npmjs.com/package/iiif-processor) module.
-- A [Lambda Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) that is used to invoke the IIIF API via HTTPS.
-- A [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) containing all the dependencies for the Lambda Function.
-- An optional [CloudFormation](https://aws.amazon.com/cloudformation/) template describing the resources needed to deploy the application.
+* A simple [Lambda Function](https://aws.amazon.com/lambda/) wrapper for the [iiif-processor](https://www.npmjs.com/package/iiif-processor) module.
+* A [Lambda Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) that is used to invoke the IIIF API via HTTPS.
+* A [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) containing all the dependencies for the Lambda Function.
 
 ## Prerequisites
 
-- Some basic knowledge of AWS.
-- An Amazon Web Services account with permissions to create resources via the console and/or command line.
-- An [Amazon S3](https://aws.amazon.com/s3/) bucket to hold the source images to be served via IIIF.
+* Some basic knowledge of AWS.
+* An Amazon Web Services account with permissions to create resources via the console and/or command line.
+* An [Amazon S3](https://aws.amazon.com/s3/) bucket to hold the source images to be served via IIIF.
 
 <Callout>
   Note: The Lambda Function will be granted read access to this bucket.

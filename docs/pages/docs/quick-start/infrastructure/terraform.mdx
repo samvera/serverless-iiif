@@ -1,0 +1,162 @@
+import styles from './custom.module.scss';
+import { Tab, Tabs } from 'nextra/components';
+import { MDXRemote } from 'next-mdx-remote';
+import { useData } from 'nextra/data';
+import { displayValue, present, snake } from '../../../../lib/render';
+
+export async function getStaticProps(context) {
+  const { compileMdx } = await import('nextra/compile');
+  const { getPropertyList } = await import('../../../../lib/cfn-reader');
+  
+  const inputs = (await getPropertyList({ descPrefix: 'Description: ' })).map((prop) => {
+    prop.Name = snake(prop.Name);
+    prop.Type = prop.Type.toLowerCase();
+    if (prop.AllowedValues?.includes(false)) prop.Type = 'bool';
+    return prop;
+  });
+
+  const outputs = [
+    { Name: 'stack_id', Description: 'The ID of the serverless-iiif application stack' },
+    { Name: 'serverless_iiif_endpoint_v2', Description: 'IIIF Image API v2 Endpoint' },
+    { Name: 'serverless_iiif_endpoint_v3', Description: 'IIIF Image API v3 Endpoint' },
+    { Name: 'serverless_iiif_function_domain', Description: 'IIIF Function Domain Name' },
+    { Name: 'serverless_iiif_function_url', Description: 'IIIF Function URL' }
+  ]
+
+  return { props: { ssg: { data: { inputs, outputs } } } };
+}
+
+export const ModuleLink = ({ label, fragment='' }) => {
+  const branch = 'v5.0-streaming-iiif3';
+  return <>
+    <a href={`https://github.com/samvera/serverless-iiif/tree/${branch}/extras/terraform${fragment}`}>{label}</a>
+  </>
+};
+
+export const Attribute = ({ Name, Value, Code }) => {
+  if (present(Value)) {
+    if (Code) {
+      return <p>{Name}: <code>{displayValue(Value)}</code></p>
+    } else {
+      return <p>{Name}: {displayValue(Value)}</p>
+    }
+  }
+}
+
+export const PropTabs = ({ children }) => {
+  const { data } = useData();
+  const items = [
+    `Inputs (${data.inputs.length})`,
+    `Outputs (${data.outputs.length})`,
+    'Examples'
+  ];
+  return <Tabs items={items}>{children}</Tabs>
+}
+
+export const Input = ({ AllowedPattern, AllowedValues, Default, Description, MaxLength, MaxValue, MinLength, MinValue, Name, Type }) => {
+  return <>
+    <div className={styles.tfAttribute}>
+      <h3>{Name} <span className={styles.tfAttributeType}>{Type}</span></h3>
+      <MDXRemote compiledSource={Description}/>
+      <Attribute Name="Default" Value={Default} Code={true}/>
+    </div>
+  </>
+}
+
+export const Inputs = ({ required }) => {
+  const { data } = useData();
+  const inputs = data.inputs.filter(({ Default }) => present(Default) !== required);
+
+  return <div>
+  {
+    inputs
+    .filter(({ Default }) => {
+      return (Default === undefined) === required;
+    })
+    .map((input) => {
+      return <Input key={'input-'+input.Name} {...input}/>
+    })
+  }
+  </div>
+}
+
+export const Output = ({ Name, Description }) => {
+  return <>
+    <div key={"output-"+Name} className={styles.tfAttribute}>
+      <h3>{Name}</h3>
+      <Attribute Name="Description" Value={Description}/>
+    </div>
+  </>
+}
+
+export const Outputs = () => {
+  const { data: { outputs } } = useData();
+  return <div>{outputs.map((output) => <Output key={'output-'+output.Name} {...output}/>)}</div>
+}
+
+The `serverless-iiif` GitHub repository includes a <ModuleLink label="Terraform Module"/> that can be used as a drop-in component in any 
+Terraform manifest. Please refer to the documentation and examples below, as well as the [Terraform documentation](https://developer.hashicorp.com/terraform) 
+for more information on how you might use these tools to deploy your own custom stack to AWS.
+
+<PropTabs>
+  <Tab>
+    ### Required Inputs
+    <hr/>
+
+    These variables must be set in the `module` block when using this module.
+
+    <Inputs required={true}/>
+
+
+    ### Optional Inputs
+    <hr/>
+
+    These variables have default values and don't have to be set to use this module. You may set these variables to override their default 
+    values.
+
+    <Inputs required={false}/>
+  </Tab>
+
+  <Tab>
+    <Outputs/>
+  </Tab>
+
+  <Tab>
+    ### Minimal Example
+
+    ```hcl
+    module "serverless_iiif" {
+      source          = "github.com/samvera/serverless-iiif//extras/terraform"
+
+      source_bucket   = "iiif-images"
+      stack_name      = "my-iiif-service"
+    }
+    ```
+
+    ### (Almost) Full Example
+
+    ```hcl
+    module "serverless_iiif" {
+      source                    = "github.com/samvera/serverless-iiif//extras/terraform"
+
+      source_bucket             = "iiif-images"
+      stack_name                = "my-iiif-service"
+      cors_allow_credentials    = true
+      cors_allow_headers        = "X-Custom-Header,Upgrade-Insecure-Requests"
+      cors_allow_origin         = "REFLECT_ORIGIN"
+      cors_expose_headers       = "Content-Encoding"
+      cors_max_age              = 600
+      force_host                = "iiif.my-domain.edu"
+      iiif_lambda_memory        = 2048
+      iiif_lambda_timeout       = 120
+      pixel_density             = 600
+      preflight                 = true
+      resolver_template         = "iiif/%s.tif"
+
+      tags = {
+        Project = "my-image-service"
+      }
+    }
+    ```
+  </Tab>
+</PropTabs>

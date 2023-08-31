@@ -1,0 +1,147 @@
+Transform: "AWS::Serverless-2016-10-31"
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: serverless-iiif-customization-example
+    Description: |
+      Sample SAM application for deploying serverless-iiif with a 
+      custom Lambda function
+    Author: Samvera
+  CacheDomainName:
+    Type: String
+    Description: Custom Domain Name for the API Gateway Endpoint or CloudFront Cache
+  CacheSSLCertificate:
+    Type: String
+    Description: ARN of the ACM SSL Certification to use for the API Gateway Endpoint or CloudFront Cache
+  SourceBucket:
+    Type: String
+    Description: Name of bucket containing source images
+  TokenSecret:
+    Type: String
+    Description: Secret Key for verifying Javascript Web Tokens (for auth)
+Resources:
+  CachingIdentity:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "Caching Distribution Identity"
+  OriginRequestPolicy:
+    Type: "AWS::CloudFront::OriginRequestPolicy"
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub "${AWS::StackName}-allow-preflight-headers"
+        Comment: Allows IIIF preflight headers
+        CookiesConfig:
+          CookieBehavior: none
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers:
+            - x-preflight-location
+            - x-preflight-dimensions
+        QueryStringsConfig:
+          QueryStringBehavior: none
+  ResponseHeaderPolicy:
+    Type: "AWS::CloudFront::ResponseHeadersPolicy"
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-allow-cors-response-headers"
+        Comment: Allows IIIF CORS response headers
+        CorsConfig:
+          AccessControlAllowCredentials: false
+          AccessControlAllowHeaders:
+            Items: ["*"]
+          AccessControlAllowMethods:
+            Items: ["GET", "OPTIONS"]
+          AccessControlAllowOrigins:
+            Items: ["*"]
+          AccessControlExposeHeaders:
+            Items: ["cache-control", "content-language", "content-length", "content-type", "date", "expires", "last-modified", "pragma"]
+          AccessControlMaxAgeSec: 3600
+          OriginOverride: false
+  CachingEndpoint:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        PriceClass: PriceClass_100
+        Aliases:
+          - !Ref CacheDomainName
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CacheSSLCertificate
+          MinimumProtocolVersion: 'TLSv1'
+          SslSupportMethod: 'sni-only'
+        Origins:
+          - Id: IiifLambda
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+            DomainName:
+              Fn::GetAtt: IiifApp.Outputs.FunctionDomain
+        DefaultCacheBehavior:
+          TargetOriginId: IiifLambda
+          ViewerProtocolPolicy: https-only
+          AllowedMethods: ["GET", "HEAD", "OPTIONS"]
+          CachedMethods: ["GET", "HEAD"]
+          CachePolicyId: !Ref CachePolicyID
+          OriginRequestPolicyId: !Ref OriginRequestPolicy
+          ResponseHeadersPolicyId: !Ref ResponseHeaderPolicy
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              LambdaFunctionARN: !Ref ViewerRequestFunctionVersion
+              IncludeBody: false
+  ViewerRequestFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - edgelambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  ViewerRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Per-request customization function
+      CodeUri: ./viewer-request/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Timeout: 2
+      Role: !Ref ViewerRequestFunctionRole
+      Environment:
+        Variables:
+          IIIF_SOURCE_BUCKET: !Ref SourceBucket
+          JWT_SECRET: !Ref TokenSecret
+  ViewerRequestFunctionVersion:
+    Type: AWS::Lambda::Version
+    Properties: 
+      FunctionName: !GetAtt ViewerRequestFunction.Arn
+  IiifApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif
+        SemanticVersion: 5.0.0
+      Parameters:
+        CorsAllowOrigin: REFLECT_ORIGIN
+        ForceHost: !Ref CacheDomainName
+        Preflight: "true"
+        SourceBucket: !Ref SourceBucket
+Outputs:
+  Endpoint:
+    Description: IIIF Endpoint URL
+    Value: !Sub "https://${CacheDomainName}/iiif"
+  DistributionId:
+    Description: Caching Distribution ID
+    Value: 
+      Ref: CachingEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}:DistributionId"
+  LambdaFunction:
+    Description: IIIF Lambda Function Name
+    Value: !Ref IiifApp

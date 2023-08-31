@@ -1,0 +1,110 @@
+import styles from './custom.module.scss';
+import { Tab, Tabs } from 'nextra/components';
+import { MDXRemote } from 'next-mdx-remote';
+import { useData } from 'nextra/data';
+import { displayValue, present } from '../../../../lib/render';
+
+export async function getStaticProps(context) {
+  const cfn = await import('../../../../lib/cloudformation');
+  const { compileMdx } = await import('nextra/compile');
+  const { getParameters, getPropertyList } = await import('../../../../lib/cfn-reader');
+
+  const renderExample = async (format) => {
+    const markdown = cfn.example(format);
+    const mdx = await compileMdx(markdown, { defaultShowCopyCode: true });
+    return mdx.result;
+  };
+
+  const renderParameterList = async (format) => {
+    const markdown = cfn.parameterList(format);
+    const mdx = await compileMdx(markdown, { defaultShowCopyCode: true });
+    return mdx.result;
+  }
+
+  const data = {
+    yaml: await renderParameterList('yaml'),
+    json: await renderParameterList('json'),
+    props: await getPropertyList(),
+    examples: {
+      yaml: await renderExample('yaml'),
+      json: await renderExample('json')
+    }
+  };
+  return { props: { ssg: { data } } };
+}
+
+export const Parameters = ({ format }) => {
+  const { data } = useData();
+  return <MDXRemote compiledSource={data[format]}/>;
+};
+
+export const Attribute = ({ Name, Value, Code }) => {
+  if (present(Value)) {
+    if (Code) {
+      return <p><em>{Name}:</em> <code>{displayValue(Value)}</code></p>
+    } else {
+      return <p><em>{Name}:</em> {displayValue(Value)}</p>
+    }
+  }
+}
+
+export const Property = ({ AllowedPattern, AllowedValues, Default, Description, MaxLength, MaxValue, MinLength, MinValue, Name, Type }) => {
+  return <>
+      <div className={styles.cfAttribute}>
+      <dt key={"properties-"+Name+"-dt"}><code>{Name}</code></dt>
+      <dd key={"properties-"+Name+"-dd"}>
+        <MDXRemote key={"attribute-"+Name+"-Description"} compiledSource={Description}/>
+        <Attribute key={"attribute-"+Name+"-Required"} Name="Required" Value={Default === undefined ? 'Yes' : 'No'}/>
+        <Attribute key={"attribute-"+Name+"-Type"} Name="Type" Value={Type}/>
+        <Attribute key={"attribute-"+Name+"-Default"} Name="Default" Value={Default} Code={true}/>
+        <Attribute key={"attribute-"+Name+"-AllowedPattern"} Name="Allowed Pattern" Value={AllowedPattern} Code={true}/>
+        <Attribute key={"attribute-"+Name+"-AllowedValues"} Name="Allowed Values" Value={AllowedValues} Code={true}/>
+        <Attribute key={"attribute-"+Name+"-MinLength"} Name="Min Length" Value={MinLength} Code={true}/>
+        <Attribute key={"attribute-"+Name+"-MaxLength"} Name="Max Length" Value={MaxLength} Code={true}/>
+        <Attribute key={"attribute-"+Name+"-MinValue"} Name="Min Value" Value={MinValue} Code={true}/>
+        <Attribute key={"attribute-"+Name+"-MaxValue"} Name="Max Value" Value={MaxValue} Code={true}/>
+      </dd>
+    </div>
+  </>
+}
+
+export const Properties = () => {
+  const { data } = useData();
+  return <dl>
+  {data.props.map((prop) => {
+    return <Property key={prop.Name+"-attributes"} {...prop}/>
+  })}
+  </dl>
+}
+
+export const Example = ({ format }) => {
+  const { data } = useData();
+  return <><MDXRemote compiledSource={data.examples[format]}/></>
+}
+
+export const formats = ['yaml', 'json'];
+
+Installing `serverless-iiif` as part of a [CloudFormation](https://aws.amazon.com/cloudformation/) template makes it easy to integrate the service with other components. Please refer to the [example](#example) and the [CloudFormation documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) for more information on how you might tailor these templates to your own needs and deploy them to AWS.
+
+### Syntax
+
+To declare this entity in your AWS CloudFormation template, use the following syntax:
+
+<Tabs items={formats.map(v => v.toUpperCase())}>
+  {formats.map((format) => <Tab key={format}><Parameters format={format}/></Tab>)}
+</Tabs>
+
+### Properties
+
+<Properties/>
+
+### Example
+
+This example template will deploy a full application stack consisting of:
+
+- A serverless-iiif image server
+- A CloudFront distribution with a custom hostname and SSL certificate
+
+<Tabs items={formats.map(v => v.toUpperCase())}>
+  {formats.map((format) => <Tab key={format}><Example format={format}/></Tab>)}
+</Tabs>
