@@ -36,8 +36,8 @@ function handler(event) {
 ```JavaScript
 function handler(event) {
   var request = event.request;
-  request.headers['x-preflight-location'] = {value: 's3://image-bucket/path/to/correct/image.tif'};
-  request.headers['x-preflight-dimensions'] = {value: JSON.stringify({ width: 640, height: 480 })};
+  request.headers['x-preflight-location'] = [{value: 's3://image-bucket/path/to/correct/image.tif'}];
+  request.headers['x-preflight-dimensions'] = [{value: JSON.stringify({ width: 640, height: 480 })}];
   return request;
 }
 ```
