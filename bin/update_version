@@ -13,10 +13,12 @@ for f in $root/package.json $root/src/package.json $root/dependencies/package.js
 done
 
 if [[ "$OSTYPE" = "darwin*" ]]; then
-  sedreplace="sed -i ''"
+  sedreplace="sed -Ei ''"
 else
-  sedreplace="sed -i''"
+  sedreplace="sed -Ei"
 fi
 
-$sedreplace -E "s/SemanticVersion: .+/SemanticVersion: $version/" $root/sam/template.yml
-$sedreplace -E "s/  serverless_iiif_app_version   =.+/  serverless_iiif_app_version   = \"$version\"" $root/extras/terraform/main.tf
+for edition in . standalone cloudfront; do
+  $sedreplace "s/SemanticVersion: .+/SemanticVersion: $version/" $root/sam/$edition/template.yml
+done
+$sedreplace "s/  serverless_iiif_app_version   =.+/  serverless_iiif_app_version   = \"$version\"/" $root/extras/terraform/main.tf

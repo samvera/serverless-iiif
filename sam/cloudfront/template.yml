@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ./README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://samvera.github.io/serverless-iiif
-    SemanticVersion: 5.0.0
+    SemanticVersion: 5.0.1
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -209,35 +209,6 @@ Conditions:
       - Condition: UseViewerResponse
       - Fn::Equals: [!Ref ViewerResponseType, "Lambda@Edge"]
 Resources:
-  CacheBucket:
-    Type: "AWS::S3::Bucket"
-    Properties:
-      BucketName: 
-        Fn::Sub: "${AWS::StackName}-cache"
-      LifecycleConfiguration:
-        Rules:
-          - Status: Enabled
-            ExpirationInDays: 1
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls : true
-        BlockPublicPolicy : true
-        IgnorePublicAcls : true
-        RestrictPublicBuckets : true
-  CacheBucketPolicy:
-    Type: "AWS::S3::BucketPolicy"
-    Properties:
-      Bucket: !Ref CacheBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-            Resource:
-              - Fn::Sub: "arn:aws:s3:::${CacheBucket}/*"
-            Principal:
-              CanonicalUser:
-                Fn::GetAtt: CachingIdentity.S3CanonicalUserId
   CachingIdentity:
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
     Properties:
@@ -300,30 +271,8 @@ Resources:
               OriginProtocolPolicy: https-only
             DomainName:
               Fn::GetAtt: IiifFunction.Outputs.FunctionDomain
-          - Id: IiifCache
-            S3OriginConfig:
-              OriginAccessIdentity: 
-                Fn::Join:
-                  - ''
-                  - - 'origin-access-identity/cloudfront/'
-                    - !Ref CachingIdentity
-            DomainName:
-              Fn::Sub: "${CacheBucket}.s3.${AWS::Region}.amazonaws.com"
-        OriginGroups:
-          Quantity: 1
-          Items:
-            - Id: IiifOrigins
-              Members:
-                Quantity: 2
-                Items:
-                  - OriginId: IiifLambda
-                  - OriginId: IiifCache
-              FailoverCriteria:
-                  StatusCodes:
-                      Items: [404]
-                      Quantity: 1
         DefaultCacheBehavior:
-          TargetOriginId: IiifOrigins
+          TargetOriginId: IiifLambda
           ViewerProtocolPolicy: https-only
           AllowedMethods: ["GET", "HEAD", "OPTIONS"]
           CachedMethods: ["GET", "HEAD"]
@@ -371,9 +320,8 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif
-        SemanticVersion: 5.0.0
+        SemanticVersion: 5.0.1
       Parameters:
-        CacheBucket: !Ref CacheBucket
         CorsAllowCredentials: !Ref CorsAllowCredentials
         CorsAllowOrigin: !Ref CorsAllowOrigin
         CorsAllowHeaders: !Ref CorsAllowHeaders
