@@ -180,6 +180,10 @@ Conditions:
   UseOriginResponse:
     Fn::Not:
       - Fn::Equals: [!Ref OriginResponseARN, ""]
+  UsePreflight:
+    Fn::Or:
+      - Condition: UseOriginRequest
+      - Condition: UseViewerRequest
   UseViewerRequest:
     Fn::And:
       - Fn::Not:
@@ -337,7 +341,7 @@ Resources:
         PixelDensity: !Ref PixelDensity
         Preflight:
           Fn::If:
-            - UseViewerRequest
+            - UsePreflight
             - true
             - false
         PyramidLimit: !Ref PyramidLimit
