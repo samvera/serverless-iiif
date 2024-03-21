@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ./README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://samvera.github.io/serverless-iiif
-    SemanticVersion: 5.0.2
+    SemanticVersion: 5.0.3
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -180,6 +180,10 @@ Conditions:
   UseOriginResponse:
     Fn::Not:
       - Fn::Equals: [!Ref OriginResponseARN, ""]
+  UsePreflight:
+    Fn::Or:
+      - Condition: UseOriginRequest
+      - Condition: UseViewerRequest
   UseViewerRequest:
     Fn::And:
       - Fn::Not:
@@ -320,7 +324,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif
-        SemanticVersion: 5.0.2
+        SemanticVersion: 5.0.3
       Parameters:
         CorsAllowCredentials: !Ref CorsAllowCredentials
         CorsAllowOrigin: !Ref CorsAllowOrigin
@@ -337,7 +341,7 @@ Resources:
         PixelDensity: !Ref PixelDensity
         Preflight:
           Fn::If:
-            - UseViewerRequest
+            - UsePreflight
             - true
             - false
         PyramidLimit: !Ref PyramidLimit

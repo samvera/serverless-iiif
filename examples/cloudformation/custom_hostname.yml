@@ -21,7 +21,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone-dev
-        SemanticVersion: 5.0.0
+        SemanticVersion: 5.0.3
       Parameters:
         SourceBucket: !Ref IiifSourceBucket
   ResponseHeaderPolicy:

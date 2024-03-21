@@ -18,7 +18,7 @@ else
   sedreplace="sed -Ei"
 fi
 
-for edition in . standalone cloudfront; do
-  $sedreplace "s/SemanticVersion: .+/SemanticVersion: $version/" $root/sam/$edition/template.yml
+for template in sam/template.yml sam/standalone/template.yml sam/cloudfront/template.yml examples/sam/customization/template.yaml examples/cloudformation/custom_hostname.yml; do
+  $sedreplace "s/SemanticVersion: .+/SemanticVersion: $version/" $root/$template
 done
 $sedreplace "s/  serverless_iiif_app_version   =.+/  serverless_iiif_app_version   = \"$version\"/" $root/extras/terraform/main.tf
