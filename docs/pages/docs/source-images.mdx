@@ -11,6 +11,10 @@ Some versions of `libvips` and `libjpeg` have an issue with JPEG-compressed pyra
 alpha channels). If you find that `serverless-iiif` returns an error for an image request or isn't rendering as you'd expect, try removing any additional channels beyond red, green, and blue.
 </Callout>
 
+## Image Metadata
+
+`serverless-iiif` will probe each source image for its dimensions before any other processing takes place. Because this process can be time consuming, especially for large files, `serverless-iiif` first looks for fields calls `x-amz-meta-width` and `x-amz-meta-height` in the source file's [S3 Object Metadata](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html) before trying to load dimensions from the image itself. If those properties are present, they will be used instead.
+
 ## Creating tiled TIFFs
 
 ### Using the VIPS command line

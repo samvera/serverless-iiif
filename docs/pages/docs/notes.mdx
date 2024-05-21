@@ -1,5 +1,3 @@
 # Notes
 
-Lambda Function URLs have a payload (request/response body) size limit of approximately 6MB in both directions. To overcome this limitation, the Lambda URL is configured behind an AWS CloudFront distribution with two origins - the API and a cache bucket. Responses larger than 6MB are saved to the cache bucket at the same relative path as the request, and the Lambda returns a `404 Not Found` response to CloudFront. CloudFront then fails over to the second origin (the cache bucket), where it finds the actual response and returns it.
-
-The cache bucket uses an S3 lifecycle rule to expire cached responses in 1 day.
+`serverless-iiif` takes advantage of AWS Lambda URLs' [streaming response](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/) functionality to overcome the 6MB response limit that previous versions were subject to. Instead of a hard limit of 6MB, there is now a soft limit of approximately 20MB for each response. This limit can be adjusted by opening a support ticket with AWS requesting a quota increase. In addition, the streaming rate for the first 6MB of each response is uncapped; data over 6MB is capped at 2MB/s.
