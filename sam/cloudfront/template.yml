@@ -2,7 +2,7 @@ Transform: "AWS::Serverless-2016-10-31"
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif-cloudfront
-    Description: IIIF Image API 2.1/3.0 server in an AWS Serverless Application (w/CloudFront Caching)
+    Description: (Deprecated) IIIF Image API 2.1/3.0 server in an AWS Serverless Application (w/CloudFront Caching)
     Author: Samvera
     SpdxLicenseId: Apache-2.0
     LicenseUrl: ../../LICENSE.txt
