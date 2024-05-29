@@ -2,7 +2,7 @@ Transform: "AWS::Serverless-2016-10-31"
 Metadata:
   AWS::ServerlessRepo::Application:
     Name: serverless-iiif-standalone
-    Description: Passthrough template to install serverless-iiif
+    Description: (Deprecated) Passthrough template to install serverless-iiif
     Author: Samvera
     SpdxLicenseId: Apache-2.0
     LicenseUrl: ../../LICENSE.txt
