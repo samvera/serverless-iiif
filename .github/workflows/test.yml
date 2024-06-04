@@ -1,0 +1,51 @@
+---
+name: Run Tests
+on:
+  - push
+concurrency:
+  group: "tests"
+  cancel-in-progress: false
+jobs:
+  lts-runtime:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['lts/-2', 'lts/-1']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+      - name: Run Tests
+        run: npm run test
+  current-runtime:
+    runs-on: ubuntu-latest
+    needs: lts-runtime
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+      - name: Setup Code Climate
+        uses: remarkablemark/setup-codeclimate@v2
+      - name: Run Tests
+        run: |
+          cc-test-reporter before-build
+          npm run test-coverage
+          cc-test-reporter after-build --exit-code $?
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      - name: Send coverage to Coveralls
+        uses: coverallsapp/github-action@v2
