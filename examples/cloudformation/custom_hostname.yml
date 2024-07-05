@@ -20,7 +20,7 @@ Resources:
     Type: 'AWS::Serverless::Application'
     Properties:
       Location:
-        ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif-standalone-dev
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif
         SemanticVersion: 5.0.4
       Parameters:
         ForceHost: !Sub '${CacheHostName}.${CacheDomainName}'
