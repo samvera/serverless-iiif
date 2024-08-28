@@ -43,7 +43,7 @@ const reduceToLimit = ({ width, height, limit }) => {
   const result = [{ width, height }];
   let page = 1;
   let currentPage = result[result.length - 1];
-  while (currentPage.width >= limit || currentPage.height >= limit) {
+  while (currentPage.width > limit || currentPage.height > limit) {
     const nextPage = calculatePage(result[0], page++);
     result.push(nextPage);
     currentPage = result[result.length - 1];
