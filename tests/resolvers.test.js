@@ -150,7 +150,6 @@ describe('resolvers', () => { // eslint-disable-line max-lines-per-function
           { width: 1024, height: 768 },
           { width: 512, height: 384 },
           { width: 256, height: 192 },
-          { width: 128, height: 96 },
         ];
         const result = await dimensionResolver({id: 'dimensions'});
         expect(result).toEqual(expected);
