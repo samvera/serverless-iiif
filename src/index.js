@@ -5,6 +5,7 @@ const { errorHandler } = require('./error');
 const { streamifyResponse } = require('./streamify');
 
 const handleRequestFunc = streamifyResponse(async (event, context) => {
+  console.log('http path: ', event?.requestContext?.http?.path);
   const { addCorsHeaders, eventPath, fileMissing } = helpers;
 
   context.callbackWaitsForEmptyEventLoop = false;
