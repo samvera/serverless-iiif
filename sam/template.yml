@@ -159,7 +159,7 @@ Resources:
           - Ref: Dependencies
           - Fn::If:
             - UseJP2SharpLayer
-            - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:4"
+            - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:sharp-libvips-jp2:1"
             - Ref: SharpLayer
       Policies:
         - AWSLambdaExecute
