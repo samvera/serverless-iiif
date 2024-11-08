@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ../README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://samvera.github.io/serverless-iiif
-    SemanticVersion: 5.0.6
+    SemanticVersion: 5.1.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -136,13 +136,14 @@ Resources:
       ContentUri: ../dependencies
       CompatibleRuntimes:
         - nodejs18.x
+        - nodejs20.x
       LicenseInfo: "Apache-2.0"
     Metadata:
-      BuildMethod: nodejs18.x
+      BuildMethod: nodejs20.x
   IiifFunction:
     Type: "AWS::Serverless::Function"
     Properties:
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Handler: index.handler
       MemorySize:
         Ref: IiifLambdaMemory
@@ -153,13 +154,12 @@ Resources:
         Ref: IiifLambdaTimeout
       CodeUri: ../src
       Layers:
-        - Ref: Dependencies
         - Fn::If:
           - UseBuiltInDependencies
-          - !Ref AWS::NoValue
+          - Ref: Dependencies
           - Fn::If:
             - UseJP2SharpLayer
-            - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:libvips-sharp-jp2:4"
+            - !Sub "arn:aws:lambda:${AWS::Region}:625046682746:layer:sharp-libvips-jp2:1"
             - Ref: SharpLayer
       Policies:
         - AWSLambdaExecute
@@ -208,6 +208,8 @@ Resources:
               - !Ref AWS::NoValue
           resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
+    Metadata:
+      BuildMethod: makefile
 Outputs:
   EndpointV2:
     Description: IIIF Image API v2 Endpoint

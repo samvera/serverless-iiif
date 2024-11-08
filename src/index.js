@@ -53,9 +53,23 @@ const handleServiceDiscoveryRequestFunc = () => {
           href: '/iiif/3/{:id}',
           name: 'IIIF Image API v3 endpoint'
         }
-      ]
+      ],
+      versions: { ...require('sharp').versions }
     })
   };
+};
+
+const executeResource = async (uri, streamResolver, dimensionFunction, density, sharpOptions = {}) => {
+  try {
+    const resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction, density, sharpOptions });
+    return await resource.execute();
+  } catch (err) {
+    if (/Invalid tile part index/.test(err.message) && !sharpOptions.jp2Oneshot) {
+      console.log('Encountered JP2 tile part index error. Trying oneshot load.');
+      return await executeResource(uri, streamResolver, dimensionFunction, density, { ...sharpOptions, jp2Oneshot: true });
+    }
+    throw err;
+  }
 };
 
 const handleResourceRequestFunc = async (event, context) => {
@@ -67,8 +81,7 @@ const handleResourceRequestFunc = async (event, context) => {
   let resource;
   try {
     const uri = getUri(event);
-    resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction: dimensionResolver, density: density });
-    const result = await resource.execute();
+    const result = await executeResource(uri, streamResolver, dimensionResolver, density);
     return makeResponse(result);
   } catch (err) {
     return errorHandler(err, event, context, resource);
