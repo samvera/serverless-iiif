@@ -100,6 +100,13 @@ describe('resolvers', () => { // eslint-disable-line max-lines-per-function
     });
 
     describe('dimensionResolver', () => {
+      it('preflight dimensions (case insensitive)', async () => {
+        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'X-Preflight-Dimensions': '{ "width": 640, "height": 480 }' } }, true);
+        const expected = { width: 640, height: 480 };
+        const result = await dimensionResolver({id: 'dimensions'});
+        expect(result).toEqual(expected);
+      });
+
       it('preflight dimensions (single)', async () => {
         const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480 }' } }, true);
         const expected = { width: 640, height: 480 };

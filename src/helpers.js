@@ -13,7 +13,7 @@ const corsSetting = (name) => {
 
 const allowOriginValue = (corsAllowOrigin, event) => {
   if (corsAllowOrigin === 'REFLECT_ORIGIN') {
-    return event.headers.origin || '*';
+    return getHeaderValue(event, 'origin') || '*';
   }
   return corsAllowOrigin;
 };
@@ -38,9 +38,15 @@ const fileMissing = (event) => {
   return !/\.(jpe?g|tiff?|jp2|gif|png|webp|json)$/.test(eventPath(event));
 };
 
+const getHeaderValue = (event, header) => {
+  const headerName = Object.keys(event.headers).find((h) => h.toLowerCase() === header);
+  if (headerName) return event.headers[headerName];
+  return null;
+};
+
 const getUri = (event) => {
-  const scheme = event.headers['x-forwarded-proto'] || 'http';
-  const host = process.env.forceHost || event.headers['x-forwarded-host'] || event.headers.host;
+  const scheme = getHeaderValue(event, 'x-forwarded-proto') || 'http';
+  const host = process.env.forceHost || getHeaderValue(event, 'x-forwarded-host') || getHeaderValue(event, 'host');
   const uri = `${scheme}://${host}${eventPath(event)}`;
   return uri;
 };
@@ -68,6 +74,7 @@ module.exports = {
   addCorsHeaders,
   eventPath,
   fileMissing,
+  getHeaderValue,
   getUri,
   isBase64,
   isTooLarge,

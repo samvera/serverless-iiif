@@ -1,4 +1,5 @@
 const { S3Client, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { getHeaderValue } = require('./helpers');
 const URI = require('uri-js');
 const util = require('util');
 
@@ -71,7 +72,7 @@ const dimensionRetriever = async (location) => {
 
 // Preflight resolvers
 const parseLocationHeader = (event) => {
-  const locationHeader = event.headers['x-preflight-location'];
+  const locationHeader = getHeaderValue(event, 'x-preflight-location');
   if (locationHeader && locationHeader.match(/^s3:\/\//)) {
     const parsedURI = URI.parse(locationHeader);
     return { Bucket: parsedURI.host, Key: parsedURI.path.slice(1) };
@@ -80,7 +81,7 @@ const parseLocationHeader = (event) => {
 };
 
 const parseDimensionsHeader = (event) => {
-  const dimensionsHeader = event.headers['x-preflight-dimensions'];
+  const dimensionsHeader = getHeaderValue(event, 'x-preflight-dimensions');
   if (!dimensionsHeader) return null;
 
   const result = JSON.parse(dimensionsHeader);
