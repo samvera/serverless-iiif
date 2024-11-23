@@ -3,6 +3,7 @@
 [![Build Status](https://circleci.com/gh/samvera/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera/serverless-iiif)
 [![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fserverless-iiif.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fserverless-iiif?ref=badge_shield)
 
 ## Upgrade Note
 
@@ -61,6 +62,9 @@ npm test --coverage
 
 `serverless-iiif` is available under [the Apache 2.0 license](LICENSE).
 
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsamvera%2Fserverless-iiif.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsamvera%2Fserverless-iiif?ref=badge_large)
+
 ## Contributors
 
 * [Michael B. Klein](https://github.com/mbklein)
@@ -69,4 +73,3 @@ npm test --coverage
 * [Edward Silverton](https://github.com/edsilv)
 * [Trey Pendragon](https://github.com/tpendragon)
 * [Theia Wolfe](https://github.com/theiawolfe)
-
