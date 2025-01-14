@@ -62,7 +62,9 @@ const handleServiceDiscoveryRequestFunc = () => {
 
 const executeResource = async (uri, streamResolver, dimensionFunction, density, sharpOptions = {}) => {
   try {
-    const resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction, density, sharpOptions });
+    const debugBorder = process.env.debugBorder === 'true';
+    const pageThreshold = parseInt(process.env.pageThreshold) || undefined;
+    const resource = new IIIF.Processor(uri, streamResolver, { dimensionFunction, density, debugBorder, pageThreshold, sharpOptions });
     return await resource.execute();
   } catch (err) {
     if (/Invalid tile part index/.test(err.message) && !sharpOptions.jp2Oneshot) {
