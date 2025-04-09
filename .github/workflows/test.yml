@@ -38,14 +38,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install Dependencies
         run: npm ci
-      - name: Setup Code Climate
-        uses: remarkablemark/setup-codeclimate@v2
       - name: Run Tests
-        run: |
-          cc-test-reporter before-build
-          npm run test-coverage
-          cc-test-reporter after-build --exit-code $?
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        run: npm run test-coverage
       - name: Send coverage to Coveralls
         uses: coverallsapp/github-action@v2
