@@ -85,8 +85,12 @@ variable "resolver_template" {
 
 variable "sharp_layer" {
     type          = string
-    description   = "ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies"
-    default       = ""
+    description   = <<-END
+      ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies. Use the special value 
+      `JP2` to use the managed JPEG2000-compatible layer, or `INTERNAL` to use the built-in dependencies 
+      (without JPEG2000 support).
+    END
+    default       = "JP2"
 }
 
 variable "source_bucket" {

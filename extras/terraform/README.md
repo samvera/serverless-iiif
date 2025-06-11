@@ -56,7 +56,7 @@ module "serverless_iiif" {
 | `pixel_density`           | Hardcoded DPI/Pixel Density/Resolution to encode in output images | `number` | `0` | no |
 | `preflight`               | Indicates whether the function should expect preflight headers | `bool`   | `false` | no |
 | `resolver_template`       | A printf-style format string that determines the location of source image within the bucket given the image ID | `string` | `"%s.tif"` | no |
-| `sharp_layer`             | ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies | `string` | `""` | no |
+| `sharp_layer`             | ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies. Use the special value `JP2` to use the managed JPEG2000-compatible layer, or `INTERNAL` to use the built-in dependencies (without JPEG2000 support). | `string` | `"JP2"` | no |
 | `source_bucket`           | Name of the S3 bucket containing source images | `string` | `""` | yes |
 | `stack_name`              | The stack name for the deployed serverless-iiif application | `string` | `""` | yes |
 
