@@ -6,9 +6,15 @@ The S3 key of any given file, minus the extension, is its IIIF ID. For example, 
 
 `iiif-processor` can use any image format _natively_ supported by [libvips](https://libvips.github.io/libvips/), including JPEG 2000 (`.jp2`), but best results will come from using tiled, multi-resolution TIFFs. The Lambda Function wrapper included in this application assumes a `.tif` extension unless you set ResolverTemplate in your .env file.
 
+#### Alpha Channels
 <Callout emoji="⚠️">
 Some versions of `libvips` and `libjpeg` have an issue with JPEG-compressed pyramidal TIFF images that include more than 3 channels (e.g.,
-alpha channels). If you find that `serverless-iiif` returns an error for an image request or isn't rendering as you'd expect, try removing any additional channels beyond red, green, and blue.
+alpha channels). If you find that `serverless-iiif` returns an error for an image request or isn't rendering as you'd expect, try removing any additional channels beyond red, green, and blue. The [conversion commands](#creating-tiled-tiffs) below _should_ ensure that your images are flattened with the alpha channel removed.
+</Callout>
+
+#### EXIF Orientation
+<Callout emoji="⚠️">
+`iiif-processor` cannot automatically auto-orient images based on the [EXIF Orientation flag](https://jdhao.github.io/2019/07/31/image_rotation_exif_info/). Therefore, it is essential that your source images use the default orientation (EXIF value 1). The [conversion commands](#creating-tiled-tiffs) below _should_ ensure that your images are oriented correctly.
 </Callout>
 
 ## Image Metadata
@@ -21,10 +27,10 @@ alpha channels). If you find that `serverless-iiif` returns an error for an imag
 
 ```bash
 # For a 3-channel source image
-vips tiffsave source_image.tif output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256
+vips tiffsave "source_image.tif[autorotate]" output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256
 
 # For a source image with an alpha channel
-vips extract_band source_image.tif temp_image.v 0 --n 3 \
+vips extract_band "source_image.tif[autorotate]" temp_image.v 0 --n 3 \
   && vips tiffsave temp_image.v output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256 \
   && rm temp_image.v
 ```
@@ -32,7 +38,10 @@ vips extract_band source_image.tif temp_image.v 0 --n 3 \
 ### Using ImageMagick
 
 ```bash
-convert source_image.tif -alpha off \
+convert source_image.tif \
+  -alpha off \
+  -auto-orient \
+  -define ptif:pyramid=256x4 \
   -define tiff:tile-geometry=256x256 \
   -define tiff:generate-pyramids=true \
   -compress jpeg \
@@ -42,7 +51,9 @@ convert source_image.tif -alpha off \
 ### Using GraphicsMagick
 
 ```bash
-gm convert source_image.tif -flatten \
+gm convert source_image.tif \
+  -flatten \
+  -auto-orient \
   -define tiff:tile-geometry=256x256 \
   -compress jpeg \
   'ptif:output_image.tif'
