@@ -1,5 +1,6 @@
 version: 0.1
 default:
+  # deployment configuration
   deploy:
     parameters:
       stack_name: serverless-iiif
@@ -10,16 +11,41 @@ default:
       capabilities: CAPABILITY_IAM
       parameter_overrides: >
         CorsAllowCredentials="false"
-        CorsAllowHeaders="*"
-        CorsAllowOrigin="*"
+        CorsAllowHeaders="*" 
+        CorsAllowOrigin="*" 
         CorsExposeHeaders="cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"
         CorsMaxAge="3600"
         ForceHost=""
-        IiifLambdaMemory="3008"
+        IiifLambdaMemory="3008" 
         IiifLambdaTimeout="10"
         PixelDensity="0"
         Preflight="false"
+        PyramidLimit="256"
         ResolverTemplate="%s.tif"
-        SharpLayer=""
-        SourceBucket=""
+        SourceBucket="<YOUR_SOURCE_BUCKET>"
+      image_repositories: []
+
+  # iterative development configuration
+  sync:
+    parameters:
+      stack_name: serverless-iiif-dev
+      resolve_s3: true
+      s3_prefix: serverless-iiif-dev
+      region: us-east-1
+      confirm_changeset: true
+      capabilities: CAPABILITY_IAM CAPABILITY_AUTO_EXPAND
+      parameter_overrides: >
+        CorsAllowCredentials="false"
+        CorsAllowHeaders="*" 
+        CorsAllowOrigin="*" 
+        CorsExposeHeaders="cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"
+        CorsMaxAge="3600"
+        ForceHost=""
+        IiifLambdaMemory="3008" 
+        IiifLambdaTimeout="10"
+        PixelDensity="0"
+        Preflight="false"
+        PyramidLimit="256"
+        ResolverTemplate="%s.tif"
+        SourceBucket="<YOUR_SOURCE_BUCKET>"
       image_repositories: []

@@ -7,7 +7,7 @@ function example(format) {
 }
 
 function parameterList(format = 'object') {
-  const { Parameters } = getTemplate('../sam/template.yml');
+  const { Parameters } = getTemplate('../template.yml');
   for (const key in Parameters) {
     Parameters[key] = Parameters[key].Type;
   }
