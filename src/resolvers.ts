@@ -1,0 +1,142 @@
+import { StreamResolver, DimensionFunction } from 'iiif-processor';
+import {
+  S3Client,
+  GetObjectCommand,
+  HeadObjectCommand,
+  HeadObjectCommandOutput
+} from '@aws-sdk/client-s3';
+import { LambdaFunctionURLEvent as Event } from 'aws-lambda';
+import { getHeaderValue } from './helpers';
+import * as URI from 'uri-js';
+import * as util from 'util';
+
+export interface Resolvers {
+  streamResolver: StreamResolver;
+  dimensionResolver: DimensionFunction;
+}
+
+// IIIF RESOLVERS
+
+// Create input stream from S3 location
+const s3Stream = async (location: { Bucket: string; Key: string }): Promise<NodeJS.ReadableStream> => {
+  const s3 = new S3Client({});
+  const cmd = new GetObjectCommand(location);
+  const { Body } = await s3.send(cmd);
+  return Body as NodeJS.ReadableStream;
+};
+
+// Compute default stream location from ID
+const defaultStreamLocation = (id: string) => {
+  const sourceBucket = process.env.tiffBucket as string;
+  const resolverTemplate = process.env.resolverTemplate || '%s.tif';
+  const replacementCount = (resolverTemplate.match(/%.*?s/g) || []).length;
+  const args = new Array(replacementCount).fill(id);
+  const key = util.format(resolverTemplate, ...args);
+
+  return { Bucket: sourceBucket, Key: key };
+};
+
+const calculatePage = ({ width, height }: { width: number; height: number }, page: number) => {
+  const scale = 1 / 2 ** page;
+  return {
+    width: Math.floor(width * scale),
+    height: Math.floor(height * scale)
+  };
+};
+
+const reduceByPages = ({ width, height, pages }: { width: number; height: number; pages: number }) => {
+  const result = [{ width, height }];
+  for (let page = 1; page < pages; page++) {
+    result.push(calculatePage(result[0], page));
+  }
+  return result;
+};
+
+const reduceToLimit = ({ width, height, limit }: { width: number; height: number; limit: number }) => {
+  const result = [{ width, height }];
+  let page = 1;
+  let currentPage = result[result.length - 1];
+  while (currentPage.width > limit || currentPage.height > limit) {
+    const nextPage = calculatePage(result[0], page++);
+    result.push(nextPage);
+    currentPage = result[result.length - 1];
+  }
+  return result;
+};
+
+// Retrieve dimensions from S3 metadata
+const dimensionRetriever = async (location: { Bucket: string; Key: string }) => {
+  const s3 = new S3Client({});
+  const cmd = new HeadObjectCommand(location);
+  const response: HeadObjectCommandOutput = await s3.send(cmd);
+  const { Metadata } = response;
+  if (Metadata?.width && Metadata?.height) return calculateDimensions(Metadata);
+  return null;
+};
+
+const calculateDimensions = (metadata: Record<string, string>) => {
+  const result = {
+    width: parseInt(metadata.width, 10),
+    height: parseInt(metadata.height, 10)
+  };
+  if (metadata.pages)
+    return reduceByPages({ ...result, pages: parseInt(metadata.pages, 10) });
+  if (process.env.pyramidLimit)
+    return reduceToLimit({
+      ...result,
+      limit: parseInt(process.env.pyramidLimit as string, 10)
+    });
+  return [result];
+};
+
+// Preflight resolvers
+const parseLocationHeader = (event: Event) => {
+  const locationHeader = getHeaderValue(event, 'x-preflight-location');
+  if (locationHeader && locationHeader.match(/^s3:\/\//)) {
+    const parsedURI = URI.parse(locationHeader);
+    return { Bucket: parsedURI.host as string, Key: (parsedURI.path || '').slice(1) };
+  }
+  return null;
+};
+
+const parseDimensionsHeader = (event: Event) => {
+  const dimensionsHeader = getHeaderValue(event, 'x-preflight-dimensions');
+  if (!dimensionsHeader) return null;
+
+  const result = JSON.parse(dimensionsHeader);
+  if (result.pages) return reduceByPages(result);
+  if (result.limit) return reduceToLimit(result);
+  return result;
+};
+
+const preflightResolver = (event: Event): Resolvers => {
+  const preflightLocation = parseLocationHeader(event);
+  const preflightDimensions = parseDimensionsHeader(event);
+
+  return {
+    streamResolver: async ({ id }: { id: string }) => {
+      const location = preflightLocation || defaultStreamLocation(id);
+      return s3Stream(location);
+    },
+    dimensionResolver: async ({ id }: { id: string }) => {
+      const location = preflightLocation || defaultStreamLocation(id);
+      return preflightDimensions || dimensionRetriever(location);
+    }
+  };
+};
+
+// Standard (non-preflight) resolvers
+const standardResolver = (): Resolvers => {
+  return {
+    streamResolver: async ({ id }: { id: string }) => {
+      return s3Stream(defaultStreamLocation(id));
+    },
+    dimensionResolver: async ({ id }: { id: string }) => {
+      return dimensionRetriever(defaultStreamLocation(id));
+    }
+  };
+};
+
+export const resolverFactory = (event: Event, preflight: boolean): Resolvers => {
+  return preflight ? preflightResolver(event) : standardResolver();
+};

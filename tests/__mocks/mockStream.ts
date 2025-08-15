@@ -1,9 +1,10 @@
 /* eslint-env jest */
-const { Readable } = require('stream');
+import { Readable } from 'stream';
 
 const destroy = jest.fn();
 const end = jest.fn(() => {
   return { destroy: destroy };
 });
 const abort = jest.fn();
-module.exports = { ...new Readable(), destroy, end, abort };
+export default { ...(new Readable()), destroy, end, abort };
+
