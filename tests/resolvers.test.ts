@@ -1,30 +1,30 @@
 /* eslint-env jest */
-require('aws-sdk-client-mock-jest');
-const { mockClient } = require('aws-sdk-client-mock');
-const { S3Client, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
-const mockStream = require('./__mocks/mockStream');
-const resolvers = require('../src/resolvers');
+export {};
+import 'aws-sdk-client-mock-jest';
+import { mockClient } from 'aws-sdk-client-mock';
+import { S3Client, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import mockEvent from './__mocks/mockEvent';
+import mockStream from './__mocks/mockStream';
+import { resolverFactory } from '../src/resolvers';
 
-describe('resolvers', () => { // eslint-disable-line max-lines-per-function
+describe('resolvers', () => {
+  const baseUrl = 'https://iiif.example.edu/';
   let s3Mock;
 
   beforeEach(() => {
     s3Mock = mockClient(S3Client);
     s3Mock.on(GetObjectCommand).resolves({ Body: mockStream });
     s3Mock
-      .on(HeadObjectCommand).resolves({ Metadata: { } })
+      .on(HeadObjectCommand).resolves({ Metadata: {} })
       .on(HeadObjectCommand, { Key: 'dimensions.tif' }).resolves({ Metadata: { width: '2048', height: '1536' } })
       .on(HeadObjectCommand, { Key: 'paged-dimensions.tif' }).resolves({ Metadata: { width: '2048', height: '1536', pages: '5' } });
   });
 
   describe('default resolvers', () => {
-    const { streamResolver, dimensionResolver } = resolvers.resolverFactory({ headers: {} }, false);
+    const { streamResolver, dimensionResolver } = resolverFactory(mockEvent({ headers: {} }), false);
     describe('streamResolver', () => {
-      const callback = jest.fn(() => {});
-
       it('returns a stream and cleans up', async () => {
-        await streamResolver({id: 'id'}, callback);
-        expect(callback).toHaveBeenCalled();
+        await streamResolver({ id: 'id', baseUrl });
         expect(s3Mock).toHaveReceivedCommand(GetObjectCommand);
       });
 
@@ -38,17 +38,16 @@ describe('resolvers', () => { // eslint-disable-line max-lines-per-function
         });
 
         it('uses the resolverTemplate, if present', async () => {
-          await streamResolver({id: 'id'}, callback);
-          expect(s3Mock)
-            .toHaveReceivedCommandWith(GetObjectCommand, { Bucket: 'test-bucket', Key: '/path/to/id/id-pyramid.tiff' });
-        });  
+          await streamResolver({ id: 'id', baseUrl });
+          expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, { Bucket: 'test-bucket', Key: '/path/to/id/id-pyramid.tiff' });
+        });
       });
     });
 
     describe('dimensionResolver', () => {
       it('has metadata dimensions', async () => {
         const expected = [{ width: 2048, height: 1536 }];
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
@@ -60,23 +59,26 @@ describe('resolvers', () => { // eslint-disable-line max-lines-per-function
           { width: 256, height: 192 },
           { width: 128, height: 96 }
         ];
-        const result = await dimensionResolver({id: 'paged-dimensions'});
+        const result = await dimensionResolver({
+          id: "paged-dimensions",
+          baseUrl: "https://iiif.example.edu/"
+        });
         expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
-          Bucket: "test-bucket",
-          Key: "paged-dimensions.tif",
+          Bucket: 'test-bucket',
+          Key: 'paged-dimensions.tif'
         });
         expect(result).toEqual(expected);
       });
 
       it('does not have metadata dimensions', async () => {
         const expected = null;
-        const result = await dimensionResolver({id: 'no-dimensions'});
+        const result = await dimensionResolver({ id: 'no-dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
     });
   });
 
-  describe('preflight resolvers', () => { // eslint-disable-line max-lines-per-function
+  describe('preflight resolvers', () => {
     let savedEnvironment;
 
     beforeEach(() => {
@@ -88,86 +90,81 @@ describe('resolvers', () => { // eslint-disable-line max-lines-per-function
     });
 
     describe('streamResolver', () => {
-      const { streamResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }, true);
+      const { streamResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }), true);
       it('returns a stream and cleans up', async () => {
-        const callback = jest.fn(() => {});
-        await streamResolver({id: 'id'}, callback);
-        expect(callback).toHaveBeenCalled();
-        // expect(AWSMockS3.end).toHaveBeenCalled();
-        // expect(AWSMockS3.destroy).toHaveBeenCalled();
-        // expect(AWSMockS3.abort).toHaveBeenCalled();
+        await streamResolver({ id: 'id', baseUrl });
       });
     });
 
     describe('dimensionResolver', () => {
       it('preflight dimensions (case insensitive)', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'X-Preflight-Dimensions': '{ "width": 640, "height": 480 }' } }, true);
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'X-Preflight-Dimensions': '{ "width": 640, "height": 480 }' } }), true);
         const expected = { width: 640, height: 480 };
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
       it('preflight dimensions (single)', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480 }' } }, true);
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480 }' } }), true);
         const expected = { width: 640, height: 480 };
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
       it('preflight dimensions (array)', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '[{ "width": 640, "height": 480 }]' } }, true);
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-dimensions': '[{ "width": 640, "height": 480 }]' } }), true);
         const expected = [{ width: 640, height: 480 }];
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
       it('preflight dimensions (pages)', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480, "pages": 2 }' } }, true);
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480, "pages": 2 }' } }), true);
         const expected = [
           { width: 640, height: 480 },
           { width: 320, height: 240 }
         ];
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
-      it('preflight dimensions (pages)', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480, "limit": 200 }' } }, true);
+      it('preflight dimensions (limit)', async () => {
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-dimensions': '{ "width": 640, "height": 480, "limit": 200 }' } }), true);
         const expected = [
           { width: 640, height: 480 },
           { width: 320, height: 240 },
           { width: 160, height: 120 }
         ];
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
       it('no preflight dimensions / metadata dimensions', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }, true);
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }), true);
         const expected = [{ width: 2048, height: 1536 }];
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
       it('no preflight dimensions / metadata dimensions / page size limit', async () => {
-        process.env.pyramidLimit = "256";
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }, true);
+        process.env.pyramidLimit = '256';
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }), true);
         const expected = [
           { width: 2048, height: 1536 },
           { width: 1024, height: 768 },
           { width: 512, height: 384 },
-          { width: 256, height: 192 },
+          { width: 256, height: 192 }
         ];
-        const result = await dimensionResolver({id: 'dimensions'});
+        const result = await dimensionResolver({ id: 'dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
 
       it('no preflight dimensions / no metadata dimensions', async () => {
-        const { dimensionResolver } = resolvers.resolverFactory({ headers: { 'x-preflight-location': 's3://test-bucket/no-dimensions.tif' } }, true);
+        const { dimensionResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-location': 's3://test-bucket/no-dimensions.tif' } }), true);
         const expected = null;
-        const result = await dimensionResolver({id: 'no-dimensions'});
+        const result = await dimensionResolver({ id: 'no-dimensions', baseUrl });
         expect(result).toEqual(expected);
       });
     });
-  })
+  });
 });
