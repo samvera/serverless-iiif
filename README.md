@@ -10,11 +10,11 @@ Previous versions of this application featured an optional [CloudFront](https://
 
 While the CloudFront-enabled version of the application will remain available for the in the Serverless Application Repository for a time to provide an easy upgrade path for existing users, it is _strongly_ recommended that new deployments use the provided [documentation](https://samvera.github.io/serverless-iiif/docs/quick-start/infrastructure) and [examples](./examples) of [CloudFormation](https://aws.amazon.com/cloudformation/) templates and [Terraform](https://terraform.io/) manifests to deploy the standalone function as part of a larger application/infrastructure stack that defines its own CloudFront distribution.
 
-### Breaking Changes from Version 4.x
+### Breaking Changes from Version 5.x
 
-- The value of the `SharpLayer` variable must now be one of `INTERNAL`, `JP2`, or a valid Lambda layer ARN in the same region the 
-  application is being deployed in. The new default is `JP2`, which behaves the same as the former default (empty string). The new
-  value, `INTERNAL`, uses the `sharp` and `libvips` dependencies compiled into the application itself.
+- The `SharpLayer` variable has been removed, and the `sharp` dependency (with JP2 support) bundled into the published
+  package.
+- The `standalone` and `cloudfront` deployment options have been removed, per the deprecation notice in v5.x. Please see the [documented example](https://samvera.github.io/serverless-iiif/docs/quick-start/infrastructure/cloudformation#example) of how to deploy `serverless-iiif` as part of a full stack that includes a CloudFront distribution.
 
 ## Description
 
@@ -29,7 +29,7 @@ A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image
 ## Prerequisites
 
 * Some basic knowledge of AWS.
-* An Amazon Web Services account with permissions to create resources via the console and/or command line.
+* An Amazon Web Services account with permissions to create IAM resources via the console and/or command line.
 * An [Amazon S3](https://aws.amazon.com/s3/) bucket to hold the source images to be served via IIIF.
   **Note: The Lambda Function will be granted read access to this bucket.**
 

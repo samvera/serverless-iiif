@@ -4,11 +4,12 @@
 deploy.yml
 deploy.yaml
 node_modules
-samconfig.toml
+deploy.*
+!deploy.yml.example
+samconfig.*
 env.json
 package.yml
 package.yaml
-samconfig.*
 
 # NodeJS Build
 coverage
@@ -30,3 +31,5 @@ env.json
 sharp-lambda-layer.*
 *.log
 .vscode
+dependencies/*
+!dependencies/Makefile

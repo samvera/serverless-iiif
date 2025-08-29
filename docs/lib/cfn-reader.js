@@ -1,6 +1,6 @@
 const fs = require('fs');
 const YAML = require('yaml');
-const templateFile = '../sam/template.yml';
+const templateFile = '../template.yml';
 const customTags = require('./cfn-tags');
 
 function getParameters() {

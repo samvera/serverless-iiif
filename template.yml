@@ -1,11 +1,11 @@
 Transform: "AWS::Serverless-2016-10-31"
 Metadata:
   AWS::ServerlessRepo::Application:
-    Name: serverless-iiif-standalone
-    Description: (Deprecated) Passthrough template to install serverless-iiif
+    Name: serverless-iiif
+    Description: IIIF Image API 2.1 and 3.0 Service Lambda Function
     Author: Samvera
     SpdxLicenseId: Apache-2.0
-    LicenseUrl: ../../LICENSE.txt
+    LicenseUrl: ./LICENSE.txt
     ReadmeUrl: ./README.md
     Labels: ["iiif", "image-processing"]
     HomePageUrl: https://samvera.github.io/serverless-iiif
@@ -101,36 +101,114 @@ Parameters:
     Type: String
     Description: A printf-style format string that determines the location of source image within the bucket given the image ID
     Default: "%s.tif"
-  SharpLayer:
-    Type: String
-    Description: >
-      ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies. Use the special value `JP2` 
-      to use the managed JPEG2000-compatible layer, or `INTERNAL` to use the built-in dependencies (without JPEG2000
-      support).
-    AllowedPattern: "^INTERNAL$|^JP2$|^arn:aws:lambda:.*:.*:layer:.+:\\d+$"
-    Default: "JP2"
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
+Conditions:
+  UseForceHost:
+    Fn::Not:
+      - Fn::Equals: [!Ref ForceHost, ""]
+  UsePixelDensity:
+    Fn::Not:
+      - Fn::Equals: [!Ref PixelDensity, 0]
+  UsePyramidLimit:
+    Fn::Not:
+      - Fn::Equals: [!Ref PyramidLimit, 0]
 Resources:
-  ServerlessIiif:
-    Type: AWS::Serverless::Application
+  Dependencies:
+    Type: "AWS::Serverless::LayerVersion"
     Properties:
-      Location:
-        ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif
-        SemanticVersion: 5.1.7
-      Parameters:
-        CorsAllowCredentials: !Ref CorsAllowCredentials
-        CorsAllowHeaders: !Ref CorsAllowHeaders
-        CorsAllowOrigin: !Ref CorsAllowOrigin
-        CorsExposeHeaders: !Ref CorsExposeHeaders
-        CorsMaxAge: !Ref CorsMaxAge
-        ForceHost: !Ref ForceHost
-        IiifLambdaMemory: !Ref IiifLambdaMemory
-        IiifLambdaTimeout: !Ref IiifLambdaTimeout
-        PixelDensity: !Ref PixelDensity
-        Preflight: !Ref Preflight
-        PyramidLimit: !Ref PyramidLimit
-        ResolverTemplate: !Ref ResolverTemplate
-        SharpLayer: !Ref SharpLayer
-        SourceBucket: !Ref SourceBucket
+      LayerName:
+        Fn::Sub: "${AWS::StackName}-dependencies"
+      Description: Dependencies for IIIF app
+      ContentUri: ./dependencies
+      CompatibleRuntimes:
+        - nodejs22.x
+      LicenseInfo: "Apache-2.0"
+    Metadata:
+      BuildMethod: makefile
+  IiifFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Runtime: nodejs22.x
+      Handler: index.handler
+      MemorySize:
+        Ref: IiifLambdaMemory
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+      Timeout:
+        Ref: IiifLambdaTimeout
+      CodeUri: ./src
+      Layers:
+        - !Ref Dependencies
+      Policies:
+        - AWSLambdaExecute
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:GetObjectACL
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+      Environment:
+        Variables:
+          corsAllowCredentials: !Ref CorsAllowCredentials
+          corsAllowOrigin: !Ref CorsAllowOrigin
+          corsAllowHeaders: !Ref CorsAllowHeaders
+          corsExposeHeaders: !Ref CorsExposeHeaders
+          corsMaxAge: !Ref CorsMaxAge
+          density:
+            Fn::If:
+              - UsePixelDensity
+              - !Ref PixelDensity
+              - !Ref AWS::NoValue
+          forceHost:
+            Fn::If:
+              - UseForceHost
+              - !Ref ForceHost
+              - !Ref AWS::NoValue
+          preflight: !Ref Preflight
+          pyramidLimit:
+            Fn::If:
+              - UsePyramidLimit
+              - !Ref PyramidLimit
+              - !Ref AWS::NoValue
+          resolverTemplate: !Ref ResolverTemplate
+          tiffBucket: !Ref SourceBucket
+    Metadata:
+      BuildMethod: makefile
+Outputs:
+  EndpointV2:
+    Description: IIIF Image API v2 Endpoint
+    Value:
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/2"
+  EndpointV3:
+    Description: IIIF Image API v3 Endpoint
+    Value:
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/3"
+  FunctionDomain:
+    Description: IIIF Function Domain Name
+    Value:
+      Fn::Select:
+        - 2
+        - Fn::Split:
+          - "/"
+          - Fn::GetAtt: IiifFunctionUrl.FunctionUrl
+  FunctionUrl:
+    Description: IIIF Function URL
+    Value:
+      Fn::GetAtt: IiifFunctionUrl.FunctionUrl

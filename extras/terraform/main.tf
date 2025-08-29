@@ -30,7 +30,6 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "serverless_
     PixelDensity            = var.pixel_density
     Preflight               = var.preflight
     ResolverTemplate        = var.resolver_template
-    SharpLayer              = var.sharp_layer
     SourceBucket            = var.source_bucket
   }
 }
