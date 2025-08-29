@@ -1,8 +1,4 @@
-import { 
-  LambdaFunctionURLEvent as Event, 
-  APIGatewayProxyStructuredResultV2 as Result, 
-  Context
-} from 'aws-lambda';
+import { LambdaEvent, LambdaResponse } from './contracts';
 
 const SafelistedResponseHeaders =
   'cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma';
@@ -19,7 +15,7 @@ export const corsSetting = (name: string): string => {
   return (process.env[`cors${name}`] as string) || CorsDefaults[name];
 };
 
-export const getHeaderValue = (event: Event, header: string): string | null => {
+export const getHeaderValue = (event: LambdaEvent, header: string): string | null => {
   const headerName = Object.keys(event.headers || {}).find(
     (h) => h.toLowerCase() === header
   );
@@ -27,7 +23,7 @@ export const getHeaderValue = (event: Event, header: string): string | null => {
   return null;
 };
 
-export const allowOriginValue = (corsAllowOrigin: string, event: Event): string => {
+export const allowOriginValue = (corsAllowOrigin: string, event: LambdaEvent): string => {
   if (corsAllowOrigin === 'REFLECT_ORIGIN') {
     return getHeaderValue(event, 'origin') || '*';
   }
@@ -35,9 +31,9 @@ export const allowOriginValue = (corsAllowOrigin: string, event: Event): string 
 };
 
 export const addCorsHeaders = (
-  event: Event,
-  response: Result
-): Result => {
+  event: LambdaEvent,
+  response: LambdaResponse
+): LambdaResponse => {
   response.headers = {
     ...response.headers,
     "Access-Control-Allow-Credentials": corsSetting("AllowCredentials"),
@@ -52,15 +48,15 @@ export const addCorsHeaders = (
   return response;
 };
 
-export const eventPath = (event: Event): string => {
+export const eventPath = (event: LambdaEvent): string => {
   return (event.requestContext?.http?.path || '').replace(/\/*$/, '');
 };
 
-export const fileMissing = (event: Event): boolean => {
+export const fileMissing = (event: LambdaEvent): boolean => {
   return !/\.(jpe?g|tiff?|jp2|gif|png|webp|json)$/.test(eventPath(event));
 };
 
-export const getUri = (event: Event): string => {
+export const getUri = (event: LambdaEvent): string => {
   const scheme = getHeaderValue(event, 'x-forwarded-proto') || 'http';
   const host =
     process.env.forceHost ||

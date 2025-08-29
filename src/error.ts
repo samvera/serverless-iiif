@@ -1,16 +1,12 @@
-import { 
-  LambdaFunctionURLEvent as Event,
-  APIGatewayProxyStructuredResultV2 as Response,
-  Context 
-} from 'aws-lambda';
+import { LambdaEvent, LambdaResponse, LambdaContext } from './contracts';
 import { IIIFError, Processor } from 'iiif-processor';
 
 export const errorHandler = async (
   err: Error & { statusCode?: number },
-  _event: Event,
-  _context: Context,
+  _event: LambdaEvent,
+  _context: LambdaContext,
   resource?: Processor
-): Promise<Response> => {
+): Promise<LambdaResponse> => {
   if (err?.statusCode) {
     return {
       statusCode: err.statusCode,

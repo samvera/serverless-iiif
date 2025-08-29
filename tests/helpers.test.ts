@@ -1,6 +1,6 @@
 /* eslint-env jest */
 export {};
-import { addCorsHeaders, eventPath, fileMissing, getUri } from '../src/helpers';
+import { addCorsHeaders, eventPath, fileMissing, getUri, parseDensity } from '../src/helpers';
 import mockEvent from './__mocks/mockEvent';
 
 describe('helper functions', () => {
@@ -126,6 +126,17 @@ describe('helper functions', () => {
         requestContext: { http: { path: '/path' } }
       });
       expect(getUri(event)).toEqual('https://forced-host/path');
+    });
+  });
+
+  describe('parseDensity', () => {
+    it('returns a number for valid values', () => {
+      expect(parseDensity('150')).toBe(150);
+    });
+
+    it('returns undefined for invalid or negative', () => {
+      expect(parseDensity('not-a-number')).toBeUndefined();
+      expect(parseDensity('-5')).toBeUndefined();
     });
   });
 });

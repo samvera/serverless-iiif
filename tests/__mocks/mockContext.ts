@@ -1,6 +1,6 @@
-import { Context } from "aws-lambda";
+import { LambdaContext } from "../../src/contracts";
 
-const defaultContext: Context = {
+const defaultContext: LambdaContext = {
   callbackWaitsForEmptyEventLoop: true,
   functionName: "test-function",
   functionVersion: "$LATEST",
@@ -15,6 +15,6 @@ const defaultContext: Context = {
   succeed: () => {}
 };
 
-export default function mockContext(overrides = {}): Context {
+export default function mockContext(overrides = {}): LambdaContext {
   return { ...defaultContext, ...overrides };
 }

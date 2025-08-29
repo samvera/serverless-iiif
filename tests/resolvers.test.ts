@@ -41,6 +41,15 @@ describe('resolvers', () => {
           await streamResolver({ id: 'id', baseUrl });
           expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, { Bucket: 'test-bucket', Key: '/path/to/id/id-pyramid.tiff' });
         });
+
+        it('supports templates without placeholders', async () => {
+          process.env.resolverTemplate = 'static-name.tif';
+          await streamResolver({ id: 'ignored', baseUrl });
+          expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+            Bucket: 'test-bucket',
+            Key: 'static-name.tif'
+          });
+        });
       });
     });
 
@@ -93,6 +102,18 @@ describe('resolvers', () => {
       const { streamResolver } = resolverFactory(mockEvent({ headers: { 'x-preflight-location': 's3://test-bucket/dimensions.tif' } }), true);
       it('returns a stream and cleans up', async () => {
         await streamResolver({ id: 'id', baseUrl });
+      });
+
+      it('falls back to default location for non-s3 preflight URI', async () => {
+        const { streamResolver: sr } = resolverFactory(
+          mockEvent({ headers: { 'x-preflight-location': 'https://example.com/file.tif' } }),
+          true
+        );
+        await sr({ id: 'dimensions', baseUrl });
+        expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
+          Bucket: 'test-bucket',
+          Key: 'dimensions.tif'
+        });
       });
     });
 
