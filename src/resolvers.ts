@@ -5,7 +5,7 @@ import {
   HeadObjectCommand,
   HeadObjectCommandOutput
 } from '@aws-sdk/client-s3';
-import { LambdaFunctionURLEvent as Event } from 'aws-lambda';
+import { LambdaEvent } from "./contracts";
 import { getHeaderValue } from './helpers';
 import * as URI from 'uri-js';
 import * as util from 'util';
@@ -90,7 +90,7 @@ const calculateDimensions = (metadata: Record<string, string>) => {
 };
 
 // Preflight resolvers
-const parseLocationHeader = (event: Event) => {
+const parseLocationHeader = (event: LambdaEvent) => {
   const locationHeader = getHeaderValue(event, 'x-preflight-location');
   if (locationHeader && locationHeader.match(/^s3:\/\//)) {
     const parsedURI = URI.parse(locationHeader);
@@ -99,7 +99,7 @@ const parseLocationHeader = (event: Event) => {
   return null;
 };
 
-const parseDimensionsHeader = (event: Event) => {
+const parseDimensionsHeader = (event: LambdaEvent) => {
   const dimensionsHeader = getHeaderValue(event, 'x-preflight-dimensions');
   if (!dimensionsHeader) return null;
 
@@ -109,7 +109,7 @@ const parseDimensionsHeader = (event: Event) => {
   return result;
 };
 
-const preflightResolver = (event: Event): Resolvers => {
+const preflightResolver = (event: LambdaEvent): Resolvers => {
   const preflightLocation = parseLocationHeader(event);
   const preflightDimensions = parseDimensionsHeader(event);
 
@@ -137,6 +137,6 @@ const standardResolver = (): Resolvers => {
   };
 };
 
-export const resolverFactory = (event: Event, preflight: boolean): Resolvers => {
+export const resolverFactory = (event: LambdaEvent, preflight: boolean): Resolvers => {
   return preflight ? preflightResolver(event) : standardResolver();
 };

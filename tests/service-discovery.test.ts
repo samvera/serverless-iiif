@@ -2,7 +2,6 @@
 export {};
 import { handler } from '../src/index';
 import callHandler from './stream-handler';
-import * as helpers from '../src/helpers';
 
 describe('service discovery document', () => {
   it('provides a links document at the root', async () => {

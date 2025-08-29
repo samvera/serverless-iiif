@@ -1,0 +1,32 @@
+---
+name: Build Project
+on:
+  - push
+concurrency:
+  group: "builds"
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install Dependencies
+        run: npm ci
+      - name: Install esbuild globally
+        run: |
+          esbuild_version=$(npm list esbuild | grep esbuild | cut -d '@' -f 2)
+          npm install -g esbuild@${esbuild_version}
+      - name: Build
+        run: ./bin/build build
+      - name: Verify Build
+        run: |
+          file .aws-sam/build/Dependencies/nodejs/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.* | grep 'ELF 64-bit LSB shared object, x86-64' >/dev/null
+          file .aws-sam/build/Dependencies/nodejs/node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64.node | grep 'ELF 64-bit LSB shared object, x86-64' >/dev/null
+          file .aws-sam/build/Dependencies/lib/libvips-cpp.so | grep 'ELF 64-bit LSB shared object, x86-64' >/dev/null
+          test -e .aws-sam/build/IiifFunction/index.js
