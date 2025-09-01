@@ -89,7 +89,6 @@ be considered for inclusion in the code base and history of this repository.
 - [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html)
 - [AWS CLI](https://aws.amazon.com/cli/)
 - [AWS SAM CLI](https://aws.amazon.com/serverless/sam/) v1.140.0 or greater
-- The [make](https://www.gnu.org/software/make/) build tool (included with build tools on most UNIX-like operating systems)
 
 #### Building and Deploying
 

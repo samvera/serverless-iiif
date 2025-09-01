@@ -28,17 +28,17 @@
     "yaml": "^2.3.1"
   },
   "scripts": {
-    "clean": "make clean",
+    "clean": "bin/build clean",
     "lint": "eslint src/*.js",
     "lint-fix": "eslint --fix src/*.js",
     "test": "node scripts/test.js --env=jsdom",
     "test-coverage": "node scripts/test.js --env=jsdom --coverage",
-    "build": "make build",
-    "deploy": "make deploy",
-    "deploy-guided": "make deploy-guided",
-    "delete-stack": "make delete-stack",
-    "dev": "make dev",
-    "package": "make package",
-    "publish": "make publish"
+    "build": "bin/build build",
+    "deploy": "bin/build deploy",
+    "deploy-guided": "bin/build deploy-guided",
+    "delete-stack": "bin/build delete-stack",
+    "dev": "bin/build dev",
+    "package": "bin/build package",
+    "publish": "bin/build publish"
   }
 }
