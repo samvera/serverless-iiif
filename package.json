@@ -28,13 +28,17 @@
     "yaml": "^2.3.1"
   },
   "scripts": {
+    "clean": "bin/build clean",
     "lint": "eslint src/*.js",
     "lint-fix": "eslint --fix src/*.js",
     "test": "node scripts/test.js --env=jsdom",
     "test-coverage": "node scripts/test.js --env=jsdom --coverage",
-    "build": "sam build -t sam/template.yml --use-container",
-    "deploy": "sam deploy --config-file ./deploy.yml",
-    "deploy-guided": "sam deploy --config-file ./deploy.yml --guided",
-    "delete-stack": "sam delete --config-file ./deploy.yml"
+    "build": "bin/build build",
+    "deploy": "bin/build deploy",
+    "deploy-guided": "bin/build deploy-guided",
+    "delete-stack": "bin/build delete-stack",
+    "dev": "bin/build dev",
+    "package": "bin/build package",
+    "publish": "bin/build publish"
   }
 }

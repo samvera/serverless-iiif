@@ -1,0 +1,94 @@
+#!/bin/bash
+
+set -e
+
+AWS_PACKAGE_BUCKET=${AWS_PACKAGE_BUCKET:-nul-serverless-applications}
+AWS_PACKAGE_PREFIX=${AWS_PACKAGE_PREFIX:-serverless-iiif}
+NODE_BASE_CONTAINER_ID_FILE=$(mktemp)
+AWS_DEPENDENCIES_DIR=${PWD}/dependencies
+AWS_NODEJS_DIR=${AWS_DEPENDENCIES_DIR}/nodejs
+AWS_LIB_DIR=${AWS_DEPENDENCIES_DIR}/lib
+
+SAM_CONFIG_FILE=$(ls {deploy,samconfig}.{yaml,yml,toml} 2>/dev/null | head -1)
+if [[ -n "${SAM_CONFIG_FILE}" ]]; then
+  CONFIG_FILE_ARG="--config-file ${SAM_CONFIG_FILE}"
+else
+  CONFIG_FILE_ARG=""
+fi
+
+trap "rm -f ${NODE_BASE_CONTAINER_ID_FILE}" EXIT
+
+copy_from_container() {
+  NODE_BASE_CONTAINER_ID=$(cat ${NODE_BASE_CONTAINER_ID_FILE})
+	mkdir -p "$1"
+	docker run --rm ${NODE_BASE_CONTAINER_ID} tar -C $2 -cf - $3 | tar -C "$1" -xf -
+}
+
+clean() {
+  rm -rf .aws-sam dependencies/lib dependencies/nodejs
+}
+
+deps-image() {
+  docker buildx build --target deps --platform linux/amd64 --iidfile ${NODE_BASE_CONTAINER_ID_FILE} .
+}
+
+deps() {
+  deps-image && \
+  copy_from_container ${AWS_NODEJS_DIR} /app node_modules && \
+  copy_from_container ${AWS_LIB_DIR} /usr/local/lib .
+}
+
+build() {
+  deps && sam build
+}
+
+package() {
+  build && \
+  sam package \
+		--profile ${AWS_PROFILE} \
+		--s3-bucket ${AWS_PACKAGE_BUCKET} \
+		--s3-prefix ${AWS_PACKAGE_PREFIX} \
+		--output-template-file package.yml
+}
+
+deploy() {
+   build
+  if [[ -z "${SAM_CONFIG_FILE}" ]]; then
+    sam deploy --guided
+  else
+    sam deploy ${CONFIG_FILE_ARG}
+  fi
+}
+
+deploy-guided() {
+  build && sam deploy ${CONFIG_FILE_ARG} --guided
+}
+
+delete-stack() {
+  sam delete ${CONFIG_FILE_ARG}
+}
+
+publish() {
+  package && sam publish
+}
+
+dev() {
+  deps && sam sync ${CONFIG_FILE_ARG} --watch
+}
+
+case "$1" in
+  clean) clean ;;
+  deps-image) deps-image ;;
+  deps) deps ;;
+  build) build ;;
+  package) package ;;
+  deploy) deploy ;;
+  deploy-guided) deploy-guided ;;
+  delete-stack) delete-stack ;;
+  publish) publish ;;
+  dev) dev ;;
+  *)
+    echo "Usage: $0 {clean|deps-image|deps|build|package|deploy|deploy-guided|delete-stack|publish|dev}"
+    exit 1
+    ;;
+esac

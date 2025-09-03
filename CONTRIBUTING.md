@@ -86,27 +86,41 @@ be considered for inclusion in the code base and history of this repository.
 #### Prerequisites
 
 - Some basic knowledge of AWS and [CloudFormation](https://aws.amazon.com/cloudformation/)
-- Requires the [SAM CLI](https://aws.amazon.com/serverless/sam/) and [AWS CLI](https://aws.amazon.com/cli/)
-- Building dependencies with the correct architecture on non-Linux systems requires [Docker](https://docs.docker.com/get-docker/).
+- [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html)
+- [AWS CLI](https://aws.amazon.com/cli/)
+- [AWS SAM CLI](https://aws.amazon.com/serverless/sam/) v1.140.0 or greater
 
-#### Deploy
+#### Building and Deploying
 
-The following instructions require you to `cd` into the correct directory for whichever flavor of the template you're using - `sam/standalone` for the Lambda-only version, or `sam/cloudfront` for the CloudFront-enabled version.
+The first time you run any of the build/package/publish/deploy commands, the `libvips`/`sharp` dependency layer will 
+be built from source, which may take a while. But as long as you don't clear the Docker build cache (via 
+`docker builder prune` or `docker system prune`), future calls should be nice and fast.
 
-For iterative development, you may want to use [SAM Accelerate](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/accelerate.html) to keep the deployed stack in sync with local changes automatically.
+The file `deploy.yml.example` contains examples of both `deploy` and `sync` configurations for command-line
+deployment and iterative development. Copy it to `deploy.yml` and modify it to suit your configuration before
+running the commands below.
 
-##### Using SAM
-
-The easiest way to deploy is using the SAM guided command:
+##### Deploying
 
 ```sh
-sam build --use-container
-sam deploy --guided
+npm run deploy
 ```
 
-If successful, make note of the `Endpoint - IIIF Endpoint URL` output. You'll need this to test the API.
+If you haven't created a [SAM configuration file](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html) per the above instructions, you will be guided through a series of prompts to provide the correct values, and then prompted to save the configuration file at the end before the stack is deployed.
 
-#### Test the API
+If the stack deploys successfully, make note of the `Endpoint - IIIF Endpoint URL` output. You'll need this to test the API.
+
+##### Iterative Development
+
+```sh
+npm run dev
+```
+
+This command deploys a stack and then watches the source for changes, which are synced automatically to the stack
+without all the CloudFormation overhead until you quit the watch process. This command does not have a guided
+deployment option, so it relies on the `default.sync` section of the SAM configuration file.
+
+##### Testing the API
 
 To test the API, you'll need an identifier that exists in your source bucket. Make a request for that identifier with:
 
