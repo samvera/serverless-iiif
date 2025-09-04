@@ -1,7 +1,11 @@
 # =========================
 # build stage (Debian/glibc)
 # =========================
-FROM node:22-bookworm-slim AS build
+FROM amazonlinux:2023 AS node22
+RUN dnf install -y nodejs22-devel \
+ && npm install -g npm@latest
+
+FROM node22 AS build
 
 ARG WEBP_VERSION=1.4.0
 ARG LIBOPENJP2_VERSION=2.5.2
@@ -12,14 +16,10 @@ ENV PREFIX_PATH=/usr/local \
   PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
   LD_LIBRARY_PATH=/usr/local/lib
 
-RUN apt-get update \
- && apt-get install -y autoconf automake autotools-dev build-essential ca-certificates \
-    cmake curl gobject-introspection libcfitsio-dev libexif-dev libexpat1-dev libfftw3-dev \
-    libgif-dev libgirepository1.0-dev libglib2.0-dev libheif-dev libimagequant-dev \
-    libjpeg62-turbo-dev liblcms2-dev libmatio-dev libopenexr-dev liborc-0.4-dev libpng-dev \
-    libpoppler-glib-dev librsvg2-dev libtiff-dev libtool libxml2-dev meson nasm ninja-build \
-    pkg-config jq \
- && rm -rf /var/lib/apt/lists/*
+RUN dnf groupinstall -y "Development Tools" && \
+  dnf install -y glibc-langpack-en glib2-devel expat-devel libjpeg-turbo-devel libpng-devel \
+  giflib-devel libexif-devel librsvg2-devel libtiff-devel lcms2-devel gobject-introspection-devel \
+  cmake nasm pkg-config meson ninja-build
 
 # ---- libwebp ----
 RUN curl -L "https://github.com/webmproject/libwebp/archive/v${WEBP_VERSION}.tar.gz" | tar zx; \
@@ -57,7 +57,9 @@ RUN vips --version && pkg-config --modversion vips-cpp
 # =========================
 FROM build AS deps
 WORKDIR /app
-RUN npm install -g npm@latest
-ARG SHARP_VERSION=0.34.3
-RUN npm install --build-from-source --verbose --foreground-scripts sharp@"${SHARP_VERSION}" \
+ARG SHARP_VERSION=0.34.4-rc.1
+RUN npm install node-gyp@latest node-addon-api@latest \
+ && npm install --build-from-source --verbose --foreground-scripts lovell/sharp#v${SHARP_VERSION} \
  && npm cache clean --force
+RUN mkdir -p /export/lib \
+ && ldd ./node_modules/sharp/src/build/Release/sharp-linux-x64.node | awk '{ print $3 }' | xargs cp -v --target-directory=/export/lib

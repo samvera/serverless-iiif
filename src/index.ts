@@ -142,7 +142,7 @@ const makeResponse = (result: ProcessorResult): LambdaResponse => ({
     Link: linksHeader(result)
   },
   isBase64Encoded: false,
-  body: result.body.toString()
+  body: result.body
 });
 
 export const handler = handleRequestFunc;

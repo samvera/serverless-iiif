@@ -44,6 +44,7 @@
     "test": "node scripts/test.js --env=jsdom",
     "test-coverage": "node scripts/test.js --env=jsdom --coverage",
     "build": "bin/build build",
+    "test-build": "bin/build test-build",
     "deploy": "bin/build deploy",
     "deploy-guided": "bin/build deploy-guided",
     "delete-stack": "bin/build delete-stack",
