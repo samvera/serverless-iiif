@@ -190,7 +190,15 @@ Resources:
           resolverTemplate: !Ref ResolverTemplate
           tiffBucket: !Ref SourceBucket
     Metadata:
-      BuildMethod: makefile
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - index.ts
+        Minify: false
+        SourceMap: false
+        Target: es2022
+        External:
+          - sharp
 Outputs:
   EndpointV2:
     Description: IIIF Image API v2 Endpoint
