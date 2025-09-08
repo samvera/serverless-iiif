@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+const sharp = require('sharp');
+const versions = sharp.versions;
+console.log('Sharp library versions:', versions);
+
+const status = Object.keys(versions).length === 2 && versions.sharp && versions.vips ? 0 : 1;
+process.exit(status);

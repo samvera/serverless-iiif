@@ -1,37 +1,38 @@
 /* eslint-env jest */
-const IIIF = require('iiif-processor');
-const { handler } = require('../src/index');
-const helpers = require('../src/helpers');
-const callHandler = require("./stream-handler");
+export {};
+import * as IIIF from 'iiif-processor';
+import { handler } from '../src/index';
+import * as helpers from '../src/helpers';
+import callHandler from './stream-handler';
 
 describe('index.handler /iiif/2', () => {
   const context = {};
 
   beforeEach(() => {
-    jest.mock('../src/helpers');
     jest.spyOn(console, 'error').mockImplementation(() => {});
-  
-    helpers.getRegion = jest.fn().mockImplementation(() => {
-      return 'AWS REGION';
-    });
+    jest
+      .spyOn(helpers, "eventPath")
+      .mockImplementation(() => "/iiif/3/image_id/info.json");
+  });
 
-    helpers.eventPath = jest.fn().mockImplementation(() => '[EVENT PATH]');
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('reports an OK status', async () => {
     const event = {
       headers: {
-        host: "iiif.example.edu",
+        host: 'iiif.example.edu'
       },
       requestContext: {
         http: {
-          method: "GET",
-          path: "/iiif/2",
-        },
-      },
+          method: 'GET',
+          path: '/iiif/2'
+        }
+      }
     };
 
-    const expected = { statusCode: 200, body: "OK" };
+    const expected = { statusCode: 200, body: 'OK' };
     const result = await callHandler(handler, event, context);
     expect(result).toMatchObject(expected);
   });
@@ -50,7 +51,7 @@ describe('index.handler /iiif/2', () => {
     expect(result).toMatchObject(expected);
   });
 
-  describe("INFO.JSON request", () => {
+  describe('INFO.JSON request', () => {
     beforeEach(() => {
       process.env.preflight = 'true';
     });
@@ -60,11 +61,21 @@ describe('index.handler /iiif/2', () => {
     });
 
     it('responds to INFO.JSON REQUEST', async () => {
-      helpers.fileMissing = jest.fn().mockImplementationOnce(() => false);
-  
+      jest.spyOn(helpers, 'fileMissing').mockImplementationOnce(() => false);
+
+      jest.spyOn(IIIF.Processor.prototype, 'execute').mockResolvedValueOnce({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          '@id': 'http://iiif.example.edu/iiif/2/image_id',
+          width: 1280,
+          height: 720,
+          sizes: [{ w: 320, h: 180 }, { w: 640, h: 360 }, { w: 960, h: 540 }, { w: 1280, h: 720 }]
+        })
+      });
+
       const event = {
         headers: {
-          'host': 'iiif.example.edu',
+          host: 'iiif.example.edu',
           'x-preflight-dimensions': '{"width": 1280, "height": 720}'
         },
         requestContext: {
@@ -83,11 +94,21 @@ describe('index.handler /iiif/2', () => {
     });
 
     it('respects the x-forwarded-host header', async () => {
-      helpers.fileMissing = jest.fn().mockImplementationOnce(() => false);
-  
+      jest.spyOn(helpers, 'fileMissing').mockImplementationOnce(() => false);
+
+      jest.spyOn(IIIF.Processor.prototype, 'execute').mockResolvedValueOnce({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          '@id': 'https://iiif.example.edu/iiif/2/image_id',
+          width: 1280,
+          height: 720,
+          sizes: [{ w: 320, h: 180 }, { w: 640, h: 360 }, { w: 960, h: 540 }, { w: 1280, h: 720 }]
+        })
+      });
+
       const event = {
         headers: {
-          'host': 'handler.behind.proxy',
+          host: 'handler.behind.proxy',
           'x-forwarded-host': 'iiif.example.edu',
           'x-forwarded-proto': 'https',
           'x-preflight-dimensions': '{"width": 1280, "height": 720}'
@@ -108,15 +129,19 @@ describe('index.handler /iiif/2', () => {
     });
 
     it('redirects to INFO.JSON if filename missing', async () => {
-      helpers.eventPath = jest.fn().mockImplementationOnce(() => '/iiif/2/image_id');
-      helpers.fileMissing = jest.fn().mockImplementationOnce(() => true);
-      
+      jest.spyOn(helpers, 'eventPath').mockImplementationOnce(() => '/iiif/2/image_id');
+      jest.spyOn(helpers, 'fileMissing').mockImplementationOnce(() => true);
+
       const event = {};
-  
-      const expected = { statusCode: 302, headers: { Location: '/iiif/2/image_id/info.json' }, body: 'Redirecting to info.json' };
+
+      const expected = {
+        statusCode: 302,
+        headers: { Location: '/iiif/2/image_id/info.json' },
+        body: 'Redirecting to info.json'
+      };
       const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
-    });  
+    });
   });
 
   // IMAGE REQUEST
@@ -124,27 +149,25 @@ describe('index.handler /iiif/2', () => {
     const body = '[CONTENT BODY]';
     const event = {};
     beforeEach(() => {
-      helpers.fileMissing = jest.fn().mockImplementationOnce(() => false);
-      helpers.getUri = jest.fn().mockImplementationOnce(() => 'https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg');
+      jest.spyOn(helpers, 'fileMissing').mockImplementationOnce(() => false);
+      jest
+        .spyOn(helpers, 'getUri')
+        .mockImplementationOnce(
+          () => 'https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg'
+        );
     });
 
     it('does not use base64 encoding when streaming', async () => {
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            return { 
-              body: body,
-              canonicalLink: 'https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg',
-              profileLink: 'http://iiif.io/api/image/2/level2.json'
-            };
-          }
-        };
-      });
-      helpers.isBase64 = jest.fn().mockImplementationOnce(() => false);
-      helpers.isTooLarge = jest.fn().mockImplementationOnce(() => false);
+      jest
+        .spyOn(IIIF.Processor.prototype, 'execute')
+        .mockResolvedValue({
+          body: body,
+          canonicalLink:
+            'https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg',
+          profileLink: 'http://iiif.io/api/image/2/level2.json'
+        } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-    const expected = {
+      const expected = {
         statusCode: 200,
         isBase64Encoded: false,
         body: body,
@@ -157,23 +180,19 @@ describe('index.handler /iiif/2', () => {
     });
 
     it('handles errors that arise during processing', async () => {
-      IIIF.Processor = jest.fn().mockImplementationOnce(() => {
-        return {
-          id: 'image_id',
-          execute: async function () {
-            throw new Error('ERROR');
-          },
-          errorClass: IIIF.Error
-        };
-      });
+      jest
+        .spyOn(IIIF.Processor.prototype, 'execute')
+        .mockImplementationOnce(() => {
+          throw new Error('ERROR');
+        });
       const expected = {
-        body: "Error: ERROR",
+        body: 'Error: ERROR',
         headers: {
-          "Content-Type": "text.plain",
+          'Content-Type': 'text.plain'
         },
-        statusCode: 500,
+        statusCode: 500
       };
-      result = await callHandler(handler, event, context);
+      const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
     });
   });

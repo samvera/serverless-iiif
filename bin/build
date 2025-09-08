@@ -4,10 +4,12 @@ set -e
 
 AWS_PACKAGE_BUCKET=${AWS_PACKAGE_BUCKET:-nul-serverless-applications}
 AWS_PACKAGE_PREFIX=${AWS_PACKAGE_PREFIX:-serverless-iiif}
-NODE_BASE_CONTAINER_ID_FILE=$(mktemp)
+NODE_BASE_IMAGE_ID_FILE=$(mktemp)
 AWS_DEPENDENCIES_DIR=${PWD}/dependencies
 AWS_NODEJS_DIR=${AWS_DEPENDENCIES_DIR}/nodejs
 AWS_LIB_DIR=${AWS_DEPENDENCIES_DIR}/lib
+export DOCKER_CLI_HINTS=false
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 SAM_CONFIG_FILE=$(ls {deploy,samconfig}.{yaml,yml,toml} 2>/dev/null | head -1)
 if [[ -n "${SAM_CONFIG_FILE}" ]]; then
@@ -16,32 +18,49 @@ else
   CONFIG_FILE_ARG=""
 fi
 
-trap "rm -f ${NODE_BASE_CONTAINER_ID_FILE}" EXIT
+trap "rm -f ${NODE_BASE_IMAGE_ID_FILE}" EXIT
 
+# Copy files or directories from a container to the host
 copy_from_container() {
-  NODE_BASE_CONTAINER_ID=$(cat ${NODE_BASE_CONTAINER_ID_FILE})
+  NODE_BASE_IMAGE_ID=$(cat ${NODE_BASE_IMAGE_ID_FILE})
 	mkdir -p "$1"
-	docker run --rm ${NODE_BASE_CONTAINER_ID} tar -C $2 -cf - $3 | tar -C "$1" -xf -
+	docker run --rm ${NODE_BASE_IMAGE_ID} tar -C $2 -cf - $3 | tar -C "$1" -xf -
 }
 
+# Remove build artifacts
 clean() {
   rm -rf .aws-sam dependencies/lib dependencies/nodejs
 }
 
+# Build a Docker image that contains the dependencies
 deps-image() {
-  docker buildx build --target deps --platform linux/amd64 --iidfile ${NODE_BASE_CONTAINER_ID_FILE} .
+  docker buildx build --target deps --iidfile ${NODE_BASE_IMAGE_ID_FILE} .
 }
 
+# Install dependencies into the dependencies directory
 deps() {
   deps-image && \
   copy_from_container ${AWS_NODEJS_DIR} /app node_modules && \
-  copy_from_container ${AWS_LIB_DIR} /usr/local/lib .
+  copy_from_container ${AWS_LIB_DIR} /export/lib .
 }
 
+# Build the application
 build() {
   deps && sam build
 }
 
+# Test the build by running a container that uses the built dependencies to load sharp
+test-build() {
+  NODE_TEST_IMAGE_ID_FILE=$(mktemp)
+  trap "rm -f ${NODE_TEST_IMAGE_ID_FILE}" RETURN
+
+  docker buildx build -q --target node22 --iidfile ${NODE_TEST_IMAGE_ID_FILE} . && \
+  NODE_TEST_IMAGE_ID=$(cat ${NODE_TEST_IMAGE_ID_FILE}) && \
+  docker run --rm -t -v ./.aws-sam/build/Dependencies:/test -v ./bin/test-build:/test/nodejs/test-build \
+    -e LD_LIBRARY_PATH=/test/lib ${NODE_TEST_IMAGE_ID} /test/nodejs/test-build
+}
+
+# Package the application for distribution via AWS Serverless Application Repository
 package() {
   build && \
   sam package \
@@ -51,6 +70,7 @@ package() {
 		--output-template-file package.yml
 }
 
+# Deploy the application directly via AWS CloudFormation
 deploy() {
    build
   if [[ -z "${SAM_CONFIG_FILE}" ]]; then
@@ -60,18 +80,22 @@ deploy() {
   fi
 }
 
+# Deploy the application directly via AWS CloudFormation with guided prompts
 deploy-guided() {
   build && sam deploy ${CONFIG_FILE_ARG} --guided
 }
 
+# Delete the deployed CloudFormation stack
 delete-stack() {
   sam delete ${CONFIG_FILE_ARG}
 }
 
+# Publish the application to AWS Serverless Application Repository
 publish() {
   package && sam publish
 }
 
+# Run the application using `sam sync --watch` for local development
 dev() {
   deps && sam sync ${CONFIG_FILE_ARG} --watch
 }
@@ -81,6 +105,7 @@ case "$1" in
   deps-image) deps-image ;;
   deps) deps ;;
   build) build ;;
+  test-build) test-build ;;
   package) package ;;
   deploy) deploy ;;
   deploy-guided) deploy-guided ;;
@@ -88,7 +113,7 @@ case "$1" in
   publish) publish ;;
   dev) dev ;;
   *)
-    echo "Usage: $0 {clean|deps-image|deps|build|package|deploy|deploy-guided|delete-stack|publish|dev}"
+    echo "Usage: $0 {clean|deps-image|deps|build|test-build|package|deploy|deploy-guided|delete-stack|publish|dev}"
     exit 1
     ;;
 esac
