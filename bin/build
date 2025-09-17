@@ -95,7 +95,7 @@ delete-stack() {
 
 # Publish the application to AWS Serverless Application Repository
 publish() {
-  package && sam publish
+  package && sam publish --profile ${AWS_PROFILE} --template package.yml
 }
 
 # Run the application using `sam sync --watch` for local development
