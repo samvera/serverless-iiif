@@ -69,7 +69,7 @@ export default defineConfig([
         }
       ],
 
-      "no-unused-vars": [
+      "@typescript-eslint/no-unused-vars": [
         1,
         {
           vars: "all",

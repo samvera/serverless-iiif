@@ -16,7 +16,7 @@ describe('density propagation to Processor', () => {
 
   it('passes density option into Processor constructor', async () => {
     jest.doMock('iiif-processor', () => {
-      const Processor = jest.fn().mockImplementation((_uri: string, _sr: any, opts: any) => ({
+      const Processor = jest.fn().mockImplementation((_uri: string, _sr: any, _opts: any) => ({
         execute: jest.fn().mockResolvedValue({ contentType: 'text/plain', body: 'ok' })
       }));
       return { Processor };

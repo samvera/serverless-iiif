@@ -34,7 +34,10 @@ clean() {
 
 # Build a Docker image that contains the dependencies
 deps-image() {
-  docker buildx build --target deps --iidfile ${NODE_BASE_IMAGE_ID_FILE} .
+  if [[ -n "${NODE_BASE_IMAGE_TAG}" ]]; then
+    TAG_ARG="--tag ${NODE_BASE_IMAGE_TAG}"
+  fi
+  docker buildx build --target deps --iidfile ${NODE_BASE_IMAGE_ID_FILE} ${TAG_ARG} .
 }
 
 # Install dependencies into the dependencies directory

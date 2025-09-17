@@ -12,11 +12,6 @@ Some versions of `libvips` and `libjpeg` have an issue with JPEG-compressed pyra
 alpha channels). If you find that `serverless-iiif` returns an error for an image request or isn't rendering as you'd expect, try removing any additional channels beyond red, green, and blue. The [conversion commands](#creating-tiled-tiffs) below _should_ ensure that your images are flattened with the alpha channel removed.
 </Callout>
 
-#### EXIF Orientation
-<Callout emoji="⚠️">
-`iiif-processor` cannot automatically auto-orient images based on the [EXIF Orientation flag](https://jdhao.github.io/2019/07/31/image_rotation_exif_info/). Therefore, it is essential that your source images use the default orientation (EXIF value 1). The [conversion commands](#creating-tiled-tiffs) below _should_ ensure that your images are oriented correctly.
-</Callout>
-
 ## Image Metadata
 
 `serverless-iiif` will probe each source image for its dimensions before any other processing takes place. Because this process can be time consuming, especially for large files, `serverless-iiif` first looks for fields calls `x-amz-meta-width` and `x-amz-meta-height` in the source file's [S3 Object Metadata](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html) before trying to load dimensions from the image itself. If those properties are present, they will be used instead.
@@ -27,10 +22,10 @@ alpha channels). If you find that `serverless-iiif` returns an error for an imag
 
 ```bash
 # For a 3-channel source image
-vips tiffsave "source_image.tif[autorotate]" output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256
+vips tiffsave "source_image.tif" output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256
 
 # For a source image with an alpha channel
-vips extract_band "source_image.tif[autorotate]" temp_image.v 0 --n 3 \
+vips extract_band "source_image.tif" temp_image.v 0 --n 3 \
   && vips tiffsave temp_image.v output_image.tif --tile --pyramid --compression jpeg --tile-width 256 --tile-height 256 \
   && rm temp_image.v
 ```
@@ -40,7 +35,6 @@ vips extract_band "source_image.tif[autorotate]" temp_image.v 0 --n 3 \
 ```bash
 convert source_image.tif \
   -alpha off \
-  -auto-orient \
   -define ptif:pyramid=256x4 \
   -define tiff:tile-geometry=256x256 \
   -define tiff:generate-pyramids=true \
@@ -53,7 +47,6 @@ convert source_image.tif \
 ```bash
 gm convert source_image.tif \
   -flatten \
-  -auto-orient \
   -define tiff:tile-geometry=256x256 \
   -compress jpeg \
   'ptif:output_image.tif'
