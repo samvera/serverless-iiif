@@ -7,18 +7,18 @@ if [[ -z $version ]]; then
   exit 1
 fi
 
-for f in $root/package.json $root/src/package.json $root/dependencies/package.json; do
+for f in $root/package.json $root/src/package.json; do
   content=$(cat $f)
   jq --arg v "$version" '.version = $v' <<< $content > $f
 done
 
-if [[ "$OSTYPE" = "darwin*" ]]; then
-  sedreplace="sed -Ei ''"
+if [[ "$OSTYPE" = darwin* ]]; then
+  sedreplace=("sed" "-Ei" '')
 else
-  sedreplace="sed -Ei"
+  sedreplace=("sed" "-Ei")
 fi
 
-for template in sam/template.yml sam/standalone/template.yml sam/cloudfront/template.yml examples/sam/customization/template.yaml examples/cloudformation/custom_hostname.yml; do
-  $sedreplace "s/SemanticVersion: .+/SemanticVersion: $version/" $root/$template
+for template in template.yml examples/sam/customization/template.yaml examples/cloudformation/custom_hostname.yml; do
+  "${sedreplace[@]}" "s/SemanticVersion: .+/SemanticVersion: $version/" $root/$template
 done
-$sedreplace "s/  serverless_iiif_app_version   =.+/  serverless_iiif_app_version   = \"$version\"/" $root/extras/terraform/main.tf
+"${sedreplace[@]}" "s/  serverless_iiif_app_version   =.+/  serverless_iiif_app_version   = \"$version\"/" $root/extras/terraform/main.tf
