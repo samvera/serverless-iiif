@@ -4,16 +4,10 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
 [![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
 
-## Upgrade Note
-
-Previous versions of this application featured an optional [CloudFront](https://aws.amazon.com/cloudfront/) distribution that provided caching, custom domain/hostname mapping, and request/response pre/post-processing. However, the primary motivation for including this feature in the past was that it provided a complicated but effective way to skirt the hard 6 megabyte limit for Lambda function response payloads. Since then, AWS has introduced [AWS Lambda response streaming](https://aws.amazon.com/blogs/compute/introducing-aws-lambda-response-streaming/), which uses chunked responses to bypass the 6 megabyte limit. As this is a much more elegant solution to the problem, there's nothing about the CloudFront template that's specific to this project any more. Ongoing development and maintenance will therefore focus on the IIIF Lambda itself rather than the large, complicated template required for a flexible, customizable CloudFront deployment.
-
-While the CloudFront-enabled version of the application will remain available for the in the Serverless Application Repository for a time to provide an easy upgrade path for existing users, it is _strongly_ recommended that new deployments use the provided [documentation](https://samvera.github.io/serverless-iiif/docs/quick-start/infrastructure) and [examples](./examples) of [CloudFormation](https://aws.amazon.com/cloudformation/) templates and [Terraform](https://terraform.io/) manifests to deploy the standalone function as part of a larger application/infrastructure stack that defines its own CloudFront distribution.
-
 ### Breaking Changes from Version 5.x
 
-- The `SharpLayer` variable has been removed, and the `sharp` dependency (with JP2 support) bundled into the published
-  package.
+- The `SharpLayer` variable has been removed, and the `sharp` dependency (with JP2 support) bundled into the published package. This greatly simplifies
+  packaging and deployment, and removes the need for the maintainers to keep up-to-date layers deployed in every region.
 - The `standalone` and `cloudfront` deployment options have been removed, per the deprecation notice in v5.x. Please see the [documented example](https://samvera.github.io/serverless-iiif/docs/quick-start/infrastructure/cloudformation#example) of how to deploy `serverless-iiif` as part of a full stack that includes a CloudFront distribution.
 
 ## Description
