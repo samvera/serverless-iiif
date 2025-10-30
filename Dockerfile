@@ -40,7 +40,7 @@ RUN <<EOF
 EOF
 
 # ---- libvips (Meson) ----
-ARG VIPS_VERSION=8.17.2
+ARG VIPS_VERSION=8.17.3
 RUN <<EOF
   curl -L "https://github.com/libvips/libvips/releases/download/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz" | tar xJ
   cd "vips-${VIPS_VERSION}"
@@ -56,7 +56,7 @@ RUN vips --version && pkg-config --modversion vips-cpp
 # =========================
 FROM build AS deps
 WORKDIR /app
-ARG SHARP_VERSION=0.34.4-rc.3
+ARG SHARP_VERSION=0.34.4
 RUN <<EOF
   npm install node-gyp@latest node-addon-api@latest
   npm install --build-from-source --verbose --foreground-scripts sharp@${SHARP_VERSION}

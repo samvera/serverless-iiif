@@ -6,9 +6,12 @@ import {
   HeadObjectCommandOutput
 } from '@aws-sdk/client-s3';
 import { LambdaEvent } from "./contracts";
+import createDebug from "debug";
 import { getHeaderValue } from './helpers';
 import * as URI from 'uri-js';
 import * as util from 'util';
+
+const debug = createDebug('serverless-iiif:resolvers');
 
 export interface Resolvers {
   streamResolver: StreamResolver;
@@ -32,8 +35,9 @@ const defaultStreamLocation = (id: string) => {
   const replacementCount = (resolverTemplate.match(/%.*?s/g) || []).length;
   const args = new Array(replacementCount).fill(id);
   const key = util.format(resolverTemplate, ...args);
-
-  return { Bucket: sourceBucket, Key: key };
+  const result = { Bucket: sourceBucket, Key: key };
+  debug(`Resolved default stream location for ID ${id}: ${util.inspect(result)}`);
+  return result;
 };
 
 const calculatePage = ({ width, height }: { width: number; height: number }, page: number) => {
@@ -93,16 +97,24 @@ const calculateDimensions = (metadata: Record<string, string>) => {
 const parseLocationHeader = (event: LambdaEvent) => {
   const locationHeader = getHeaderValue(event, 'x-preflight-location');
   if (locationHeader && locationHeader.match(/^s3:\/\//)) {
+    debug(`Preflight location header found: ${locationHeader}`);
     const parsedURI = URI.parse(locationHeader);
-    return { Bucket: parsedURI.host as string, Key: (parsedURI.path || '').slice(1) };
+    const result = { Bucket: parsedURI.host as string, Key: (parsedURI.path || '').slice(1) };
+    debug(`Parsed preflight location: ${util.inspect(result)}`);
+    return result;
   }
+  debug('No preflight location header found');
   return null;
 };
 
 const parseDimensionsHeader = (event: LambdaEvent) => {
   const dimensionsHeader = getHeaderValue(event, 'x-preflight-dimensions');
-  if (!dimensionsHeader) return null;
+  if (!dimensionsHeader) {
+    debug('No preflight dimensions header found');
+    return null;
+  }
 
+  debug(`Preflight dimension header found: ${dimensionsHeader}`);
   const result = JSON.parse(dimensionsHeader);
   if (result.pages) return reduceByPages(result);
   if (result.limit) return reduceToLimit(result);
@@ -138,5 +150,6 @@ const standardResolver = (): Resolvers => {
 };
 
 export const resolverFactory = (event: LambdaEvent, preflight: boolean): Resolvers => {
+  debug(`Using ${preflight ? 'preflight' : 'standard'} resolver`);
   return preflight ? preflightResolver(event) : standardResolver();
 };

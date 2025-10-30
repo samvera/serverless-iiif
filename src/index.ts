@@ -2,13 +2,15 @@ import { LambdaEvent, LambdaResponse, LambdaContext } from './contracts';
 import { DimensionFunction, Processor, StreamResolver } from 'iiif-processor';
 import { ProcessorResult } from './contracts';
 import createDebug from 'debug';
-import { addCorsHeaders, eventPath, fileMissing, parseDensity, getUri } from './helpers';
+import { addCorsHeaders, eventPath, fileMissing, parseDensity, getUri, isBrowserAutoFetch } from './helpers';
 import { resolverFactory } from './resolvers';
 import { errorHandler } from './error';
 import { streamifyResponse } from './streamify';
 import sharp from 'sharp';
+import util from 'util';
 
 const debug = createDebug('serverless-iiif:lambda');
+const debugVerbose = createDebug("serverless-iiif-v:lambda");
 
 // Small route helpers reduce complexity of the main handler
 const isOptions = (event: LambdaEvent): boolean => event.requestContext?.http?.method === 'OPTIONS';
@@ -28,10 +30,17 @@ const handleInfoRedirect = (event: LambdaEvent) => ({
   headers: { Location: eventPath(event) + '/info.json' },
   body: 'Redirecting to info.json'
 });
+const handleNotFound = () => ({
+  statusCode: 404,
+  headers: { 'Content-Type': 'text/plain' },
+  isBase64Encoded: false,
+  body: 'Not Found'
+});
 
 // eslint-disable-next-line complexity
 const handleRequestFunc = streamifyResponse(async (event: LambdaEvent, context: LambdaContext) => {
-  debug('http path: ', event?.requestContext?.http?.path);
+  debugVerbose(`Event: ${util.inspect(event)}`);
+  debug(`http path: ${event?.requestContext?.http?.path}`);
   context.callbackWaitsForEmptyEventLoop = false;
 
   if (isPing(event)) return handlePing();
@@ -41,6 +50,8 @@ const handleRequestFunc = streamifyResponse(async (event: LambdaEvent, context: 
     response = handleOptions();
   } else if (isRoot(event)) {
     response = handleServiceDiscoveryRequestFunc();
+  } else if (isBrowserAutoFetch(event?.requestContext?.http?.path)) {
+    response = handleNotFound();
   } else if (shouldRedirectToInfo(event)) {
     response = handleInfoRedirect(event);
   } else {

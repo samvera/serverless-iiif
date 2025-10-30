@@ -1,5 +1,33 @@
 import { LambdaEvent, LambdaResponse } from './contracts';
 
+const BrowserAutoFetchPatterns = [
+  // Favicons
+  /^\/favicon(?:-\d+x\d+)?\.(?:ico|png|svg)(?:$|[?#])/i,
+
+  // Apple / Android icons
+  /^\/apple-touch-icon(?:-precomposed)?(?:-\d+x\d+)?\.png(?:$|[?#])/i,
+  /^\/(?:android-chrome|mstile)-\d+x\d+\.png(?:$|[?#])/i,
+
+  // Safari pinned tab, MS browser config
+  /^\/safari-pinned-tab\.svg(?:$|[?#])/i,
+  /^\/browserconfig\.xml(?:$|[?#])/i,
+
+  // Web app manifests
+  /^\/(?:site\.webmanifest|manifest\.json)(?:$|[?#])/i,
+
+  // Common text metadata
+  /^\/(?:robots|humans)\.txt(?:$|[?#])/i,
+
+  // Service worker
+  /^\/service-worker(?:\.min)?\.js(?:$|[?#])/i,
+
+  // Apple app association
+  /^\/apple-app-site-association(?:\.json)?(?:$|[?#])/i,
+
+  // Well-known endpoints
+  /^\/\.well-known\/(?:change-password|security\.txt|assetlinks\.json|apple-app-site-association|openid-configuration|webfinger)(?:$|[?#])/i
+];
+
 const SafelistedResponseHeaders =
   'cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma';
 
@@ -72,3 +100,6 @@ export const parseDensity = (value?: string): number | undefined => {
   return result;
 };
 
+export const isBrowserAutoFetch = (path: string): boolean => {
+  return BrowserAutoFetchPatterns.some((re) => re.test(path));
+};
