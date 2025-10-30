@@ -7,7 +7,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { LambdaEvent } from "./contracts";
 import createDebug from "debug";
-import { getHeaderValue } from './helpers';
+import { getHeaderValue, inspect } from './helpers';
 import * as URI from 'uri-js';
 import * as util from 'util';
 
@@ -36,7 +36,7 @@ const defaultStreamLocation = (id: string) => {
   const args = new Array(replacementCount).fill(id);
   const key = util.format(resolverTemplate, ...args);
   const result = { Bucket: sourceBucket, Key: key };
-  debug(`Resolved default stream location for ID ${id}: ${util.inspect(result)}`);
+  debug(`Resolved default stream location for ID ${id}: ${inspect(result)}`);
   return result;
 };
 
@@ -100,7 +100,7 @@ const parseLocationHeader = (event: LambdaEvent) => {
     debug(`Preflight location header found: ${locationHeader}`);
     const parsedURI = URI.parse(locationHeader);
     const result = { Bucket: parsedURI.host as string, Key: (parsedURI.path || '').slice(1) };
-    debug(`Parsed preflight location: ${util.inspect(result)}`);
+    debug(`Parsed preflight location: ${inspect(result)}`);
     return result;
   }
   debug('No preflight location header found');

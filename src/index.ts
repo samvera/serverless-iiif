@@ -2,12 +2,11 @@ import { LambdaEvent, LambdaResponse, LambdaContext } from './contracts';
 import { DimensionFunction, Processor, StreamResolver } from 'iiif-processor';
 import { ProcessorResult } from './contracts';
 import createDebug from 'debug';
-import { addCorsHeaders, eventPath, fileMissing, parseDensity, getUri, isBrowserAutoFetch } from './helpers';
+import { addCorsHeaders, eventPath, fileMissing, parseDensity, getUri, inspect, isBrowserAutoFetch } from './helpers';
 import { resolverFactory } from './resolvers';
 import { errorHandler } from './error';
 import { streamifyResponse } from './streamify';
 import sharp from 'sharp';
-import util from 'util';
 
 const debug = createDebug('serverless-iiif:lambda');
 const debugVerbose = createDebug("serverless-iiif-v:lambda");
@@ -39,7 +38,7 @@ const handleNotFound = () => ({
 
 // eslint-disable-next-line complexity
 const handleRequestFunc = streamifyResponse(async (event: LambdaEvent, context: LambdaContext) => {
-  debugVerbose(`Event: ${util.inspect(event)}`);
+  debugVerbose(`Event: ${inspect(event)}`);
   debug(`http path: ${event?.requestContext?.http?.path}`);
   context.callbackWaitsForEmptyEventLoop = false;
 

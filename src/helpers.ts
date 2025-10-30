@@ -1,4 +1,5 @@
 import { LambdaEvent, LambdaResponse } from './contracts';
+import util from 'util';
 
 const BrowserAutoFetchPatterns = [
   // Favicons
@@ -103,3 +104,5 @@ export const parseDensity = (value?: string): number | undefined => {
 export const isBrowserAutoFetch = (path: string): boolean => {
   return BrowserAutoFetchPatterns.some((re) => re.test(path));
 };
+
+export const inspect = (obj: any) => util.inspect(obj, { depth: Infinity, compact: false });
