@@ -110,14 +110,17 @@ const executeWithJp2Retry = async (
   try {
     return await buildProcessor(uri, streamResolver, dimensionFunction, density, sharpOptions).execute();
   } catch (err: any) {  // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (/Invalid tile part index/.test(err.message) && !sharpOptions.jp2Oneshot) {
+    if (/Invalid tile part index/.test(err.message) && !sharpOptions.jp2?.oneshot) {
       console.log('Encountered JP2 tile part index error. Trying oneshot load.');
       return await buildProcessor(
         uri,
         streamResolver,
         dimensionFunction,
         density,
-        { ...sharpOptions, jp2Oneshot: true }
+        { 
+          ...sharpOptions,
+          jp2: { ...sharpOptions.jp2, oneshot: true }
+        }
       ).execute();
     }
     throw err;

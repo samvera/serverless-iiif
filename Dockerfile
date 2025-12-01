@@ -56,7 +56,7 @@ RUN vips --version && pkg-config --modversion vips-cpp
 # =========================
 FROM build AS deps
 WORKDIR /app
-ARG SHARP_VERSION=0.34.4
+ARG SHARP_VERSION=0.34.5
 RUN <<EOF
   npm install node-gyp@latest node-addon-api@latest
   npm install --build-from-source --verbose --foreground-scripts sharp@${SHARP_VERSION}
