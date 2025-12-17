@@ -81,10 +81,6 @@ export const eventPath = (event: LambdaEvent): string => {
   return (event.requestContext?.http?.path || '').replace(/\/*$/, '');
 };
 
-export const fileMissing = (event: LambdaEvent): boolean => {
-  return !/\.(jpe?g|tiff?|jp2|gif|png|webp|json)$/.test(eventPath(event));
-};
-
 export const getUri = (event: LambdaEvent): string => {
   const scheme = getHeaderValue(event, 'x-forwarded-proto') || 'http';
   const host =

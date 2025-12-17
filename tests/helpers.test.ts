@@ -1,6 +1,11 @@
 /* eslint-env jest */
 export {};
-import { addCorsHeaders, eventPath, fileMissing, getUri, parseDensity } from '../src/helpers';
+import {
+  addCorsHeaders,
+  eventPath,
+  getUri,
+  parseDensity,
+} from "../src/helpers";
 import mockEvent from './__mocks/mockEvent';
 
 describe('helper functions', () => {
@@ -73,21 +78,6 @@ describe('helper functions', () => {
         requestContext: { http: { path: '/path/' } }
       });
       expect(eventPath(event)).toEqual('/path');
-    });
-  });
-
-  describe('fileMissing', () => {
-    it('has a missing file', () => {
-      const event = mockEvent({
-        requestContext: { http: { path: 'http://path' } }
-      });
-      expect(fileMissing(event)).toEqual(true);
-    });
-    it('does not have a missing file', () => {
-      const event = mockEvent({
-        requestContext: { http: { path: 'http://path/file.json' } }
-      });
-      expect(fileMissing(event)).toEqual(false);
     });
   });
 

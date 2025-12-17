@@ -1,12 +1,18 @@
 /* eslint-env jest */
+import * as IIIF from "iiif-processor";
+import { LambdaContext } from "../src/contracts";
 export {};
 
-describe('density propagation to Processor', () => {
+describe("density propagation to Processor", () => {
   const savedEnv = { ...process.env };
 
   beforeEach(() => {
     jest.resetModules();
-    process.env = { ...savedEnv, tiffBucket: 'test-bucket', density: '150' } as any;
+    process.env = {
+      ...savedEnv,
+      tiffBucket: "test-bucket",
+      density: "150",
+    } as any;
   });
 
   afterEach(() => {
@@ -14,29 +20,44 @@ describe('density propagation to Processor', () => {
     jest.restoreAllMocks();
   });
 
-  it('passes density option into Processor constructor', async () => {
-    jest.doMock('iiif-processor', () => {
-      const Processor = jest.fn().mockImplementation((_uri: string, _sr: any, _opts: any) => ({
-        execute: jest.fn().mockResolvedValue({ contentType: 'text/plain', body: 'ok' })
-      }));
+  it("passes density option into Processor constructor", async () => {
+    jest.doMock("iiif-processor", () => {
+      const Processor = jest
+        .fn()
+        .mockImplementation(
+          (
+            _uri: string,
+            _sr: IIIF.StreamResolver,
+            _opts: IIIF.ProcessorOptions
+          ) => ({
+            execute: jest.fn().mockResolvedValue({
+              type: "content",
+              contentType: "text/plain",
+              body: "ok",
+            }),
+          })
+        );
       return { Processor };
     });
 
-    const helpers = await import('../src/helpers');
-    jest.spyOn(helpers, 'fileMissing').mockReturnValue(false);
-    jest.spyOn(helpers, 'getUri').mockReturnValue('https://example/iiif/3/id/full/max/0/default.jpg');
+    const helpers = await import("../src/helpers");
+    jest
+      .spyOn(helpers, "getUri")
+      .mockReturnValue("https://example/iiif/3/id/full/max/0/default.jpg");
 
-    const { handler } = await import('../src/index');
-    const { default: callHandler } = await import('./stream-handler');
+    const { handler } = await import("../src/index");
+    const { default: callHandler } = await import("./stream-handler");
 
     const result = await callHandler(
       handler,
-      { requestContext: { http: { path: '/iiif/3/id/full/max/0/default.jpg' } } } as any,
-      {} as any
+      {
+        requestContext: { http: { path: "/iiif/3/id/full/max/0/default.jpg" } },
+      } as any,
+      {} as LambdaContext
     );
     expect(result.statusCode).toBe(200);
 
-    const iiif = await import('iiif-processor');
+    const iiif = await import("iiif-processor");
     const Processor: any = (iiif as any).Processor;
     expect(Processor).toHaveBeenCalled();
     const lastCall = Processor.mock.calls[Processor.mock.calls.length - 1];

@@ -7,7 +7,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.685.0",
     "debug": "^4.3.2",
-    "iiif-processor": "^6.1.1",
+    "iiif-processor": "^7.0.0-rc.0",
     "lambda-stream": "^0.4.0",
     "uri-js": "^4.4.1"
   },
