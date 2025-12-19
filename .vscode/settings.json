@@ -1,0 +1,8 @@
+{
+  "jest.runMode": {
+    "type": "watch"
+  },
+  "jest.nodeEnv": {
+    "tiffBucket": "test-bucket"
+  }
+}

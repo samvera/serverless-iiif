@@ -1,6 +1,7 @@
 import { StreamResolver, DimensionFunction, IIIFError } from "iiif-processor";
 import {
   S3Client,
+  S3ServiceException,
   GetObjectCommand,
   HeadObjectCommand,
   HeadObjectCommandOutput,
@@ -31,10 +32,7 @@ const s3Stream = async (location: {
     const s3Response = await s3.send(cmd);
     return s3Response.Body as NodeJS.ReadableStream;
   } catch (err) {
-    throw new IIIFError(
-      `Error fetching S3 object at ${util.inspect(location)}: ${err}`,
-      { statusCode: err.$metadata?.httpStatusCode || 500 }
-    );
+    throw iiifErrorFromS3Error(err, location);
   }
 };
 
@@ -111,10 +109,7 @@ const dimensionRetriever = async (location: {
       return calculateDimensions(Metadata);
     return null;
   } catch (err) {
-    throw new IIIFError(
-      `Error fetching S3 object metadata at ${util.inspect(location)}: ${err}`,
-      { statusCode: err.$metadata?.httpStatusCode || 500 }
-    );
+    throw iiifErrorFromS3Error(err, location);
   }
 };
 
@@ -131,6 +126,17 @@ const calculateDimensions = (metadata: Record<string, string>) => {
       limit: parseInt(process.env.pyramidLimit as string, 10),
     });
   return [result];
+};
+
+const iiifErrorFromS3Error = (
+  err: S3ServiceException,
+  location: { Bucket: string; Key: string }
+) => {
+  const message = `Error fetching S3 object metadata at ${util.inspect(
+    location
+  )}: ${err}`;
+  const extra = { statusCode: err.$metadata.httpStatusCode };
+  return new IIIFError(message, extra);
 };
 
 // Preflight resolvers

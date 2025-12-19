@@ -1,52 +1,52 @@
 /* eslint-env jest */
 export {};
-import * as IIIF from 'iiif-processor';
-import { handler } from '../src/index';
-import * as helpers from '../src/helpers';
-import callHandler from './stream-handler';
+import * as IIIF from "iiif-processor";
+import { handler } from "../src/index";
+import * as helpers from "../src/helpers";
+import callHandler from "./stream-handler";
 
-describe('index.handler /iiif/3', () => {
+describe("index.handler /iiif/3", () => {
   const context = {};
 
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
     jest
-      .spyOn(helpers, 'eventPath')
-      .mockImplementation(() => '/iiif/3/image_id/info.json');
+      .spyOn(helpers, "eventPath")
+      .mockImplementation(() => "/iiif/3/image_id/info.json");
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('reports an OK status', async () => {
+  it("reports an OK status", async () => {
     const event = {
       headers: {
-        host: 'iiif.example.edu'
+        host: "iiif.example.edu",
       },
       requestContext: {
         http: {
-          method: 'GET',
-          path: '/iiif/3'
-        }
-      }
+          method: "GET",
+          path: "/iiif/3",
+        },
+      },
     };
 
-    const expected = { statusCode: 200, body: 'OK' };
+    const expected = { statusCode: 200, body: "OK" };
     const result = await callHandler(handler, event, context);
     expect(result).toMatchObject(expected);
   });
 
-  it('responds to OPTIONS REQUEST', async () => {
+  it("responds to OPTIONS REQUEST", async () => {
     const event = {
       requestContext: {
         http: {
-          method: 'OPTIONS'
-        }
-      }
+          method: "OPTIONS",
+        },
+      },
     };
 
-    const expected = { statusCode: 204, body: '' };
+    const expected = { statusCode: 204, body: "" };
     const result = await callHandler(handler, event, context);
     expect(result).toMatchObject(expected);
   });
@@ -218,6 +218,33 @@ describe('index.handler /iiif/3', () => {
       };
       const result = await callHandler(handler, event, context);
       expect(result).toMatchObject(expected);
+    });
+  });
+
+  describe("responds to common browser auto-fetch requests", () => {
+    const paths = [
+      "/favicon.ico",
+      "/robots.txt",
+      "/apple-touch-icon.png",
+      "/apple-touch-icon-precomposed.png",
+      "/.well-known/security.txt",
+      "/android-chrome-192x192.png",
+    ];
+    paths.forEach((path) => {
+      it(`responds to request for ${path}`, async () => {
+        jest.spyOn(helpers, "eventPath").mockImplementationOnce(() => path);
+
+        const event = {
+          requestContext: {
+            http: {
+              method: "GET",
+              path,
+            },
+          },
+        };
+        const result = await callHandler(handler, event, context);
+        expect(result.statusCode).toEqual(404);
+      });
     });
   });
 });

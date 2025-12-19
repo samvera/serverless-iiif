@@ -1,9 +1,18 @@
-import { LambdaEvent, LambdaResponse, LambdaContext } from './contracts';
-import { ResponseStream, streamifyResponse as lambdaStreamifyResponse } from 'lambda-stream';
+import { LambdaEvent, LambdaResponse, LambdaContext } from "./contracts";
+import {
+  ResponseStream,
+  streamifyResponse as lambdaStreamifyResponse,
+} from "lambda-stream";
 
 /* istanbul ignore next */
-const maybeStream = (responseStream: ResponseStream, prelude: LambdaResponse) => {
-  if ('from' in responseStream.constructor && typeof responseStream.constructor.from === 'function') {
+const maybeStream = (
+  responseStream: ResponseStream,
+  prelude: LambdaResponse
+) => {
+  if (
+    "from" in responseStream.constructor &&
+    typeof responseStream.constructor.from === "function"
+  ) {
     responseStream.constructor.from(responseStream, prelude);
   } else {
     responseStream.setContentType(
@@ -15,18 +24,31 @@ const maybeStream = (responseStream: ResponseStream, prelude: LambdaResponse) =>
   }
 };
 
-export const streamifyResponse = (handler: (_event: LambdaEvent, _context: LambdaContext) => Promise<LambdaResponse>) => {
-  return lambdaStreamifyResponse(async (event: LambdaEvent, responseStream: ResponseStream, context: LambdaContext) => {
-    const result: LambdaResponse = (await handler(event, context)) || {};
-    const body = result.body;
-    const prelude = { ...result };
-    delete prelude.body;
-    maybeStream(responseStream, prelude);
-    const chunk =
-      typeof body === 'string' || (body as unknown) instanceof Uint8Array || Buffer.isBuffer(body)
-        ? body
-        : String(body ?? '');
-    responseStream.write(chunk);
-    responseStream.end();
-  });
+export const streamifyResponse = (
+  handler: (
+    _event: LambdaEvent,
+    _context: LambdaContext
+  ) => Promise<LambdaResponse>
+) => {
+  return lambdaStreamifyResponse(
+    async (
+      event: LambdaEvent,
+      responseStream: ResponseStream,
+      context: LambdaContext
+    ) => {
+      const result: LambdaResponse = await handler(event, context);
+      const body = result.body;
+      const prelude = { ...result };
+      delete prelude.body;
+      maybeStream(responseStream, prelude);
+      const chunk =
+        typeof body === "string" ||
+        (body as unknown) instanceof Uint8Array ||
+        Buffer.isBuffer(body)
+          ? body
+          : String(body ?? "");
+      responseStream.write(chunk);
+      responseStream.end();
+    }
+  );
 };

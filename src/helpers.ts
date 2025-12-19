@@ -51,13 +51,14 @@ export const corsSetting = (name: string): string => {
 
 export const getHeaderValue = (
   event: LambdaEvent,
-  header: string
+  header: string,
+  defaultValue: string | null = null
 ): string | null => {
   const headerName = Object.keys(event.headers || {}).find(
     (h) => h.toLowerCase() === header
   );
   if (headerName) return event.headers[headerName];
-  return null;
+  return defaultValue;
 };
 
 export const allowOriginValue = (
@@ -65,7 +66,7 @@ export const allowOriginValue = (
   event: LambdaEvent
 ): string => {
   if (corsAllowOrigin === "REFLECT_ORIGIN") {
-    return getHeaderValue(event, "origin") || "*";
+    return getHeaderValue(event, "origin", "*");
   }
   return corsAllowOrigin;
 };
@@ -89,11 +90,11 @@ export const addCorsHeaders = (
 };
 
 export const eventPath = (event: LambdaEvent): string => {
-  return (event.requestContext?.http?.path || "").replace(/\/*$/, "");
+  return event.requestContext.http.path.replace(/\/*$/, "");
 };
 
 export const getUri = (event: LambdaEvent): string => {
-  const scheme = getHeaderValue(event, "x-forwarded-proto") || "http";
+  const scheme = getHeaderValue(event, "x-forwarded-proto", "http");
   let host =
     process.env.forceHost ||
     getHeaderValue(event, "x-forwarded-host") ||
@@ -102,7 +103,7 @@ export const getUri = (event: LambdaEvent): string => {
   if (host?.includes(":")) {
     [host, port] = host.split(":");
   } else {
-    port = getHeaderValue(event, "x-forwarded-port") || DefaultPorts[scheme];
+    port = getHeaderValue(event, "x-forwarded-port", DefaultPorts[scheme]);
   }
   const uri = new URL(
     `${scheme}://${host}:${port}${eventPath(event)}`
