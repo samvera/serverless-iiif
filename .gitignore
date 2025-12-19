@@ -25,11 +25,11 @@ env.json
 *.tfvars
 
 # Misc
-.vscode
 *~undo-tree~
 .DS_Store
 sharp-lambda-layer.*
 *.log
-.vscode
+.vscode/*
+!.vscode/settings.json
 dependencies/*
 !dependencies/Makefile

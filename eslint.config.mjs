@@ -1,3 +1,4 @@
+import eslintConfigPrettier from "eslint-config-prettier";
 import { defineConfig, globalIgnores } from "eslint/config";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import globals from "globals";
@@ -46,29 +47,6 @@ export default defineConfig([
     },
 
     rules: {
-      "brace-style": [2, "1tbs"],
-      "comma-dangle": [2, "never"],
-
-      indent: [
-        "error",
-        2,
-        {
-          SwitchCase: 1
-        }
-      ],
-
-      "key-spacing": 0,
-      "max-len": [0, 120, 2],
-
-      "max-lines-per-function": [
-        "warn",
-        {
-          max: 30,
-          skipBlankLines: true,
-          skipComments: true
-        }
-      ],
-
       "@typescript-eslint/no-unused-vars": [
         1,
         {
@@ -78,24 +56,10 @@ export default defineConfig([
           argsIgnorePattern: "^_"
         }
       ],
-
-      "no-var": 1,
-      "object-curly-spacing": [2, "always"],
-
-      "prefer-const": [
-        1,
-        {
-          destructuring: "any",
-          ignoreReadBeforeAssign: true
-        }
-      ],
-
-      semi: [2, "always"],
-      "space-in-parens": ["error", "never"],
-      complexity: ["warn", 6],
       "@typescript-eslint/no-explicit-any": "warn"
     }
   },
+  eslintConfigPrettier,
   {
     files: ["tests/**/*.{ts,tsx}"],
     rules: {

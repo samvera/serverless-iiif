@@ -29,7 +29,7 @@ RUN <<EOF
 EOF
 
 # ---- openjpeg (libopenjp2) ----
-ARG LIBOPENJP2_VERSION=2.5.3
+ARG LIBOPENJP2_VERSION=2.5.4
 RUN <<EOF
   curl -L "https://github.com/uclouvain/openjpeg/archive/refs/tags/v${LIBOPENJP2_VERSION}.tar.gz" | tar zx
   mkdir -p "openjpeg-${LIBOPENJP2_VERSION}/build"
@@ -40,7 +40,7 @@ RUN <<EOF
 EOF
 
 # ---- libvips (Meson) ----
-ARG VIPS_VERSION=8.17.3
+ARG VIPS_VERSION=8.18.0
 RUN <<EOF
   curl -L "https://github.com/libvips/libvips/releases/download/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz" | tar xJ
   cd "vips-${VIPS_VERSION}"
