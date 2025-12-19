@@ -1,5 +1,5 @@
-import { LambdaEvent, LambdaResponse } from './contracts';
-import util from 'util';
+import { LambdaEvent, LambdaResponse } from "./contracts";
+import util from "util";
 
 const BrowserAutoFetchPatterns = [
   // Favicons
@@ -26,25 +26,33 @@ const BrowserAutoFetchPatterns = [
   /^\/apple-app-site-association(?:\.json)?(?:$|[?#])/i,
 
   // Well-known endpoints
-  /^\/\.well-known\/(?:change-password|security\.txt|assetlinks\.json|apple-app-site-association|openid-configuration|webfinger)(?:$|[?#])/i
+  /^\/\.well-known\/(?:change-password|security\.txt|assetlinks\.json|apple-app-site-association|openid-configuration|webfinger)(?:$|[?#])/i,
 ];
 
 const SafelistedResponseHeaders =
-  'cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma';
+  "cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma";
 
 const CorsDefaults: Record<string, string> = {
-  AllowCredentials: 'false',
-  AllowOrigin: '*',
-  AllowHeaders: '*',
+  AllowCredentials: "false",
+  AllowOrigin: "*",
+  AllowHeaders: "*",
   ExposeHeaders: SafelistedResponseHeaders,
-  MaxAge: '3600'
+  MaxAge: "3600",
+};
+
+const DefaultPorts: Record<string, string> = {
+  http: "80",
+  https: "443",
 };
 
 export const corsSetting = (name: string): string => {
   return (process.env[`cors${name}`] as string) || CorsDefaults[name];
 };
 
-export const getHeaderValue = (event: LambdaEvent, header: string): string | null => {
+export const getHeaderValue = (
+  event: LambdaEvent,
+  header: string
+): string | null => {
   const headerName = Object.keys(event.headers || {}).find(
     (h) => h.toLowerCase() === header
   );
@@ -52,9 +60,12 @@ export const getHeaderValue = (event: LambdaEvent, header: string): string | nul
   return null;
 };
 
-export const allowOriginValue = (corsAllowOrigin: string, event: LambdaEvent): string => {
-  if (corsAllowOrigin === 'REFLECT_ORIGIN') {
-    return getHeaderValue(event, 'origin') || '*';
+export const allowOriginValue = (
+  corsAllowOrigin: string,
+  event: LambdaEvent
+): string => {
+  if (corsAllowOrigin === "REFLECT_ORIGIN") {
+    return getHeaderValue(event, "origin") || "*";
   }
   return corsAllowOrigin;
 };
@@ -72,22 +83,30 @@ export const addCorsHeaders = (
     ),
     "Access-Control-Allow-Headers": corsSetting("AllowHeaders"),
     "Access-Control-Expose-Headers": corsSetting("ExposeHeaders"),
-    "Access-Control-Max-Age": corsSetting("MaxAge")
+    "Access-Control-Max-Age": corsSetting("MaxAge"),
   };
   return response;
 };
 
 export const eventPath = (event: LambdaEvent): string => {
-  return (event.requestContext?.http?.path || '').replace(/\/*$/, '');
+  return (event.requestContext?.http?.path || "").replace(/\/*$/, "");
 };
 
 export const getUri = (event: LambdaEvent): string => {
-  const scheme = getHeaderValue(event, 'x-forwarded-proto') || 'http';
-  const host =
+  const scheme = getHeaderValue(event, "x-forwarded-proto") || "http";
+  let host =
     process.env.forceHost ||
-    getHeaderValue(event, 'x-forwarded-host') ||
-    getHeaderValue(event, 'host');
-  const uri = `${scheme}://${host}${eventPath(event)}`;
+    getHeaderValue(event, "x-forwarded-host") ||
+    getHeaderValue(event, "host");
+  let port;
+  if (host?.includes(":")) {
+    [host, port] = host.split(":");
+  } else {
+    port = getHeaderValue(event, "x-forwarded-port") || DefaultPorts[scheme];
+  }
+  const uri = new URL(
+    `${scheme}://${host}:${port}${eventPath(event)}`
+  ).toString();
   return uri;
 };
 
@@ -101,4 +120,5 @@ export const isBrowserAutoFetch = (path: string): boolean => {
   return BrowserAutoFetchPatterns.some((re) => re.test(path));
 };
 
-export const inspect = (obj: any) => util.inspect(obj, { depth: Infinity, compact: false });
+export const inspect = (obj: any) =>
+  util.inspect(obj, { depth: Infinity, compact: false });
