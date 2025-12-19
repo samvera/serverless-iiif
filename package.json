@@ -37,6 +37,7 @@
     "nodemon": "^3.1.11",
     "sharp": "^0.34.3",
     "ts-jest": "^29.4.1",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.2",
     "yaml": "^2.3.1"
   },
@@ -54,6 +55,6 @@
     "dev": "bin/build dev",
     "package": "bin/build package",
     "publish": "bin/build publish",
-    "serve": "concurrently --names build,server --colors blue,green \"npx nodemon -w ./src -e js,mjs,cjs,json,ts --exec 'sam build'\" \"sam local start-lambda --warm-containers=LAZY --host 0.0.0.0 --env-vars $PWD/env.json --log-file lambda.log\""
+    "serve": "concurrently --names build,server --colors blue,green \"npx tsup --watch ./src -d ./dist ./src/index.ts\" \"sam local start-api -t template.local.yml --host 0.0.0.0 --env-vars $PWD/env.json --log-file serverless-iiif.log --warm-containers EAGER\""
   }
 }

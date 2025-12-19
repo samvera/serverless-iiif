@@ -63,7 +63,7 @@ describe("index.handler /iiif/2", () => {
     it("responds to INFO.JSON REQUEST", async () => {
       jest.spyOn(IIIF.Processor.prototype, "execute").mockResolvedValueOnce({
         type: "content",
-        contentType: "application/json",
+        contentType: "application/ld+json",
         body: JSON.stringify({
           "@id": "http://iiif.example.edu/iiif/2/image_id",
           width: 1280,
@@ -100,7 +100,7 @@ describe("index.handler /iiif/2", () => {
     it("respects the x-forwarded-host header", async () => {
       jest.spyOn(IIIF.Processor.prototype, "execute").mockResolvedValueOnce({
         type: "content",
-        contentType: "application/json",
+        contentType: "application/ld+json",
         body: JSON.stringify({
           "@id": "https://iiif.example.edu/iiif/2/image_id",
           width: 1280,

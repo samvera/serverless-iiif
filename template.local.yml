@@ -1,0 +1,213 @@
+Transform: "AWS::Serverless-2016-10-31"
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: serverless-iiif
+    Description: IIIF Image API 2.1 and 3.0 Service Lambda Function
+    Author: Samvera
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: ./LICENSE.txt
+    ReadmeUrl: ./README.md
+    Labels: ["iiif", "image-processing"]
+    HomePageUrl: https://samvera.github.io/serverless-iiif
+    SemanticVersion: 6.0.4
+    SourceCodeUrl: https://github.com/samvera/serverless-iiif
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "General Configuration"
+        Parameters:
+          - SourceBucket
+          - IiifLambdaMemory
+          - IiifLambdaTimeout
+          - PixelDensity
+          - PyramidLimit
+          - ResolverTemplate
+      - Label:
+          default: "CORS Configuration"
+        Parameters:
+          - CorsAllowCredentials
+          - CorsAllowHeaders
+          - CorsAllowOrigin
+          - CorsExposeHeaders
+          - CorsMaxAge
+      - Label:
+          default: "Advanced Options"
+        Parameters:
+          - ForceHost
+          - Preflight
+Parameters:
+  CorsAllowCredentials:
+    Type: String
+    Description: >
+      Value of the CORS `Access-Control-Allow-Credentials` response header.
+      Must be `true` to allow requests with `Authorization` and/or
+      `Cookie` headers.
+    AllowedValues:
+      - false
+      - true
+    Default: false
+  CorsAllowHeaders:
+    Type: String
+    Description: Value of the CORS `Access-Control-Allow-Headers` response header
+    Default: "*"
+  CorsAllowOrigin:
+    Type: String
+    Description: >
+      Value of the CORS `Access-Control-Allow-Origin` response header.
+      Use the special value `REFLECT_ORIGIN` to copy the value from the
+      `Origin` request header (required to emulate `*` for XHR requests
+      using `Authorization` and/or `Cookie` headers).
+    Default: "*"
+  CorsExposeHeaders:
+    Type: String
+    Description: Value of the CORS `Access-Control-Expose-Headers` response header
+    Default: cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma
+  CorsMaxAge:
+    Type: Number
+    Description: Value of the CORS `Access-Control-MaxAge` response header
+    Default: 3600
+  ForceHost:
+    Type: String
+    Description: Forced hostname to use in responses
+    Default: ""
+  IiifLambdaMemory:
+    Type: Number
+    Description: The memory provisioned for the lambda.
+    MinValue: 128
+    MaxValue: 10240
+    Default: 3008
+  IiifLambdaTimeout:
+    Type: Number
+    Description: The timeout for the lambda.
+    Default: 10
+  PixelDensity:
+    Type: Number
+    Description: Hardcoded DPI/Pixel Density/Resolution to encode in output images
+    Default: 0
+    MinValue: 0
+  Preflight:
+    Type: String
+    Description: Indicates whether the function should expect preflight headers
+    AllowedValues:
+      - false
+      - true
+    Default: false
+  PyramidLimit:
+    Type: Number
+    Description: Smallest pyramid image dimension. Set to `0` to prevent server from auto-calculating pyramid page sizes.
+    MinValue: 0
+    Default: 256
+  ResolverTemplate:
+    Type: String
+    Description: A printf-style format string that determines the location of source image within the bucket given the image ID
+    Default: "%s.tif"
+  SourceBucket:
+    Type: String
+    Description: Name of bucket containing source images
+Conditions:
+  UseForceHost:
+    Fn::Not:
+      - Fn::Equals: [!Ref ForceHost, ""]
+  UsePixelDensity:
+    Fn::Not:
+      - Fn::Equals: [!Ref PixelDensity, 0]
+  UsePyramidLimit:
+    Fn::Not:
+      - Fn::Equals: [!Ref PyramidLimit, 0]
+Resources:
+  IiifFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Runtime: nodejs22.x
+      Handler: dist/index.handler
+      MemorySize:
+        Ref: IiifLambdaMemory
+      Timeout:
+        Ref: IiifLambdaTimeout
+      CodeUri: .
+      Policies:
+        - AWSLambdaExecute
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:GetObjectACL
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+      Environment:
+        Variables:
+          DEBUG: ""
+          STREAMIFY_DISABLED: "true"
+          corsAllowCredentials: !Ref CorsAllowCredentials
+          corsAllowOrigin: !Ref CorsAllowOrigin
+          corsAllowHeaders: !Ref CorsAllowHeaders
+          corsExposeHeaders: !Ref CorsExposeHeaders
+          corsMaxAge: !Ref CorsMaxAge
+          density:
+            Fn::If:
+              - UsePixelDensity
+              - !Ref PixelDensity
+              - !Ref AWS::NoValue
+          forceHost:
+            Fn::If:
+              - UseForceHost
+              - !Ref ForceHost
+              - !Ref AWS::NoValue
+          preflight: !Ref Preflight
+          pyramidLimit:
+            Fn::If:
+              - UsePyramidLimit
+              - !Ref PyramidLimit
+              - !Ref AWS::NoValue
+          resolverTemplate: !Ref ResolverTemplate
+          tiffBucket: !Ref SourceBucket
+      Events:
+        HttpGet:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: GET            
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - index.ts
+        Minify: false
+        SourceMap: false
+        Target: es2022
+        External:
+          - sharp
+Outputs:
+  EndpointV2:
+    Description: IIIF Image API v2 Endpoint
+    Value:
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/2"
+  EndpointV3:
+    Description: IIIF Image API v3 Endpoint
+    Value:
+      Fn::Sub: "${IiifFunctionUrl.FunctionUrl}iiif/3"
+  FunctionDomain:
+    Description: IIIF Function Domain Name
+    Value:
+      Fn::Select:
+        - 2
+        - Fn::Split:
+          - "/"
+          - Fn::GetAtt: IiifFunctionUrl.FunctionUrl
+  FunctionUrl:
+    Description: IIIF Function URL
+    Value:
+      Fn::GetAtt: IiifFunctionUrl.FunctionUrl

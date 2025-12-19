@@ -33,3 +33,5 @@ sharp-lambda-layer.*
 !.vscode/settings.json
 dependencies/*
 !dependencies/Makefile
+src/dist
+dist/**

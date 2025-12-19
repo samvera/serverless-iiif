@@ -24,7 +24,20 @@ const maybeStream = (
   }
 };
 
-export const streamifyResponse = (
+const stringify = (
+  handler: (
+    _event: LambdaEvent,
+    _context: LambdaContext
+  ) => Promise<LambdaResponse>
+) => {
+  return async (event: LambdaEvent, context: LambdaContext) => {
+    const result: LambdaResponse = await handler(event, context);
+    const body = result.body.toString("base64");
+    return { ...result, isBase64Encoded: true, body };
+  };
+};
+
+const streamify = (
   handler: (
     _event: LambdaEvent,
     _context: LambdaContext
@@ -36,7 +49,7 @@ export const streamifyResponse = (
       responseStream: ResponseStream,
       context: LambdaContext
     ) => {
-      const result: LambdaResponse = await handler(event, context);
+      const result: LambdaResponse = (await handler(event, context)) || {};
       const body = result.body;
       const prelude = { ...result };
       delete prelude.body;
@@ -51,4 +64,14 @@ export const streamifyResponse = (
       responseStream.end();
     }
   );
+};
+
+export const streamifyResponse = (
+  handler: (
+    _event: LambdaEvent,
+    _context: LambdaContext
+  ) => Promise<LambdaResponse>
+) => {
+  if (process.env.STREAMIFY_DISABLED === "true") return stringify(handler);
+  return streamify(handler);
 };
