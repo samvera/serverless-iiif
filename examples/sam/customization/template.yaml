@@ -67,7 +67,7 @@ Resources:
           - !Ref CacheDomainName
         ViewerCertificate:
           AcmCertificateArn: !Ref CacheSSLCertificate
-          MinimumProtocolVersion: 'TLSv1'
+          MinimumProtocolVersion:'TLSv1.2_2021'
           SslSupportMethod: 'sni-only'
         Origins:
           - Id: IiifLambda
