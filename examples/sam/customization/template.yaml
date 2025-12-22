@@ -126,7 +126,7 @@ Resources:
     Properties:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif
-        SemanticVersion: 7.0.0
+        SemanticVersion: 7.0.1
       Parameters:
         CorsAllowOrigin: REFLECT_ORIGIN
         ForceHost: !Ref CacheDomainName
