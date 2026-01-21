@@ -20,7 +20,7 @@ jobs:
         run: npm ci
       - name: Install esbuild globally
         run: |
-          esbuild_version=$(npm list esbuild | grep esbuild | cut -d '@' -f 2)
+          esbuild_version=$(npm list esbuild | grep esbuild | cut -d '@' -f 2 | head -n 1)
           npm install -g esbuild@${esbuild_version}
       - name: Build
         run: ./bin/build build
