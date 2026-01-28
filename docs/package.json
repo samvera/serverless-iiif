@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "next": "15.5.9",
+    "next": "16.1.5",
     "next-mdx-remote": "^4.4.1",
     "nextra": "^2.13.2",
     "nextra-theme-docs": "^2.13.2",
