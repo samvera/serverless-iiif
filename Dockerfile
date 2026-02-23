@@ -18,7 +18,7 @@ libexif-devel libimagequant-devel librsvg2-devel libtiff-devel lcms2-devel gobje
 cmake nasm pkg-config meson ninja-build
 
 # ---- cgif (Meson) ----
-ARG CGIF_VERSION=0.5.0
+ARG CGIF_VERSION=0.5.1
 RUN <<EOF
   curl -L "https://github.com/dloebl/cgif/archive/refs/tags/v${CGIF_VERSION}.tar.gz" | tar zx
   cd "cgif-${CGIF_VERSION}"

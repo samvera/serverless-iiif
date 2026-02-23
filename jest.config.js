@@ -10,7 +10,4 @@ module.exports = {
   testEnvironment: 'node',
   moduleDirectories: ['node_modules'],
   moduleFileExtensions: ['ts', 'js', 'json'],
-  moduleNameMapper: {
-    '^uuid$': require.resolve('uuid'),
-  },
 };
