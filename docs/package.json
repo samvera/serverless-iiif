@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "next": "15.5.12",
-    "next-mdx-remote": "^4.4.1",
+    "next-mdx-remote": "^6.0.0",
     "nextra": "^2.13.2",
     "nextra-theme-docs": "^2.13.2",
     "react": "^18.2.0",
