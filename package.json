@@ -32,7 +32,7 @@
     "globals": "^16.3.0",
     "iiif-processor": "^7.0.0-rc.0",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "jest-environment-jsdom": "^30.2.0",
     "lambda-stream": "^0.4.0",
     "nodemon": "^3.1.11",
     "sharp": "^0.34.3",
