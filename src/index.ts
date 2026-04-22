@@ -1,6 +1,6 @@
-import { LambdaEvent, LambdaResponse, LambdaContext } from './contracts';
+import { LambdaEvent, LambdaResponse, LambdaContext } from "./contracts";
 import {
-  DimensionFunction,
+  GeometryFunction,
   Processor,
   StreamResolver,
   ContentResult,
@@ -62,7 +62,7 @@ const handleRequestFunc = streamifyResponse(
       response = await handleImageRequest(event, context);
     }
     return addCorsHeaders(event, response);
-  }
+  },
 );
 
 const handleServiceDiscoveryRequestFunc = () => {
@@ -91,15 +91,15 @@ const handleServiceDiscoveryRequestFunc = () => {
 const buildProcessor = (
   uri: string,
   streamResolver: StreamResolver,
-  dimensionFunction: DimensionFunction,
+  geometryFunction: GeometryFunction,
   density?: number,
-  sharpOptions: Record<string, any> = {}
+  sharpOptions: Record<string, any> = {},
 ) => {
   const debugBorder = process.env.debugBorder === "true";
   const pageThreshold =
     parseInt(process.env.pageThreshold as string) || undefined;
   return new Processor(uri, streamResolver, {
-    dimensionFunction,
+    geometryFunction,
     density,
     debugBorder,
     pageThreshold,
@@ -110,17 +110,17 @@ const buildProcessor = (
 const executeWithJp2Retry = async (
   uri: string,
   streamResolver: StreamResolver,
-  dimensionFunction: DimensionFunction,
+  geometryFunction: GeometryFunction,
   density?: number,
-  sharpOptions: Record<string, any> = {}
+  sharpOptions: Record<string, any> = {},
 ) => {
   try {
     return await buildProcessor(
       uri,
       streamResolver,
-      dimensionFunction,
+      geometryFunction,
       density,
-      sharpOptions
+      sharpOptions,
     ).execute();
   } catch (err: any) {
     if (
@@ -128,17 +128,17 @@ const executeWithJp2Retry = async (
       !sharpOptions.jp2?.oneshot
     ) {
       console.warn(
-        "Encountered JP2 tile part index error. Trying oneshot load."
+        "Encountered JP2 tile part index error. Trying oneshot load.",
       );
       return await buildProcessor(
         uri,
         streamResolver,
-        dimensionFunction,
+        geometryFunction,
         density,
         {
           ...sharpOptions,
           jp2: { ...sharpOptions.jp2, oneshot: true },
-        }
+        },
       ).execute();
     }
     throw err;
@@ -147,21 +147,21 @@ const executeWithJp2Retry = async (
 
 const handleImageRequest = async (
   event: LambdaEvent,
-  _context: LambdaContext
+  _context: LambdaContext,
 ): Promise<LambdaResponse> => {
   const density = parseDensity(process.env.density as string);
   const preflight = process.env.preflight === "true";
-  const { streamResolver, dimensionResolver } = resolverFactory(
+  const { streamResolver, geometryFunction } = resolverFactory(
     event,
-    preflight
+    preflight,
   );
   try {
     const uri = getUri(event);
     const result = await executeWithJp2Retry(
       uri,
       streamResolver,
-      dimensionResolver,
-      density
+      geometryFunction,
+      density,
     );
 
     return makeResponse(result);

@@ -1,5 +1,3 @@
-/* eslint-env jest */
-export {};
 import * as IIIF from "iiif-processor";
 import { handler } from "../src/index";
 import * as helpers from "../src/helpers";

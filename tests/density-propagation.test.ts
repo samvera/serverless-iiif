@@ -1,7 +1,5 @@
-/* eslint-env jest */
 import * as IIIF from "iiif-processor";
 import { LambdaContext } from "../src/contracts";
-export {};
 
 describe("density propagation to Processor", () => {
   const savedEnv = { ...process.env };

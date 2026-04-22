@@ -1,5 +1,3 @@
-/* eslint-env jest */
-export {};
 import { handler } from '../src/index';
 import callHandler from './stream-handler';
 
