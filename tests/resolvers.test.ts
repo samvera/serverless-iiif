@@ -16,15 +16,39 @@ describe("resolvers", () => {
   let s3Mock;
 
   beforeEach(() => {
+    const basicMetadata = { width: "2048", height: "1536", pages: "5" };
     s3Mock = mockClient(S3Client);
     s3Mock.on(GetObjectCommand).resolves({ Body: mockStream });
     s3Mock
       .on(HeadObjectCommand)
       .resolves({ Metadata: {} })
       .on(HeadObjectCommand, { Key: "dimensions.tif" })
-      .resolves({ Metadata: { width: "2048", height: "1536" } })
+      .resolves({ Metadata: basicMetadata })
       .on(HeadObjectCommand, { Key: "paged-dimensions.tif" })
-      .resolves({ Metadata: { width: "2048", height: "1536", pages: "5" } });
+      .resolves({ Metadata: basicMetadata })
+      .on(HeadObjectCommand, { Key: "prefixed-dimensions.tif" })
+      .resolves({
+        Metadata: {
+          "iiif-width": "2048",
+          "iiif-height": "1536",
+          "iiif-pages": "5",
+        },
+      })
+      .on(HeadObjectCommand, { Key: "dimensions-with-tileinfo.tif" })
+      .resolves({
+        Metadata: {
+          ...basicMetadata,
+          tilewidth: "256",
+          tileheight: "256",
+        },
+      })
+      .on(HeadObjectCommand, { Key: "dimensions-with-tilesize.tif" })
+      .resolves({
+        Metadata: {
+          ...basicMetadata,
+          tilesize: "256",
+        },
+      });
   });
 
   describe("default resolvers", () => {
@@ -67,25 +91,50 @@ describe("resolvers", () => {
     });
 
     describe("geometryFunction", () => {
-      it("has metadata dimensions", async () => {
-        const expected = { width: 2048, height: 1536 };
-        const result = await geometryFunction({ id: "dimensions", baseUrl });
-        expect(result).toEqual(expected);
-      });
-
       it("calculates pyramid info if metadata has pages", async () => {
         const expected = {
           width: 2048,
           height: 1536,
           pages: 5,
         };
-        const result = await geometryFunction({
+        let result = await geometryFunction({
           id: "paged-dimensions",
           baseUrl: "https://iiif.example.edu/",
         });
         expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
           Bucket: "test-bucket",
           Key: "paged-dimensions.tif",
+        });
+        expect(result).toEqual(expected);
+
+        result = await geometryFunction({
+          id: "prefixed-dimensions",
+          baseUrl: "https://iiif.example.edu/",
+        });
+        expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
+          Bucket: "test-bucket",
+          Key: "prefixed-dimensions.tif",
+        });
+        expect(result).toEqual(expected);
+      });
+
+      it("honors the tile size metadata", async () => {
+        const expected = {
+          width: 2048,
+          height: 1536,
+          pages: 5,
+          tileWidth: 256,
+          tileHeight: 256,
+        };
+        let result = await geometryFunction({
+          id: "dimensions-with-tileinfo",
+          baseUrl: "https://iiif.example.edu/",
+        });
+        expect(result).toEqual(expected);
+
+        result = await geometryFunction({
+          id: "dimensions-with-tilesize",
+          baseUrl: "https://iiif.example.edu/",
         });
         expect(result).toEqual(expected);
       });
@@ -235,7 +284,7 @@ describe("resolvers", () => {
           }),
           true,
         );
-        const expected = { width: 2048, height: 1536 };
+        const expected = { width: 2048, height: 1536, pages: 5 };
         const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
@@ -250,7 +299,7 @@ describe("resolvers", () => {
           }),
           true,
         );
-        const expected = { width: 2048, height: 1536 };
+        const expected = { width: 2048, height: 1536, pages: 5 };
         const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });

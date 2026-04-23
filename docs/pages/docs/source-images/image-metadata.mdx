@@ -1,0 +1,64 @@
+import { Steps } from 'nextra/components';
+
+`serverless-iiif` will probe each source image for its dimensions before any other processing takes place. Because this process can be time consuming, especially for large files, `serverless-iiif` first looks for several fields in the source file's [S3 Object Metadata](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html) before trying to load dimensions from the image itself.
+
+- `x-amz-width`/`x-amz-height` (or `x-amz-iiif-width`/`x-amz-iiif-height`): the width and height of the image in pixels
+- `x-amz-pages` (or `x-amz-iiif-pages`): the number of resolutions in the multi-resolution (pyramidal) image
+- `x-amz-tilewidth`/`x-amz-tileheight` (or `x-amz-iiif-tilewidth`/`x-amz-iiif-tileheight`): the tile width and height used when 
+  generating the tiled pyramidal image
+- `x-amz-tilesize` (or `x-amz-iiif-tilesize`): can be used instead of `tilewidth` and `tileheight` if width and height are the same
+
+If those properties are present, they will be used instead.
+
+## Image Metadata Script
+
+The `serverless-iiif` source repository includes a script that can probe one or more image files and set the appropriate `width`, `height`, `pages`,
+and tile size metadata.
+
+### Prerequisites
+
+- [NodeJS](https://nodejs.org/) >= v22.x
+- [AWS CLI](https://aws.amazon.com/cli/)
+
+<Steps>
+
+### Step 1
+
+Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that
+have read/write access to the S3 bucket containing the images that will be served by `serverless-iiif`
+
+### Step 2
+
+Clone this repository.
+
+### Step 3
+
+Install runtime dependencies:
+```shell
+npm ci
+```
+
+### Step 4
+
+Run the script:
+```shell
+export sourceBucket="my-image-bucket" # corresponds to the SourceBucket deploy parameter
+export resolverTemplate="%s.tif" # corresponds to the ResolverTemplate deploy parameter
+npm run create-metadata image_id_1 image_id_2 image_id_3
+```
+
+Or to process every file in the bucket, regardless of type:
+```shell
+export sourceBucket="my-image-bucket"
+export resolverTemplate="%s"
+aws s3 ls --recursive s3://my-image-bucket/ \
+  | awk '{ print $4 }' \
+  | xargs -n 50 npm run create-metadata
+```
+
+### Step 5
+Verify the output:
+```shell
+aws s3api head-object --bucket my-image-bucket --key image_id_1.tif
+```
+</Steps>

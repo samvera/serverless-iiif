@@ -3,6 +3,6 @@
     "type": "watch"
   },
   "jest.nodeEnv": {
-    "tiffBucket": "test-bucket"
+    "sourceBucket": "test-bucket"
   }
 }

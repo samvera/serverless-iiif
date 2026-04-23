@@ -34,7 +34,7 @@
 - PRs: describe intent, link issues, include tests, and note infra/template changes. Ensure CI, lint, and tests pass.
 
 ## Security & Configuration Tips
-- Configuration via env vars: `tiffBucket`, `resolverTemplate`, `density`, `pyramidLimit`, `preflight`, `forceHost`, `debugBorder`, `pageThreshold`, and CORS (`corsAllow*`).
+- Configuration via env vars: `sourceBucket`, `resolverTemplate`, `density`, `pyramidLimit`, `preflight`, `forceHost`, `debugBorder`, `pageThreshold`, and CORS (`corsAllow*`).
 - Local dev: load values with `.env` (uses `dotenv`). Do not commit secrets.
 - SAM/Docker required for builds that match Lambda architecture.
 

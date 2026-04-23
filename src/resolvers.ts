@@ -14,7 +14,6 @@ import {
 import { LambdaEvent } from "./contracts";
 import createDebug from "debug";
 import { getHeaderValue, inspect } from "./helpers";
-import * as URI from "uri-js";
 import * as util from "util";
 
 const debug = createDebug("serverless-iiif:resolvers");
@@ -27,7 +26,7 @@ export interface Resolvers {
 // IIIF RESOLVERS
 
 // Create input stream from S3 location
-const s3Stream = async (location: {
+export const s3Stream = async (location: {
   Bucket: string;
   Key: string;
 }): Promise<NodeJS.ReadableStream> => {
@@ -42,8 +41,8 @@ const s3Stream = async (location: {
 };
 
 // Compute default stream location from ID
-const defaultStreamLocation = (id: string) => {
-  const sourceBucket = process.env.tiffBucket as string;
+export const defaultStreamLocation = (id: string) => {
+  const sourceBucket = process.env.sourceBucket || process.env.tiffBucket; // Support legacy env var for backwards compatibility
   const resolverTemplate = process.env.resolverTemplate || "%s.tif";
   const replacementCount = (resolverTemplate.match(/%.*?s/g) || []).length;
   const args = new Array(replacementCount).fill(id);
@@ -125,10 +124,10 @@ const parseLocationHeader = (event: LambdaEvent) => {
   const locationHeader = getHeaderValue(event, "x-preflight-location");
   if (locationHeader && locationHeader.match(/^s3:\/\//)) {
     debug(`Preflight location header found: ${locationHeader}`);
-    const parsedURI = URI.parse(locationHeader);
+    const parsedURI = new URL(locationHeader);
     const result = {
       Bucket: parsedURI.host as string,
-      Key: (parsedURI.path || "").slice(1),
+      Key: (parsedURI.pathname || "").slice(1),
     };
     debug(`Parsed preflight location: ${inspect(result)}`);
     return result;

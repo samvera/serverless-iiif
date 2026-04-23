@@ -8,6 +8,7 @@ NODE_BASE_IMAGE_ID_FILE=$(mktemp)
 AWS_DEPENDENCIES_DIR=${PWD}/dependencies
 AWS_NODEJS_DIR=${AWS_DEPENDENCIES_DIR}/nodejs
 AWS_LIB_DIR=${AWS_DEPENDENCIES_DIR}/lib
+DOCKER_BUILD_PARAMS=${DOCKER_BUILD_PARAMS:-""}
 export DOCKER_CLI_HINTS=false
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
@@ -37,7 +38,7 @@ deps-image() {
   if [[ -n "${NODE_BASE_IMAGE_TAG}" ]]; then
     TAG_ARG="--tag ${NODE_BASE_IMAGE_TAG}"
   fi
-  docker buildx build --target deps --iidfile ${NODE_BASE_IMAGE_ID_FILE} ${TAG_ARG} .
+  docker buildx build ${DOCKER_BUILD_PARAMS} --target deps --iidfile ${NODE_BASE_IMAGE_ID_FILE} ${TAG_ARG} .
 }
 
 # Install dependencies into the dependencies directory
@@ -57,7 +58,7 @@ test-build() {
   NODE_TEST_IMAGE_ID_FILE=$(mktemp)
   trap "rm -f ${NODE_TEST_IMAGE_ID_FILE}" RETURN
 
-  docker buildx build -q --target node22 --iidfile ${NODE_TEST_IMAGE_ID_FILE} . && \
+  docker buildx build ${DOCKER_BUILD_PARAMS} -q --target node22 --iidfile ${NODE_TEST_IMAGE_ID_FILE} . && \
   NODE_TEST_IMAGE_ID=$(cat ${NODE_TEST_IMAGE_ID_FILE}) && \
   docker run --rm -t -v ./.aws-sam/build/Dependencies:/test -v ./bin/test-build:/test/nodejs/test-build \
     -e LD_LIBRARY_PATH=/test/lib ${NODE_TEST_IMAGE_ID} /test/nodejs/test-build
