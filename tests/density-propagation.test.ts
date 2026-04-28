@@ -1,7 +1,5 @@
-/* eslint-env jest */
 import * as IIIF from "iiif-processor";
 import { LambdaContext } from "../src/contracts";
-export {};
 
 describe("density propagation to Processor", () => {
   const savedEnv = { ...process.env };
@@ -10,7 +8,7 @@ describe("density propagation to Processor", () => {
     jest.resetModules();
     process.env = {
       ...savedEnv,
-      tiffBucket: "test-bucket",
+      sourceBucket: "test-bucket",
       density: "150",
     } as any;
   });
@@ -28,14 +26,14 @@ describe("density propagation to Processor", () => {
           (
             _uri: string,
             _sr: IIIF.StreamResolver,
-            _opts: IIIF.ProcessorOptions
+            _opts: IIIF.ProcessorOptions,
           ) => ({
             execute: jest.fn().mockResolvedValue({
               type: "content",
               contentType: "text/plain",
               body: "ok",
             }),
-          })
+          }),
         );
       return { Processor };
     });
@@ -53,7 +51,7 @@ describe("density propagation to Processor", () => {
       {
         requestContext: { http: { path: "/iiif/3/id/full/max/0/default.jpg" } },
       } as any,
-      {} as LambdaContext
+      {} as LambdaContext,
     );
     expect(result.statusCode).toBe(200);
 

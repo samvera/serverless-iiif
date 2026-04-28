@@ -1,5 +1,3 @@
-/* eslint-env jest */
-export {};
 import "aws-sdk-client-mock-jest";
 import { mockClient } from "aws-sdk-client-mock";
 import {
@@ -18,21 +16,45 @@ describe("resolvers", () => {
   let s3Mock;
 
   beforeEach(() => {
+    const basicMetadata = { width: "2048", height: "1536", pages: "5" };
     s3Mock = mockClient(S3Client);
     s3Mock.on(GetObjectCommand).resolves({ Body: mockStream });
     s3Mock
       .on(HeadObjectCommand)
       .resolves({ Metadata: {} })
       .on(HeadObjectCommand, { Key: "dimensions.tif" })
-      .resolves({ Metadata: { width: "2048", height: "1536" } })
+      .resolves({ Metadata: basicMetadata })
       .on(HeadObjectCommand, { Key: "paged-dimensions.tif" })
-      .resolves({ Metadata: { width: "2048", height: "1536", pages: "5" } });
+      .resolves({ Metadata: basicMetadata })
+      .on(HeadObjectCommand, { Key: "prefixed-dimensions.tif" })
+      .resolves({
+        Metadata: {
+          "iiif-width": "2048",
+          "iiif-height": "1536",
+          "iiif-pages": "5",
+        },
+      })
+      .on(HeadObjectCommand, { Key: "dimensions-with-tileinfo.tif" })
+      .resolves({
+        Metadata: {
+          ...basicMetadata,
+          tilewidth: "256",
+          tileheight: "256",
+        },
+      })
+      .on(HeadObjectCommand, { Key: "dimensions-with-tilesize.tif" })
+      .resolves({
+        Metadata: {
+          ...basicMetadata,
+          tilesize: "256",
+        },
+      });
   });
 
   describe("default resolvers", () => {
-    const { streamResolver, dimensionResolver } = resolverFactory(
+    const { streamResolver, geometryFunction } = resolverFactory(
       mockEvent({ headers: {} }),
-      false
+      false,
     );
     describe("streamResolver", () => {
       it("returns a stream and cleans up", async () => {
@@ -68,22 +90,14 @@ describe("resolvers", () => {
       });
     });
 
-    describe("dimensionResolver", () => {
-      it("has metadata dimensions", async () => {
-        const expected = [{ width: 2048, height: 1536 }];
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
-        expect(result).toEqual(expected);
-      });
-
+    describe("geometryFunction", () => {
       it("calculates pyramid info if metadata has pages", async () => {
-        const expected = [
-          { width: 2048, height: 1536 },
-          { width: 1024, height: 768 },
-          { width: 512, height: 384 },
-          { width: 256, height: 192 },
-          { width: 128, height: 96 },
-        ];
-        const result = await dimensionResolver({
+        const expected = {
+          width: 2048,
+          height: 1536,
+          pages: 5,
+        };
+        let result = await geometryFunction({
           id: "paged-dimensions",
           baseUrl: "https://iiif.example.edu/",
         });
@@ -92,11 +106,42 @@ describe("resolvers", () => {
           Key: "paged-dimensions.tif",
         });
         expect(result).toEqual(expected);
+
+        result = await geometryFunction({
+          id: "prefixed-dimensions",
+          baseUrl: "https://iiif.example.edu/",
+        });
+        expect(s3Mock).toHaveReceivedCommandWith(HeadObjectCommand, {
+          Bucket: "test-bucket",
+          Key: "prefixed-dimensions.tif",
+        });
+        expect(result).toEqual(expected);
+      });
+
+      it("honors the tile size metadata", async () => {
+        const expected = {
+          width: 2048,
+          height: 1536,
+          pages: 5,
+          tileWidth: 256,
+          tileHeight: 256,
+        };
+        let result = await geometryFunction({
+          id: "dimensions-with-tileinfo",
+          baseUrl: "https://iiif.example.edu/",
+        });
+        expect(result).toEqual(expected);
+
+        result = await geometryFunction({
+          id: "dimensions-with-tilesize",
+          baseUrl: "https://iiif.example.edu/",
+        });
+        expect(result).toEqual(expected);
       });
 
       it("does not have metadata dimensions", async () => {
-        const expected = null;
-        const result = await dimensionResolver({
+        const expected = {};
+        const result = await geometryFunction({
           id: "no-dimensions",
           baseUrl,
         });
@@ -123,7 +168,7 @@ describe("resolvers", () => {
             "x-preflight-location": "s3://test-bucket/dimensions.tif",
           },
         }),
-        true
+        true,
       );
       it("returns a stream and cleans up", async () => {
         await streamResolver({ id: "id", baseUrl });
@@ -134,7 +179,7 @@ describe("resolvers", () => {
           mockEvent({
             headers: { "x-preflight-location": "https://example.com/file.tif" },
           }),
-          true
+          true,
         );
         await sr({ id: "dimensions", baseUrl });
         expect(s3Mock).toHaveReceivedCommandWith(GetObjectCommand, {
@@ -144,131 +189,132 @@ describe("resolvers", () => {
       });
     });
 
-    describe("dimensionResolver", () => {
+    describe("geometryFunction", () => {
       it("preflight dimensions (case insensitive)", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "X-Preflight-Dimensions": '{ "width": 640, "height": 480 }',
             },
           }),
-          true
+          true,
         );
         const expected = { width: 640, height: 480 };
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("preflight dimensions (single)", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-dimensions": '{ "width": 640, "height": 480 }',
             },
           }),
-          true
+          true,
         );
         const expected = { width: 640, height: 480 };
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("preflight dimensions (array)", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-dimensions": '[{ "width": 640, "height": 480 }]',
             },
           }),
-          true
+          true,
         );
-        const expected = [{ width: 640, height: 480 }];
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const expected = {
+          width: 640,
+          height: 480,
+          sizes: [{ width: 640, height: 480 }],
+          pages: 1,
+        };
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("preflight dimensions (pages)", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-dimensions":
                 '{ "width": 640, "height": 480, "pages": 2 }',
             },
           }),
-          true
+          true,
         );
-        const expected = [
-          { width: 640, height: 480 },
-          { width: 320, height: 240 },
-        ];
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const expected = {
+          width: 640,
+          height: 480,
+          pages: 2,
+        };
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("preflight dimensions (limit)", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-dimensions":
                 '{ "width": 640, "height": 480, "limit": 200 }',
             },
           }),
-          true
+          true,
         );
-        const expected = [
-          { width: 640, height: 480 },
-          { width: 320, height: 240 },
-          { width: 160, height: 120 },
-        ];
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const expected = {
+          width: 640,
+          height: 480,
+          pages: 2,
+        };
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("no preflight dimensions / metadata dimensions", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-location": "s3://test-bucket/dimensions.tif",
             },
           }),
-          true
+          true,
         );
-        const expected = [{ width: 2048, height: 1536 }];
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const expected = { width: 2048, height: 1536, pages: 5 };
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("no preflight dimensions / metadata dimensions / page size limit", async () => {
         process.env.pyramidLimit = "256";
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-location": "s3://test-bucket/dimensions.tif",
             },
           }),
-          true
+          true,
         );
-        const expected = [
-          { width: 2048, height: 1536 },
-          { width: 1024, height: 768 },
-          { width: 512, height: 384 },
-          { width: 256, height: 192 },
-        ];
-        const result = await dimensionResolver({ id: "dimensions", baseUrl });
+        const expected = { width: 2048, height: 1536, pages: 5 };
+        const result = await geometryFunction({ id: "dimensions", baseUrl });
         expect(result).toEqual(expected);
       });
 
       it("no preflight dimensions / no metadata dimensions", async () => {
-        const { dimensionResolver } = resolverFactory(
+        const { geometryFunction } = resolverFactory(
           mockEvent({
             headers: {
               "x-preflight-location": "s3://test-bucket/no-dimensions.tif",
             },
           }),
-          true
+          true,
         );
-        const expected = null;
-        const result = await dimensionResolver({
+        const expected = {};
+        const result = await geometryFunction({
           id: "no-dimensions",
           baseUrl,
         });
@@ -295,20 +341,20 @@ describe("s3 errors", () => {
   it("streamResolver handles S3 errors gracefully", async () => {
     const { streamResolver } = resolverFactory(
       mockEvent({ headers: {} }),
-      false
+      false,
     );
     expect(streamResolver({ id: "error-dimensions", baseUrl })).rejects.toThrow(
-      IIIFError
+      IIIFError,
     );
   });
 
-  it("dimensionResolver handles S3 errors gracefully", async () => {
-    const { dimensionResolver } = resolverFactory(
+  it("geometryFunction handles S3 errors gracefully", async () => {
+    const { geometryFunction } = resolverFactory(
       mockEvent({ headers: {} }),
-      false
+      false,
     );
     expect(
-      dimensionResolver({ id: "error-dimensions", baseUrl })
+      geometryFunction({ id: "error-dimensions", baseUrl }),
     ).rejects.toThrow(IIIFError);
   });
 });

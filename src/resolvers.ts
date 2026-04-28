@@ -1,4 +1,9 @@
-import { StreamResolver, DimensionFunction, IIIFError } from "iiif-processor";
+import {
+  StreamResolver,
+  GeometryFunction,
+  IIIFError,
+  ImageGeometry,
+} from "iiif-processor";
 import {
   S3Client,
   S3ServiceException,
@@ -9,20 +14,19 @@ import {
 import { LambdaEvent } from "./contracts";
 import createDebug from "debug";
 import { getHeaderValue, inspect } from "./helpers";
-import * as URI from "uri-js";
 import * as util from "util";
 
 const debug = createDebug("serverless-iiif:resolvers");
 
 export interface Resolvers {
   streamResolver: StreamResolver;
-  dimensionResolver: DimensionFunction;
+  geometryFunction: GeometryFunction;
 }
 
 // IIIF RESOLVERS
 
 // Create input stream from S3 location
-const s3Stream = async (location: {
+export const s3Stream = async (location: {
   Bucket: string;
   Key: string;
 }): Promise<NodeJS.ReadableStream> => {
@@ -37,8 +41,8 @@ const s3Stream = async (location: {
 };
 
 // Compute default stream location from ID
-const defaultStreamLocation = (id: string) => {
-  const sourceBucket = process.env.tiffBucket as string;
+export const defaultStreamLocation = (id: string) => {
+  const sourceBucket = process.env.sourceBucket || process.env.tiffBucket; // Support legacy env var for backwards compatibility
   const resolverTemplate = process.env.resolverTemplate || "%s.tif";
   const replacementCount = (resolverTemplate.match(/%.*?s/g) || []).length;
   const args = new Array(replacementCount).fill(id);
@@ -48,92 +52,68 @@ const defaultStreamLocation = (id: string) => {
   return result;
 };
 
-const calculatePage = (
-  { width, height }: { width: number; height: number },
-  page: number
+const readNumberFromMetadata = (
+  metadata: Record<string, string> | undefined,
+  key: string,
 ) => {
-  const scale = 1 / 2 ** page;
-  return {
-    width: Math.floor(width * scale),
-    height: Math.floor(height * scale),
-  };
+  if (!metadata) return undefined;
+  const value = metadata[key] || metadata[`iiif-${key}`];
+  if (value) {
+    const num = Number(value);
+    if (!isNaN(num)) {
+      return num;
+    }
+  }
+  return undefined;
 };
 
-const reduceByPages = ({
-  width,
-  height,
-  pages,
-}: {
-  width: number;
-  height: number;
-  pages: number;
-}) => {
-  const result = [{ width, height }];
-  for (let page = 1; page < pages; page++) {
-    result.push(calculatePage(result[0], page));
+const tileSizeDefaults = () => {
+  if (process.env.tileWidth && process.env.tileHeight) {
+    return {
+      tileWidth: Number(process.env.tileWidth),
+      tileHeight: Number(process.env.tileHeight),
+    };
   }
-  return result;
-};
-
-const reduceToLimit = ({
-  width,
-  height,
-  limit,
-}: {
-  width: number;
-  height: number;
-  limit: number;
-}) => {
-  const result = [{ width, height }];
-  let page = 1;
-  let currentPage = result[result.length - 1];
-  while (currentPage.width > limit || currentPage.height > limit) {
-    const nextPage = calculatePage(result[0], page++);
-    result.push(nextPage);
-    currentPage = result[result.length - 1];
+  if (process.env.tileSize) {
+    const size = Number(process.env.tileSize);
+    return { tileWidth: size, tileHeight: size };
   }
-  return result;
+  return {};
 };
 
 // Retrieve dimensions from S3 metadata
-const dimensionRetriever = async (location: {
+const geometryRetriever = async (location: {
   Bucket: string;
   Key: string;
-}) => {
+}): Promise<ImageGeometry> => {
   const s3 = new S3Client({});
   const cmd = new HeadObjectCommand(location);
   try {
     const response: HeadObjectCommandOutput = await s3.send(cmd);
     const { Metadata } = response;
-    if (Metadata?.width && Metadata?.height)
-      return calculateDimensions(Metadata);
-    return null;
+    return {
+      ...tileSizeDefaults(),
+      width: readNumberFromMetadata(Metadata, "width"),
+      height: readNumberFromMetadata(Metadata, "height"),
+      pages: readNumberFromMetadata(Metadata, "pages"),
+      tileWidth:
+        readNumberFromMetadata(Metadata, "tilewidth") ||
+        readNumberFromMetadata(Metadata, "tilesize"),
+      tileHeight:
+        readNumberFromMetadata(Metadata, "tileheight") ||
+        readNumberFromMetadata(Metadata, "tilesize"),
+    };
   } catch (err) {
     throw iiifErrorFromS3Error(err, location);
   }
 };
 
-const calculateDimensions = (metadata: Record<string, string>) => {
-  const result = {
-    width: parseInt(metadata.width, 10),
-    height: parseInt(metadata.height, 10),
-  };
-  if (metadata.pages)
-    return reduceByPages({ ...result, pages: parseInt(metadata.pages, 10) });
-  if (process.env.pyramidLimit)
-    return reduceToLimit({
-      ...result,
-      limit: parseInt(process.env.pyramidLimit as string, 10),
-    });
-  return [result];
-};
-
 const iiifErrorFromS3Error = (
   err: S3ServiceException,
-  location: { Bucket: string; Key: string }
+  location: { Bucket: string; Key: string },
 ) => {
   const message = `Error fetching S3 object metadata at ${util.inspect(
-    location
+    location,
   )}: ${err}`;
   const extra = { statusCode: err.$metadata.httpStatusCode };
   return new IIIFError(message, extra);
@@ -144,10 +124,10 @@ const parseLocationHeader = (event: LambdaEvent) => {
   const locationHeader = getHeaderValue(event, "x-preflight-location");
   if (locationHeader && locationHeader.match(/^s3:\/\//)) {
     debug(`Preflight location header found: ${locationHeader}`);
-    const parsedURI = URI.parse(locationHeader);
+    const parsedURI = new URL(locationHeader);
     const result = {
       Bucket: parsedURI.host as string,
-      Key: (parsedURI.path || "").slice(1),
+      Key: (parsedURI.pathname || "").slice(1),
     };
     debug(`Parsed preflight location: ${inspect(result)}`);
     return result;
@@ -156,7 +136,7 @@ const parseLocationHeader = (event: LambdaEvent) => {
   return null;
 };
 
-const parseDimensionsHeader = (event: LambdaEvent) => {
+const parseDimensionsHeader = (event: LambdaEvent): ImageGeometry | null => {
   const dimensionsHeader = getHeaderValue(event, "x-preflight-dimensions");
   if (!dimensionsHeader) {
     debug("No preflight dimensions header found");
@@ -165,8 +145,25 @@ const parseDimensionsHeader = (event: LambdaEvent) => {
 
   debug(`Preflight dimension header found: ${dimensionsHeader}`);
   const result = JSON.parse(dimensionsHeader);
-  if (result.pages) return reduceByPages(result);
-  if (result.limit) return reduceToLimit(result);
+  if (Array.isArray(result) && result.length > 0) {
+    return {
+      width: result[0].width,
+      height: result[0].height,
+      sizes: result,
+      pages: result.length,
+    };
+  }
+  if (result.sizes) return result;
+  if (result.width && result.height) {
+    if (result.pages) return result;
+    if (result.limit || process.env.pyramidLimit) {
+      const limit = Number(result.limit || process.env.pyramidLimit);
+      const pages = Math.ceil(
+        Math.log2(Math.max(result.width, result.height) / limit),
+      );
+      return { ...result, pages, limit: undefined };
+    }
+  }
   return result;
 };
 
@@ -179,9 +176,13 @@ const preflightResolver = (event: LambdaEvent): Resolvers => {
       const location = preflightLocation || defaultStreamLocation(id);
       return s3Stream(location);
     },
-    dimensionResolver: async ({ id }: { id: string }) => {
+    geometryFunction: async ({
+      id,
+    }: {
+      id: string;
+    }): Promise<ImageGeometry> => {
       const location = preflightLocation || defaultStreamLocation(id);
-      return preflightDimensions || dimensionRetriever(location);
+      return preflightDimensions || geometryRetriever(location);
     },
   };
 };
@@ -192,15 +193,19 @@ const standardResolver = (): Resolvers => {
     streamResolver: async ({ id }: { id: string }) => {
       return s3Stream(defaultStreamLocation(id));
     },
-    dimensionResolver: async ({ id }: { id: string }) => {
-      return dimensionRetriever(defaultStreamLocation(id));
+    geometryFunction: async ({
+      id,
+    }: {
+      id: string;
+    }): Promise<ImageGeometry> => {
+      return geometryRetriever(defaultStreamLocation(id));
     },
   };
 };
 
 export const resolverFactory = (
   event: LambdaEvent,
-  preflight: boolean
+  preflight: boolean,
 ): Resolvers => {
   debug(`Using ${preflight ? "preflight" : "standard"} resolver`);
   return preflight ? preflightResolver(event) : standardResolver();

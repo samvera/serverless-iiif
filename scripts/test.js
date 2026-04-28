@@ -1,6 +1,6 @@
 'use strict';
 
-process.env.tiffBucket = 'test-bucket';
+process.env.sourceBucket = 'test-bucket';
 
 const jest = require('jest');
 const argv = process.argv.slice(2);

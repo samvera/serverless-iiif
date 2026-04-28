@@ -1,4 +1,3 @@
-/* eslint-env jest */
 import { Readable } from 'stream';
 
 const destroy = jest.fn();

@@ -1,14 +1,19 @@
 # serverless-iiif
 
-[![Build Status](https://circleci.com/gh/samvera/serverless-iiif.svg?style=svg)](https://circleci.com/gh/samvera/serverless-iiif)
-[![Maintainability](https://api.codeclimate.com/v1/badges/4ac80b539190cb5b082f/maintainability)](https://codeclimate.com/github/samvera/serverless-iiif/maintainability)
-[![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
+[![Build Status](https://github.com/samvera/serverless-iiif/actions/workflows/build.yml/badge.svg)](https://github.com/samvera/serverless-iiif/actions/workflows/build.yml) [![Test Coverage](https://coveralls.io/repos/github/samvera/serverless-iiif/badge.svg)](https://coveralls.io/github/samvera/serverless-iiif)
 
-### Breaking Changes from Version 5.x
-
-- The `SharpLayer` variable has been removed, and the `sharp` dependency (with JP2 support) bundled into the published package. This greatly simplifies
-  packaging and deployment, and removes the need for the maintainers to keep up-to-date layers deployed in every region.
-- The `standalone` and `cloudfront` deployment options have been removed, per the deprecation notice in v5.x. Please see the [documented example](https://samvera.github.io/serverless-iiif/docs/quick-start/infrastructure/cloudformation#example) of how to deploy `serverless-iiif` as part of a full stack that includes a CloudFront distribution.
+> [!IMPORTANT]
+> ### Breaking Changes from Version 7.x
+> 
+> - The [image metadata](https://samvera.github.io/serverless-iiif/docs/source-images#image-metadata) requirements have changed. Existing
+>   metadata will continue to work, but with no `pages` property, the service will assume source images are single resolution and operate
+>   less efficiently. This tradeoff was required to clear up ambiguity and prevent the service from making incorrect assumptions about
+>   the properties of source images. Image metadata also now supports `tilewidth`, `tileheight` and `tilesize` properties to prevent the
+>   service from having to probe the image for tile information.
+> - The [`x-preflight-dimensions`](https://samvera.github.io/serverless-iiif/docs/advanced-usage/request-response-functions#custom-file-location--image-dimensions)
+>   preflight header has new requirements to match the above changes.
+> 
+> The repository also includes two new command-line utilities. See [Components](#components) below for details
 
 ## Description
 
@@ -19,6 +24,9 @@ A IIIF [2.1](https://iiif.io/api/image/2.1/) and [3.0](https://iiif.io/api/image
 * A simple [Lambda Function](https://aws.amazon.com/lambda/) wrapper for the [iiif-processor](https://www.npmjs.com/package/iiif-processor) module.
 * A [Lambda Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) that is used to invoke the IIIF API via HTTPS.
 * A [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html) containing all the dependencies for the Lambda Function.
+* Two utility scripts:
+  - [create-tiled-tiff](create-tiled-tiff.md) generates a tiled, multi-resolution TIFF from an AWS S3 image object and writes it to another AWS S3 object
+  - [create-metadata](create-metadata.md) probes an existing AWS S3 image object for IIIF geometry metadata and adds the metadata to the S3 object
 
 ## Prerequisites
 

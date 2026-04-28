@@ -1,5 +1,3 @@
-/* eslint-env jest */
-export {};
 import {
   addCorsHeaders,
   eventPath,

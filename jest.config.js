@@ -10,4 +10,5 @@ module.exports = {
   testEnvironment: 'node',
   moduleDirectories: ['node_modules'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  setupFilesAfterEnv: ['aws-sdk-client-mock-jest'],
 };

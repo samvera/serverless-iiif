@@ -37,27 +37,32 @@ function handler(event) {
 function handler(event) {
   var request = event.request;
   request.headers['x-preflight-location'] = [{value: 's3://image-bucket/path/to/correct/image.tif'}];
-  request.headers['x-preflight-dimensions'] = [{value: JSON.stringify({ width: 640, height: 480 })}];
+  request.headers['x-preflight-dimensions'] = [{value: JSON.stringify({ width: 640, height: 480, pages: 3 })}];
   return request;
 }
 ```
 
-The `x-preflight-dimensions` header can take several shapes:
+The `x-preflight-dimensions` header should be a JSON object including some or all of the following properties:
 
-* `{ width, height }` (or `[{ width, height }]`) - a straightforward, single-resolution image
-* `[{ width, height }, { width, height }, ...]` - a multi-resolution image with pages of the specified sizes
-* `{ width, height, pages }` - a multi-resolution image with the specified number of `pages`, each half the size of the one before
-* `{ width, height, limit }` - a multi-resolution image in which the smallest width and height are both less than the specified `limit`
+* Basic properties (required):
+  * `width`: the width in pixels of the largest representation of the entire image
+  * `height`: the height in pixels of the largest representation of the entire image
+* Multi-resolution properties (at least one is required):
+  * `sizes`: an array of `[{width, height}]` listing the size in pixels of each resolution included in the pyramidal image
+  * `pages`: the number of resolutions contained in the pyramidal image (or `1` if the image isn't pyramidal)
+* Optional properties:
+  * `tileWidth`: the tile width used when generating the tiled pyramidal image
+  * `tileHeight`: the tile height used when generating the tiled pyramidal image
 
 For example, the following dimension values would all describe the same pyramidal image:
 
-* `[{ width: 2048, height: 1536 }, { width: 1024, height: 768 }, { width: 512, height: 384 }]`
-* `{ width: 2048, height: 1536, pages: 3 }`
-* `{ width: 2048, height: 1536, limit: 480 }`
+* `{ width: 1024, height: 768, sizes: [{ width: 1024, height: 768 }, { width: 512, height: 384 }, { width: 256, height: 192 }] }`
+* `{ width: 1024, height: 768, pages: 3 }`
 
-The `limit` calculator will keep going until both dimensions are _less than_ the limit, not _less than or equal to_. So a `limit: 512` on the third example above would generate a fourth page at `{ width: 256, height: 192 }`.
+When responding to an Image Information Document (`info.json`) document request, if `tileWidth` is not present, the image will be
+probed to determine the correct values for `tileWidth` and `tileHeight`. If `tileWidth` is present but `null`, the `tiles` property
+will not be included in the output.
 
 <Callout>
 If you plan to use CloudFront functions to add either of the above `x-preflight-` headers to incoming requests, you *must* set the value of the `Preflight` parameter to `true` when deploying `serverless-iiif`. The function will _only_ look for the preflight headers if this environment variable is `true`. This prevents requests from including those headers directly if no preflight function is present. If you do use a preflight function, make sure it strips out any `x-preflight-location` and `x-preflight-dimensions` headers that it doesn't set itself.
-
 </Callout>

@@ -2,7 +2,7 @@
 # build stage (Debian/glibc)
 # =========================
 FROM amazonlinux:2023 AS node22
-RUN dnf install -y nodejs22-devel \
+RUN dnf install -y nodejs24-devel \
  && npm install -g npm@latest
 
 FROM node22 AS build

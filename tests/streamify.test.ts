@@ -1,5 +1,3 @@
-/* eslint-env jest */
-export {};
 import { streamifyResponse } from '../src/streamify';
 import { LambdaResponse } from '../src/contracts';
 import callHandler from './stream-handler';
