@@ -9,7 +9,7 @@ Metadata:
     ReadmeUrl: ./README.md
     Labels: [ "iiif", "image-processing" ]
     HomePageUrl: https://samvera.github.io/serverless-iiif
-    SemanticVersion: 7.0.1
+    SemanticVersion: 8.0.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -96,7 +96,7 @@ Parameters:
     Description: Smallest pyramid image dimension. Set to `0` to prevent server from
       auto-calculating pyramid page sizes.
     MinValue: 0
-    Default: 256
+    Default: 0
   ResolverTemplate:
     Type: String
     Description: A printf-style format string that determines the location of source

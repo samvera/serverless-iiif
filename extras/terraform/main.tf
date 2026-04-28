@@ -10,7 +10,7 @@ terraform {
 
 locals {
   serverless_iiif_app_id        = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
-  serverless_iiif_app_version   = "7.0.1"
+  serverless_iiif_app_version   = "8.0.0"
 }
 
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "serverless_iiif" {
