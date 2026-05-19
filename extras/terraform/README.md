@@ -46,16 +46,16 @@ module "serverless_iiif" {
 | Name                      | Description | Type | Default | Required |
 |---------------------------|-------------|------|---------|:--------:|
 | `cors_allow_credentials`  | Value of the CORS `Access-Control-Allow-Credentials` response header. Must be `true` to allow requests with `Authorization` and/or `Cookie` headers. | `bool` | `false` | no |
-| `cors_allow_headers`      | Value of the CORS `Access-Control-Allow-Headers` response header | `string` | `"*"` | no |
+| `cors_allow_headers`      | Value of the CORS `Access-Control-Allow-Headers` response header | `string` | `null` (upstream: `"*"`) | no |
 | `cors_allow_origin`       | Value of the CORS `Access-Control-Allow-Origin` response header. Use the special value `REFLECT_ORIGIN` to copy the value from the `Origin` request header (required to emulate `*` for XHR requests using `Authorization` and/or `Cookie` headers). | `string` | `"*"` | no |
-| `cors_expose_headers`     | Value of the CORS `Access-Control-Expose-Headers` response header | `string` | `"cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"` | no |
-| `cors_max_age`            | Value of the CORS `Access-Control-MaxAge` response header | `number` | `3600` | no |
+| `cors_expose_headers`     | Value of the CORS `Access-Control-Expose-Headers` response header | `string` | `null` (upstream: `"cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"`) | no |
+| `cors_max_age`            | Value of the CORS `Access-Control-MaxAge` response header | `number` | `null` (upstream: `3600`) | no |
 | `force_host`              | Forced hostname to use in responses | `string` | `""` | no |
-| `iiif_lambda_memory`      | The memory provisioned for the lambda. | `number` | `3008` | no |
-| `iiif_lambda_timeout`     | The timeout for the lambda | `number` | `10` | no |
-| `pixel_density`           | Hardcoded DPI/Pixel Density/Resolution to encode in output images | `number` | `0` | no |
+| `iiif_lambda_memory`      | The memory provisioned for the lambda. | `number` | `null` (upstream: `3008`) | no |
+| `iiif_lambda_timeout`     | The timeout for the lambda | `number` | `null` (upstream: `10`) | no |
+| `pixel_density`           | Hardcoded DPI/Pixel Density/Resolution to encode in output images | `number` | `null` (upstream: `0`) | no |
 | `preflight`               | Indicates whether the function should expect preflight headers | `bool`   | `false` | no |
-| `resolver_template`       | A printf-style format string that determines the location of source image within the bucket given the image ID | `string` | `"%s.tif"` | no |
+| `resolver_template`       | A printf-style format string that determines the location of source image within the bucket given the image ID | `string` | `null` (upstream: `"%s.tif"`) | no |
 | `sharp_layer`             | ARN of a custom AWS Lambda Layer containing the sharp and libvips dependencies. Use the special value `JP2` to use the managed JPEG2000-compatible layer, or `INTERNAL` to use the built-in dependencies (without JPEG2000 support). | `string` | `"JP2"` | no |
 | `source_bucket`           | Name of the S3 bucket containing source images | `string` | `""` | yes |
 | `stack_name`              | The stack name for the deployed serverless-iiif application | `string` | `""` | yes |
