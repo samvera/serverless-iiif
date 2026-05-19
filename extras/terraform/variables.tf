@@ -16,7 +16,7 @@ variable "cors_allow_credentials" {
 variable "cors_allow_headers" {
     type          = string
     description   = "Value of the CORS `Access-Control-Allow-Headers` response header"
-    default       = "*"
+    default       = null # upstream default: "*"
 }
 
 variable "cors_allow_origin" {
@@ -33,13 +33,13 @@ variable "cors_allow_origin" {
 variable "cors_expose_headers" {
     type          = string
     description   = "Value of the CORS `Access-Control-Expose-Headers` response header"
-    default       = "cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"
+    default       = null # upstream default: "cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"
 }
 
 variable "cors_max_age" {
     type          = number
     description   = "Value of the CORS `Access-Control-MaxAge` response header"
-    default       = 3600
+    default       = null # upstream default: 3600
 }
 
 variable "force_host" {
@@ -51,10 +51,10 @@ variable "force_host" {
 variable "iiif_lambda_memory" {
     type          = number
     description   = "The memory provisioned for the lambda"
-    default       = 3008
+    default       = null # upstream default: 3008
 
     validation {
-      condition       = var.iiif_lambda_memory >= 128 && var.iiif_lambda_memory <= 10240
+      condition       = var.iiif_lambda_memory == null || (var.iiif_lambda_memory >= 128 && var.iiif_lambda_memory <= 10240)
       error_message   = "iiif_lambda_memory must be between 128 and 10240"
     }
 }
@@ -62,13 +62,13 @@ variable "iiif_lambda_memory" {
 variable "iiif_lambda_timeout" {
     type          = number
     description   = "The timeout for the lambda"
-    default       = 10
+    default       = null # upstream default: 10
 }
 
 variable "pixel_density" {
     type          = number
     description   = "Hardcoded DPI/Pixel Density/Resolution to encode in output images"
-    default       = 0
+    default       = null # upstream default: 0
 }
 
 variable "preflight" {
@@ -80,7 +80,7 @@ variable "preflight" {
 variable "resolver_template" {
     type          = string
     description   = "A printf-style format string that determines the location of source image within the bucket given the image ID"
-    default       = "%s.tif"
+    default       = null # upstream default: "%s.tif"
 }
 
 variable "sharp_layer" {

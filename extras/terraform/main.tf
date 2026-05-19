@@ -9,27 +9,30 @@ terraform {
 }
 
 locals {
-  serverless_iiif_app_id        = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
-  serverless_iiif_app_version   = "8.0.0"
+  serverless_iiif_app_id      = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
+  serverless_iiif_app_version = "8.0.0"
+
+  _all_parameters = {
+    CorsAllowCredentials = tostring(var.cors_allow_credentials)
+    CorsAllowHeaders     = var.cors_allow_headers
+    CorsAllowOrigin      = var.cors_allow_origin
+    CorsExposeHeaders    = var.cors_expose_headers
+    CorsMaxAge           = var.cors_max_age != null ? tostring(var.cors_max_age) : null
+    ForceHost            = var.force_host
+    IiifLambdaMemory     = var.iiif_lambda_memory != null ? tostring(var.iiif_lambda_memory) : null
+    IiifLambdaTimeout    = var.iiif_lambda_timeout != null ? tostring(var.iiif_lambda_timeout) : null
+    PixelDensity         = var.pixel_density != null ? tostring(var.pixel_density) : null
+    Preflight            = var.preflight
+    ResolverTemplate     = var.resolver_template
+    SourceBucket         = var.source_bucket
+  }
+  parameters = { for k, v in local._all_parameters : k => v if v != null }
 }
 
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "serverless_iiif" {
-  name                      = var.stack_name
-  application_id            = local.serverless_iiif_app_id
-  semantic_version          = local.serverless_iiif_app_version
-  capabilities              = ["CAPABILITY_IAM"]
-  parameters = {
-    CorsAllowCredentials    = var.cors_allow_credentials
-    CorsAllowHeaders        = var.cors_allow_headers
-    CorsAllowOrigin         = var.cors_allow_origin
-    CorsExposeHeaders       = var.cors_expose_headers
-    CorsMaxAge              = var.cors_max_age
-    ForceHost               = var.force_host
-    IiifLambdaMemory        = var.iiif_lambda_memory
-    IiifLambdaTimeout       = var.iiif_lambda_timeout
-    PixelDensity            = var.pixel_density
-    Preflight               = var.preflight
-    ResolverTemplate        = var.resolver_template
-    SourceBucket            = var.source_bucket
-  }
+  name             = var.stack_name
+  application_id   = local.serverless_iiif_app_id
+  semantic_version = local.serverless_iiif_app_version
+  capabilities     = ["CAPABILITY_IAM"]
+  parameters       = local.parameters
 }
