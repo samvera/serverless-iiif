@@ -1,11 +1,11 @@
-const customTags = require('./cfn-tags');
-const YAML = require('yaml');
+import customTags from './cfn-tags';
+import YAML from 'yaml';
 
-function fence(code, format) {
+export function fence(code, format) {
   return '```' + `${format}\n${code}\n` + '```';
 }
 
-function stringify(data, format) {
+export function stringify(data, format) {
   switch (format) {
     case 'json':
       return JSON.stringify(data, null, 2);
@@ -16,26 +16,19 @@ function stringify(data, format) {
   }
 }
 
-function displayValue(v) {
+export function displayValue(v) {
   if (v === '') return '""';
   if (v.join) return v.join(' | ');
   return v;
 }
 
-function present(v) {
+export function present(v) {
   if (v === 0) return true;
   if (v === '') return true;
+  if (v === false) return true;
   return !!v;
 }
 
-function snake(str) {
+export function snake(str) {
   return str.replace(/\B([A-Z])/g, '_$1').toLowerCase();
 }
-
-module.exports = {
-  displayValue,
-  fence,
-  present,
-  snake,
-  stringify
-};

@@ -2,6 +2,7 @@ import sharp from "sharp";
 import concat from "concat-stream";
 import { s3Stream } from "../resolvers";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { fromIni, fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 const MAX_DIMENSION = 15000;
 const TILE_SIZE = 256;
@@ -90,7 +91,10 @@ const uploadToS3 = (data, location, { width, height, pages }) => {
 };
 
 const s3ClientOpts = () => {
-  return { httpOptions: { timeout: 600000 } };
+  const credentials = process.env.AWS_PROFILE
+    ? fromIni({ profile: process.env.AWS_PROFILE })
+    : fromNodeProviderChain();
+  return { credentials, httpOptions: { timeout: 600000 } };
 };
 
 /* istanbul ignore next */

@@ -22,3 +22,7 @@ output "serverless_iiif_function_domain" {
 output "serverless_iiif_function_url" {
   value = local.outputs.FunctionUrl
 }
+
+output "serverless_iiif_metadata_function_arn" {
+  value = local.outputs.MetadataFunctionArn
+}

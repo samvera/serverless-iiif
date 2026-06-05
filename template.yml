@@ -7,7 +7,7 @@ Metadata:
     SpdxLicenseId: Apache-2.0
     LicenseUrl: ./LICENSE.txt
     ReadmeUrl: ./README.md
-    Labels: [ "iiif", "image-processing" ]
+    Labels: ["iiif", "image-processing"]
     HomePageUrl: https://samvera.github.io/serverless-iiif
     SemanticVersion: 8.0.0
     SourceCodeUrl: https://github.com/samvera/serverless-iiif
@@ -65,6 +65,16 @@ Parameters:
     Type: Number
     Description: Value of the CORS `Access-Control-MaxAge` response header
     Default: 3600
+  CreateMetadataFunction:
+    Type: String
+    Description: >
+      Indicates whether to create the additional Lambda function used for metadata generation.
+      ***NOTE: Enabling this feature will give the function full read/write permissions to 
+      the image source bucket.***
+    AllowedValues:
+      - false
+      - true
+    Default: false
   ForceHost:
     Type: String
     Description: Forced hostname to use in responses
@@ -93,28 +103,32 @@ Parameters:
     Default: false
   PyramidLimit:
     Type: Number
-    Description: Smallest pyramid image dimension. Set to `0` to prevent server from
+    Description:
+      Smallest pyramid image dimension. Set to `0` to prevent server from
       auto-calculating pyramid page sizes.
     MinValue: 0
     Default: 0
   ResolverTemplate:
     Type: String
-    Description: A printf-style format string that determines the location of source
+    Description:
+      A printf-style format string that determines the location of source
       image within the bucket given the image ID
     Default: "%s.tif"
   SourceBucket:
     Type: String
     Description: Name of bucket containing source images
 Conditions:
+  CreateMetadataFunction:
+    Fn::Equals: [!Ref CreateMetadataFunction, "true"]
   UseForceHost:
     Fn::Not:
-      - Fn::Equals: [ !Ref ForceHost, "" ]
+      - Fn::Equals: [!Ref ForceHost, ""]
   UsePixelDensity:
     Fn::Not:
-      - Fn::Equals: [ !Ref PixelDensity, 0 ]
+      - Fn::Equals: [!Ref PixelDensity, 0]
   UsePyramidLimit:
     Fn::Not:
-      - Fn::Equals: [ !Ref PyramidLimit, 0 ]
+      - Fn::Equals: [!Ref PyramidLimit, 0]
 Resources:
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
@@ -200,6 +214,52 @@ Resources:
         Target: es2022
         External:
           - sharp
+  MetadataFunction:
+    Condition: CreateMetadataFunction
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Runtime: nodejs24.x
+      Handler: utils/create-metadata.handler
+      Timeout: 900
+      CodeUri: ./src
+      Layers:
+        - !Ref Dependencies
+      Policies:
+        - AWSLambdaExecute
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:ListAllMyBuckets
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - s3:CopyObject
+                - s3:GetObject
+                - s3:GetObjectACL
+                - s3:PutObject
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}/*"
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketLocation
+              Resource:
+                Fn::Sub: "arn:aws:s3:::${SourceBucket}"
+      Environment:
+        Variables:
+          resolverTemplate: !Ref ResolverTemplate
+          sourceBucket: !Ref SourceBucket
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - utils/create-metadata.ts
+        Minify: false
+        SourceMap: false
+        Target: es2022
+        External:
+          - sharp
 Outputs:
   EndpointV2:
     Description: IIIF Image API v2 Endpoint
@@ -221,3 +281,8 @@ Outputs:
     Description: IIIF Function URL
     Value:
       Fn::GetAtt: IiifFunctionUrl.FunctionUrl
+  MetadataFunctionArn:
+    Condition: CreateMetadataFunction
+    Description: ARN of the metadata Lambda function (only created if `CreateMetadataFunction` is `true`)
+    Value:
+      Fn::GetAtt: MetadataFunction.Arn

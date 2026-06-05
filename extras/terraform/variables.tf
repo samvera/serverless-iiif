@@ -42,6 +42,16 @@ variable "cors_max_age" {
     default       = null # upstream default: 3600
 }
 
+variable "create_metadata_function" {
+    type          = bool
+    description   = <<-END
+      Indicates whether to create the additional Lambda function used for metadata generation.
+      ***NOTE: Enabling this feature will give the function full read/write permissions to 
+      the image source bucket.***
+    END
+    default       = false
+}
+
 variable "force_host" {
     type          = string
     description   = "Forced hostname to use in responses"
