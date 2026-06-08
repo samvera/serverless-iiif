@@ -4,5 +4,6 @@
   },
   "jest.nodeEnv": {
     "sourceBucket": "test-bucket"
-  }
+  },
+  "bun.test.enable": false
 }

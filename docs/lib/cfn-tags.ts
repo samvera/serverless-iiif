@@ -5,7 +5,7 @@ const functionTags = {
   '!Split': { type: 'array', quoted: false }
 };
 
-module.exports = Object.entries(functionTags).map(([tag, { quoted }]) => {
+export default Object.entries(functionTags).map(([tag, { quoted }]) => {
   const key = tag === '!Ref' ? 'Ref' : tag.replace(/^!/, 'Fn::');
   return {
     tag,

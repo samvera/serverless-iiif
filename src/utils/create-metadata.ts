@@ -1,20 +1,25 @@
 import { Processor } from "iiif-processor";
 import { defaultStreamLocation, s3Stream } from "../resolvers";
+import type { S3BatchEvent, S3BatchResult } from "aws-lambda";
 import {
   S3Client,
   S3ServiceException,
   CopyObjectCommand,
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
+import { fromIni, fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import Sharp from "sharp";
 
-const streamResolver = async ({ id }) => {
-  const location = defaultStreamLocation(id);
-  return await s3Stream(location);
+export type SingleInvocationEvent = { imageId: string };
+export type SingleInvocationResult = { statusCode: number; body: string };
+type S3Location = { Bucket: string; Key: string };
+
+const streamResolver = (location: S3Location) => {
+  return async (_) => await s3Stream(location);
 };
 
-const getMetadata = async (id: string) => {
-  const location = defaultStreamLocation(id);
-  const s3 = new S3Client({});
+const getMetadata = async (location: S3Location) => {
+  const s3 = new S3Client(s3ClientOpts());
   const cmd = new HeadObjectCommand(location);
   try {
     const { ContentType, Metadata } = await s3.send(cmd);
@@ -31,12 +36,11 @@ const getMetadata = async (id: string) => {
 };
 
 const setMetadata = async (
-  id: string,
+  location: S3Location,
   metadata: Record<string, string>,
   ContentType: string,
 ) => {
-  const location = defaultStreamLocation(id);
-  const s3 = new S3Client({});
+  const s3 = new S3Client(s3ClientOpts());
   const copyCmd = new CopyObjectCommand({
     Bucket: location.Bucket,
     CopySource: `${location.Bucket}/${location.Key}`,
@@ -55,17 +59,42 @@ const stringify = (value: unknown): string | undefined => {
   return String(value);
 };
 
-const processImage = async (
-  imageId: string,
-): Promise<{ imageId: string; metadata: Record<string, string> }> => {
-  const processor = new Processor(
-    `http://example.com/iiif/3/${imageId}/info.json`,
-    streamResolver,
-  );
-  const { ContentType, Metadata: existingMetadata } =
-    (await getMetadata(imageId)) || {};
-  const geometry = await processor.geometry(true);
+const getContentType = async (location: S3Location): Promise<string> => {
+  try {
+    const streamer = streamResolver(location);
+    const stream = await streamer({ id: "image" });
+    const reader = Sharp({ limitInputPixels: false, page: 0 });
+    stream.pipe(reader);
+    const { format } = await reader.metadata();
+    return `image/${format}`;
+  } catch (err) {
+    console.error(`Error determining content type for ${location.Key}:`, err);
+    return undefined;
+  }
+};
 
+const processImage = async (location: {
+  Bucket: string;
+  Key: string;
+}): Promise<{ metadata: Record<string, string> }> => {
+  const processor = new Processor(
+    `http://example.com/iiif/3/image/info.json`,
+    streamResolver(location),
+  );
+
+  const metadata = (await getMetadata(location)) || {
+    ContentType: "application/octet-stream",
+    Metadata: {},
+  };
+
+  if (
+    metadata.ContentType === "application/octet-stream" ||
+    metadata.ContentType === "binary/octet-stream"
+  ) {
+    metadata.ContentType = await getContentType(location);
+  }
+
+  const geometry = await processor.geometry(true);
   const tileMetadata =
     geometry.tileWidth == geometry.tileHeight
       ? { "iiif-tilesize": stringify(geometry.tileWidth) }
@@ -79,23 +108,84 @@ const processImage = async (
     "iiif-pages": stringify(geometry.pages),
     ...tileMetadata,
   };
-  const newMetadata = { ...existingMetadata, ...iiifMetadata };
+  const newMetadata = { ...metadata.Metadata, ...iiifMetadata };
   for (const key in newMetadata) {
     if (newMetadata[key] === undefined) {
       delete newMetadata[key];
     }
   }
-  await setMetadata(imageId, newMetadata, ContentType);
+  await setMetadata(location, newMetadata, metadata.ContentType);
   return {
-    imageId,
     metadata: newMetadata,
   };
 };
 
-export const handler = async (event: { imageId: string }) => {
-  const { imageId } = event;
-  const result = await processImage(imageId);
-  return { statusCode: 200, body: JSON.stringify(result) };
+const retriable = (err) => {
+  if (err instanceof S3ServiceException) {
+    const status = err.$metadata.httpStatusCode;
+    if (status === 429 || (status >= 500 && status < 600)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const batchHandler = async (event: S3BatchEvent) => {
+  const id = event.tasks[0].s3Key;
+  const bucket = event.tasks[0].s3BucketArn.split(":").pop();
+  if (process.env.sourceBucket !== bucket) {
+    const error = `Source bucket mismatch: expected ${process.env.sourceBucket}, got ${bucket}`;
+    throw new Error(error);
+  }
+
+  const response: S3BatchResult = {
+    invocationSchemaVersion: "1.0",
+    treatMissingKeysAs: "PermanentFailure",
+    invocationId: event.invocationId,
+    results: [
+      {
+        taskId: event.tasks[0].taskId,
+        resultCode: "Succeeded",
+        resultString: "OK",
+      },
+    ],
+  };
+
+  const location = { Bucket: bucket, Key: id };
+  try {
+    const result = await processImage(location);
+    response.results[0].resultString = JSON.stringify(result.metadata);
+    return response;
+  } catch (err) {
+    console.error(`Error processing ${id}:`, err);
+    response.results[0].resultCode = retriable(err)
+      ? "TemporaryFailure"
+      : "PermanentFailure";
+    response.results[0].resultString = err.message || "Error";
+    return response;
+  }
+};
+
+export const handler = async (
+  event: S3BatchEvent | SingleInvocationEvent,
+): Promise<S3BatchResult | SingleInvocationResult> => {
+  if ("tasks" in event) {
+    return await batchHandler(event);
+  } else if ("imageId" in event) {
+    const { imageId } = event;
+    const location = defaultStreamLocation(imageId);
+    const result = await processImage(location);
+    return { statusCode: 200, body: JSON.stringify(result.metadata) };
+  } else {
+    throw new Error("Invalid event format");
+  }
+};
+
+const s3ClientOpts = () => {
+  const credentials = process.env.AWS_PROFILE
+    ? fromIni({ profile: process.env.AWS_PROFILE })
+    : fromNodeProviderChain();
+  return { credentials, httpOptions: { timeout: 600000 } };
 };
 
 /* istanbul ignore next */
@@ -105,7 +195,8 @@ if (require.main === module) {
   const mainImage = async (imageId: string) => {
     try {
       console.log(`Processing image ${imageId}...`);
-      const result = await processImage(imageId);
+      const location = defaultStreamLocation(imageId);
+      const result = await processImage(location);
       console.log(
         `Metadata created successfully for ${imageId}:`,
         result.metadata,

@@ -43,13 +43,15 @@ module "serverless_iiif" {
 
 ## Inputs
 
-| Name                      | Description | Type | Default | Required |
-|---------------------------|-------------|------|---------|:--------:|
-| `cors_allow_credentials`  | Value of the CORS `Access-Control-Allow-Credentials` response header. Must be `true` to allow requests with `Authorization` and/or `Cookie` headers. | `bool` | `false` | no |
-| `cors_allow_headers`      | Value of the CORS `Access-Control-Allow-Headers` response header | `string` | `null` (upstream: `"*"`) | no |
-| `cors_allow_origin`       | Value of the CORS `Access-Control-Allow-Origin` response header. Use the special value `REFLECT_ORIGIN` to copy the value from the `Origin` request header (required to emulate `*` for XHR requests using `Authorization` and/or `Cookie` headers). | `string` | `"*"` | no |
-| `cors_expose_headers`     | Value of the CORS `Access-Control-Expose-Headers` response header | `string` | `null` (upstream: `"cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"`) | no |
-| `cors_max_age`            | Value of the CORS `Access-Control-MaxAge` response header | `number` | `null` (upstream: `3600`) | no |
+| Name                       | Description                                                                                                                                                                                                                                          | Type     | Default                                                                                                             | Required |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- | :------: |
+| `cors_allow_credentials`   | Value of the CORS `Access-Control-Allow-Credentials` response header. Must be `true` to allow requests with `Authorization` and/or `Cookie` headers.                                                                                                 | `bool`   | `false`                                                                                                             |    no    |
+| `cors_allow_headers`       | Value of the CORS `Access-Control-Allow-Headers` response header                                                                                                                                                                                     | `string` | `null` (upstream: `"*"`)                                                                                            |    no    |
+| `cors_allow_origin`        | Value of the CORS `Access-Control-Allow-Origin` response header. Use the special value `REFLECT_ORIGIN` to copy the value from the `Origin` request header (required to emulate `*` for XHR requests using `Authorization` and/or `Cookie` headers). | `string` | `"*"`                                                                                                               |    no    |
+| `cors_expose_headers`      | Value of the CORS `Access-Control-Expose-Headers` response header                                                                                                                                                                                    | `string` | `null` (upstream: `"cache-control,content-language,content-length,content-type,date,expires,last-modified,pragma"`) |    no    |
+| `cors_max_age`             | Value of the CORS `Access-Control-MaxAge` response header                                                                                                                                                                                            | `number` | `null` (upstream: `3600`)                                                                                           |    no    |
+| `create_metadata_function` | Indicates whether to create the additional Lambda function used for metadata generation. ***NOTE: Enabling this feature will give the function full read/write permissions to the image source bucket.***                                            |
+
 | `force_host`              | Forced hostname to use in responses | `string` | `""` | no |
 | `iiif_lambda_memory`      | The memory provisioned for the lambda. | `number` | `null` (upstream: `3008`) | no |
 | `iiif_lambda_timeout`     | The timeout for the lambda | `number` | `null` (upstream: `10`) | no |
@@ -62,13 +64,13 @@ module "serverless_iiif" {
 
 ## Outputs
 
-| Name                               | Description                                           |
-|------------------------------------|-------------------------------------------------------|
-| `stack_id`                         | The ID of the serverless-iiif application stack       |
-| `serverless_iiif_endpoint_v2`      | IIIF Image API v2 Endpoint                            |
-| `serverless_iiif_endpoint_v3`      | IIIF Image API v3 Endpoint                            |
-| `serverless_iiif_function_domain`  | IIIF Function Domain Name                             |
-| `serverless_iiif_function_url`     | IIIF Function URL                                     |
+| Name                              | Description                                     |
+| --------------------------------- | ----------------------------------------------- |
+| `stack_id`                        | The ID of the serverless-iiif application stack |
+| `serverless_iiif_endpoint_v2`     | IIIF Image API v2 Endpoint                      |
+| `serverless_iiif_endpoint_v3`     | IIIF Image API v3 Endpoint                      |
+| `serverless_iiif_function_domain` | IIIF Function Domain Name                       |
+| `serverless_iiif_function_url`    | IIIF Function URL                               |
 
 ## License
 

@@ -1,44 +1,33 @@
 import { Steps } from 'nextra/components';
 
-`serverless-iiif` will probe each source image for its dimensions before any other processing takes place. Because this process can be time consuming, especially for large files, `serverless-iiif` first looks for several fields in the source file's [S3 Object Metadata](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingMetadata.html) before trying to load dimensions from the image itself.
+The `create-metadata` script can probe one or more image files and set the appropriate `width`, `height`, `pages`, and tile size metadata. It can be invoked three different ways:
+- As a [standalone script](#standalone-script-invocation)
+- As a [Lambda function](#lambda-function-invocation)
+- As an [S3 Batch Operation](#s3-batch-operation-invocation)
 
-- `x-amz-width`/`x-amz-height` (or `x-amz-iiif-width`/`x-amz-iiif-height`): the width and height of the image in pixels
-- `x-amz-pages` (or `x-amz-iiif-pages`): the number of resolutions in the multi-resolution (pyramidal) image
-- `x-amz-tilewidth`/`x-amz-tileheight` (or `x-amz-iiif-tilewidth`/`x-amz-iiif-tileheight`): the tile width and height used when 
-  generating the tiled pyramidal image
-- `x-amz-tilesize` (or `x-amz-iiif-tilesize`): can be used instead of `tilewidth` and `tileheight` if width and height are the same
+### Standalone Script Invocation
 
-If those properties are present, they will be used instead.
-
-## Image Metadata Script
-
-The `serverless-iiif` source repository includes a script that can probe one or more image files and set the appropriate `width`, `height`, `pages`,
-and tile size metadata.
-
-### Prerequisites
+#### Prerequisites
 
 - [NodeJS](https://nodejs.org/) >= v22.x
 - [AWS CLI](https://aws.amazon.com/cli/)
 
-<Steps>
+#### Step 1
 
-### Step 1
+Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that have read/write access to the S3 bucket containing the images that will be served by `serverless-iiif`
 
-Make sure the AWS CLI is [properly configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) with credentials that
-have read/write access to the S3 bucket containing the images that will be served by `serverless-iiif`
+#### Step 2
 
-### Step 2
+Clone the [serverless-iiif repository](https://github.com/samvera/serverless-iiif).
 
-Clone this repository.
-
-### Step 3
+#### Step 3
 
 Install runtime dependencies:
 ```shell
 npm ci
 ```
 
-### Step 4
+#### Step 4
 
 Run the script:
 ```shell
@@ -56,9 +45,40 @@ aws s3 ls --recursive s3://my-image-bucket/ \
   | xargs -n 50 npm run create-metadata
 ```
 
-### Step 5
+#### Step 5
 Verify the output:
 ```shell
 aws s3api head-object --bucket my-image-bucket --key image_id_1.tif
 ```
-</Steps>
+
+### Lambbda Function Invocation
+
+#### Prerequisites
+
+- A `serverless-iiif` application stack deployed with `CreateMetadataFunction` set to `true`
+
+#### Step 1
+
+Get the value of the `MetadataFunctionARN` output from the deployed stack.
+
+#### Step 2
+
+Determine the ID of the image (as it will look in the ID part of the IIIF URL).
+
+#### Step 3
+
+[Invoke the Lambda Function](https://docs.aws.amazon.com/lambda/latest/dg/invocation-sync.html) with the payload `{ imageId: "ID_OF_IMAGE" }`
+
+### S3 Batch Operation Invocation
+
+#### Prerequisites
+
+- A `serverless-iiif` application stack deployed with `CreateMetadataFunction` set to `true`
+
+#### Step 1
+
+Get the value of the `MetadataFunctionARN` output from the deployed stack.
+
+#### Step 2
+
+Create an [S3 Batch Operation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/batch-ops.html) specifying the `MetadataFunctionARN` as the operation. The manifest must _only_ include objects from the image source bucket, as that is the only bucket the Lambda Function has access to.

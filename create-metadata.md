@@ -1,6 +1,11 @@
 ## `create-metadata`
 
-The `create-metadata` script can probe one or more image files and set the appropriate `width`, `height`, `pages`, and tile size metadata.
+The `create-metadata` script can probe one or more image files and set the appropriate `width`, `height`, `pages`, and tile size metadata. It can be invoked three different ways
+- As a [standalone script](#standalone-script-invocation)
+- As a [Lambda function](#lambda-function-invocation)
+- As an [S3 Batch Operation](#s3-batch-operation-invocation)
+
+### Standalone Script Invocation
 
 #### Prerequisites
 
@@ -45,3 +50,35 @@ Verify the output:
 ```shell
 aws s3api head-object --bucket my-image-bucket --key image_id_1.tif
 ```
+
+### Lambbda Function Invocation
+
+#### Prerequisites
+
+- A `serverless-iiif` application stack deployed with `CreateMetadataFunction` set to `true`
+
+#### Step 1
+
+Get the value of the `MetadataFunctionARN` output from the deployed stack.
+
+#### Step 2
+
+Determine the ID of the image (as it will look in the ID part of the IIIF URL).
+
+### Step 3
+
+[Invoke the Lambda Function](https://docs.aws.amazon.com/lambda/latest/dg/invocation-sync.html) with the payload `{ imageId: "ID_OF_IMAGE" }`
+
+### S3 Batch Operation Invocation
+
+#### Prerequisites
+
+- A `serverless-iiif` application stack deployed with `CreateMetadataFunction` set to `true`
+
+#### Step 1
+
+Get the value of the `MetadataFunctionARN` output from the deployed stack.
+
+#### Step 2
+
+Create an [S3 Batch Operation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/batch-ops.html) specifying the `MetadataFunctionARN` as the operation. The manifest must _only_ include objects from the image source bucket, as that is the only bucket the Lambda Function has access to.

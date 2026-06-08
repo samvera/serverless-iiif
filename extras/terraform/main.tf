@@ -13,18 +13,19 @@ locals {
   serverless_iiif_app_version = "8.0.0"
 
   _all_parameters = {
-    CorsAllowCredentials = tostring(var.cors_allow_credentials)
-    CorsAllowHeaders     = var.cors_allow_headers
-    CorsAllowOrigin      = var.cors_allow_origin
-    CorsExposeHeaders    = var.cors_expose_headers
-    CorsMaxAge           = var.cors_max_age != null ? tostring(var.cors_max_age) : null
-    ForceHost            = var.force_host
-    IiifLambdaMemory     = var.iiif_lambda_memory != null ? tostring(var.iiif_lambda_memory) : null
-    IiifLambdaTimeout    = var.iiif_lambda_timeout != null ? tostring(var.iiif_lambda_timeout) : null
-    PixelDensity         = var.pixel_density != null ? tostring(var.pixel_density) : null
-    Preflight            = var.preflight
-    ResolverTemplate     = var.resolver_template
-    SourceBucket         = var.source_bucket
+    CorsAllowCredentials    = tostring(var.cors_allow_credentials)
+    CorsAllowHeaders        = var.cors_allow_headers
+    CorsAllowOrigin         = var.cors_allow_origin
+    CorsExposeHeaders       = var.cors_expose_headers
+    CorsMaxAge              = var.cors_max_age != null ? tostring(var.cors_max_age) : null
+    CreateMetadataFunction  = var.create_metadata_function != null ? tostring(var.create_metadata_function) : null
+    ForceHost               = var.force_host
+    IiifLambdaMemory        = var.iiif_lambda_memory != null ? tostring(var.iiif_lambda_memory) : null
+    IiifLambdaTimeout       = var.iiif_lambda_timeout != null ? tostring(var.iiif_lambda_timeout) : null
+    PixelDensity            = var.pixel_density != null ? tostring(var.pixel_density) : null
+    Preflight               = var.preflight
+    ResolverTemplate        = var.resolver_template
+    SourceBucket            = var.source_bucket
   }
   parameters = { for k, v in local._all_parameters : k => v if v != null }
 }

@@ -20,7 +20,8 @@ export async function getStaticProps(context) {
     { Name: 'serverless_iiif_endpoint_v2', Description: 'IIIF Image API v2 Endpoint' },
     { Name: 'serverless_iiif_endpoint_v3', Description: 'IIIF Image API v3 Endpoint' },
     { Name: 'serverless_iiif_function_domain', Description: 'IIIF Function Domain Name' },
-    { Name: 'serverless_iiif_function_url', Description: 'IIIF Function URL' }
+    { Name: 'serverless_iiif_function_url', Description: 'IIIF Function URL' },
+    { Name: 'serverless_iiif_metadata_function_arn', Description: 'Metadata Function ARN' }
   ]
 
   return { props: { ssg: { data: { inputs, outputs } } } };
@@ -54,11 +55,12 @@ export const PropTabs = ({ children }) => {
 }
 
 export const Input = ({ AllowedPattern, AllowedValues, Default, Description, MaxLength, MaxValue, MinLength, MinValue, Name, Type }) => {
+  const DefaultString = Default?.toString();
   return <>
     <div className={styles.tfAttribute}>
       <h3>{Name} <span className={styles.tfAttributeType}>{Type}</span></h3>
       <MDXRemote compiledSource={Description}/>
-      <Attribute Name="Default" Value={Default} Code={true}/>
+      <Attribute Name="Default" Value={DefaultString} Code={true}/>
     </div>
   </>
 }

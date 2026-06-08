@@ -1,9 +1,10 @@
-const fs = require('fs');
-const YAML = require('yaml');
-const templateFile = '../template.yml';
-const customTags = require('./cfn-tags');
+import fs from 'fs';
+import YAML from 'yaml';
+import customTags from './cfn-tags';
 
-function getParameters() {
+const templateFile = '../template.yml';
+
+export function getParameters() {
   const { Parameters } = getTemplate(templateFile);
   const result = [];
   for (const param in Parameters) {
@@ -12,25 +13,22 @@ function getParameters() {
   return result;
 }
 
-async function getPropertyList(opts = {}) {
+export async function getPropertyList(opts = {}) {
   opts = { descPrefix: '', ...opts };
   const { compileMdx } = await import('nextra/compile');
 
   const result = getParameters();
   for (const param in result) {
     const prop = result[param];
-    const mdx = await compileMdx(`${opts?.descPrefix}${prop.Description}`, { defaultShowCopyCode: true });
+    const mdx = await compileMdx(`${opts?.descPrefix}${prop.Description}`, {
+      defaultShowCopyCode: true
+    });
     prop.Description = mdx.result;
   }
   return result;
 }
 
-function getTemplate(file) {
-  return YAML.parse(fs.readFileSync(file).toString(), { customTags });
+export function getTemplate(file) {
+  const yaml = fs.readFileSync(file).toString();
+  return YAML.parse(yaml, { customTags });
 }
-
-module.exports = {
-  getParameters,
-  getPropertyList,
-  getTemplate
-};
