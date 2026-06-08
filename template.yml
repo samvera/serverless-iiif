@@ -220,7 +220,8 @@ Resources:
     Properties:
       Runtime: nodejs24.x
       Handler: utils/create-metadata.handler
-      Timeout: 900
+      Timeout: 90
+      MemorySize: 512
       CodeUri: ./src
       Layers:
         - !Ref Dependencies
