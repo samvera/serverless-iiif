@@ -58,7 +58,7 @@ test-build() {
   NODE_TEST_IMAGE_ID_FILE=$(mktemp)
   trap "rm -f ${NODE_TEST_IMAGE_ID_FILE}" RETURN
 
-  docker buildx build ${DOCKER_BUILD_PARAMS} -q --target node22 --iidfile ${NODE_TEST_IMAGE_ID_FILE} . && \
+  docker buildx build ${DOCKER_BUILD_PARAMS} -q --target nodejs --iidfile ${NODE_TEST_IMAGE_ID_FILE} . && \
   NODE_TEST_IMAGE_ID=$(cat ${NODE_TEST_IMAGE_ID_FILE}) && \
   docker run --rm -t -v ./.aws-sam/build/Dependencies:/test -v ./bin/test-build:/test/nodejs/test-build \
     -e LD_LIBRARY_PATH=/test/lib ${NODE_TEST_IMAGE_ID} /test/nodejs/test-build

@@ -1,14 +1,14 @@
 {
-  "name": "serverless-iiif",
+  "name": "serverless-iiif-lambda",
   "version": "8.0.2",
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.685.0",
-    "@aws-sdk/credential-providers": "^3.685.0",
+    "@aws-sdk/client-s3": "^3.1066.0",
+    "@aws-sdk/credential-providers": "^3.1066.0",
     "debug": "^4.3.2",
-    "iiif-processor": "^8.0.0",
+    "iiif-processor": "^8.0.3",
     "lambda-stream": "^0.4.0",
     "uri-js": "^4.4.1"
   },
