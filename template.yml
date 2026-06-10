@@ -205,21 +205,13 @@ Resources:
           resolverTemplate: !Ref ResolverTemplate
           sourceBucket: !Ref SourceBucket
     Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        EntryPoints:
-          - index.ts
-        Minify: false
-        SourceMap: false
-        Target: es2022
-        External:
-          - sharp
+      BuildMethod: makefile
   MetadataFunction:
     Condition: CreateMetadataFunction
     Type: "AWS::Serverless::Function"
     Properties:
       Runtime: nodejs24.x
-      Handler: utils/create-metadata.handler
+      Handler: create-metadata.handler
       Timeout: 90
       MemorySize: 512
       CodeUri: ./src
@@ -252,15 +244,7 @@ Resources:
           resolverTemplate: !Ref ResolverTemplate
           sourceBucket: !Ref SourceBucket
     Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        EntryPoints:
-          - utils/create-metadata.ts
-        Minify: false
-        SourceMap: false
-        Target: es2022
-        External:
-          - sharp
+      BuildMethod: makefile
 Outputs:
   EndpointV2:
     Description: IIIF Image API v2 Endpoint
