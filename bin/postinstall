@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if pkg-config vips 2>&1; then
+  cd node_modules/sharp && bun run build
+fi
