@@ -2,7 +2,8 @@
 # build stage (Debian/glibc)
 # =========================
 FROM amazonlinux:2023 AS nodejs
-RUN dnf install -y nodejs24-devel \
+RUN curl -fsSL https://rpm.nodesource.com/setup_24.x | bash - \
+ && dnf install -y nodejs \
  && npm install -g npm@latest
 
 FROM nodejs AS build
@@ -34,7 +35,7 @@ ARG LIBOPENJP2_VERSION=2.5.4
 # mkdir -p "openjpeg-${LIBOPENJP2_VERSION}/build"
 # cd "openjpeg-${LIBOPENJP2_VERSION}/build"
 RUN <<EOF
-  git clone --single-branch --branch fix-interleaved-tile-parts https://github.com/mbklein/openjpeg.git
+  git clone --single-branch --branch master https://github.com/uclouvain/openjpeg.git
   cd openjpeg
   cmake -B build . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR="${LIB_PATH}"
   cd build
@@ -43,7 +44,7 @@ RUN <<EOF
 EOF
 
 # ---- libvips (Meson) ----
-ARG VIPS_VERSION=8.18.3
+ARG VIPS_VERSION=8.18.4
 RUN <<EOF
   curl -L "https://github.com/libvips/libvips/releases/download/v${VIPS_VERSION}/vips-${VIPS_VERSION}.tar.xz" | tar xJ
   cd "vips-${VIPS_VERSION}"
@@ -59,7 +60,7 @@ RUN vips --version && pkg-config --modversion vips-cpp
 # =========================
 FROM build AS deps
 WORKDIR /app
-ARG SHARP_VERSION=0.35.0
+ARG SHARP_VERSION=0.35.3
 RUN <<EOF
   npm install node-gyp@latest node-addon-api@latest
   npm install sharp@${SHARP_VERSION}
