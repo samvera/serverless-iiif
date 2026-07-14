@@ -190,6 +190,7 @@ const makeResponse = (result: ProcessorResult): LambdaResponse => {
         headers: {
           "Content-Type": result.contentType,
           Link: linksHeader(result),
+          Vary: "Accept",
         },
         isBase64Encoded: false,
         body: result.body,
@@ -199,6 +200,7 @@ const makeResponse = (result: ProcessorResult): LambdaResponse => {
         statusCode: result.statusCode,
         headers: {
           "Content-Type": "text/plain",
+          Vary: "Accept",
         },
         body: result.message,
       };
@@ -207,6 +209,7 @@ const makeResponse = (result: ProcessorResult): LambdaResponse => {
         statusCode: 303,
         headers: {
           Location: result.location,
+          Vary: "Accept",
         },
         body: "Redirecting...",
       };
