@@ -204,7 +204,7 @@ const makeResponse = (result: ProcessorResult): LambdaResponse => {
       };
     case "redirect":
       return {
-        statusCode: 302,
+        statusCode: 303,
         headers: {
           Location: result.location,
         },

@@ -141,9 +141,9 @@ describe("index.handler /iiif/2", () => {
 
       const event = {};
       const result = await callHandler(handler, event, context);
-      expect(result.statusCode).toEqual(302);
+      expect(result.statusCode).toEqual(303);
       expect(new URL(result.headers.Location).pathname).toEqual(
-        "/iiif/2/image_id/info.json"
+        "/iiif/2/image_id/info.json",
       );
     });
   });
@@ -157,7 +157,7 @@ describe("index.handler /iiif/2", () => {
         .spyOn(helpers, "getUri")
         .mockImplementationOnce(
           () =>
-            "https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg"
+            "https://iiif.example.edu/iiif/2/image_id/full/full/0/default.jpg",
         );
     });
 

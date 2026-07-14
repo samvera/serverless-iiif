@@ -8,7 +8,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { Processor } from "iiif-processor";
 import { handler } from "../../src/utils/create-metadata";
-import { s3Stream, defaultStreamLocation } from "../../src/resolvers";
 import type {
   SingleInvocationEvent,
   SingleInvocationResult,
