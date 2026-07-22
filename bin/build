@@ -2,7 +2,7 @@
 
 set -e
 
-AWS_PACKAGE_BUCKET=${AWS_PACKAGE_BUCKET:-nul-serverless-applications}
+AWS_PACKAGE_BUCKET=${AWS_PACKAGE_BUCKET:-nul-serverless-apps}
 AWS_PACKAGE_PREFIX=${AWS_PACKAGE_PREFIX:-serverless-iiif}
 NODE_BASE_IMAGE_ID_FILE=$(mktemp)
 AWS_DEPENDENCIES_DIR=${PWD}/dependencies

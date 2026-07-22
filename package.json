@@ -1,6 +1,6 @@
 {
   "name": "serverless-iiif",
-  "version": "8.0.4",
+  "version": "8.0.5",
   "description": "Lambda wrapper for iiif-processor",
   "author": "Michael B. Klein",
   "license": "Apache-2.0",
@@ -58,7 +58,7 @@
     "docs"
   ],
   "dependencies": {
-    "iiif-processor": "^8.0.3"
+    "iiif-processor": "^8.0.4"
   },
   "allowScripts": {
     "@parcel/watcher@2.6.0": true,

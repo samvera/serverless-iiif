@@ -1,3 +1,3 @@
 [tools]
-aws-sam-cli = { version = "1.158.0", symlink_bins = "true" }
+aws-sam-cli = { version = "latest", symlink_bins = "true" }
 node = "24.11.1"
