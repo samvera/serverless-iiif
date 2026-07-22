@@ -10,7 +10,7 @@ terraform {
 
 locals {
   serverless_iiif_app_id      = "arn:aws:serverlessrepo:us-east-1:625046682746:applications/serverless-iiif"
-  serverless_iiif_app_version = "8.0.3"
+  serverless_iiif_app_version = "8.0.4"
 
   _all_parameters = {
     CorsAllowCredentials    = tostring(var.cors_allow_credentials)

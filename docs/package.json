@@ -1,6 +1,6 @@
 {
   "name": "@samvera/serverless-iiif-docs",
-  "version": "8.0.3",
+  "version": "8.0.4",
   "description": "Documenation for @samvera/serverless-iiif package",
   "main": "next.config.js",
   "scripts": {

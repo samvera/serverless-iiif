@@ -71,4 +71,4 @@ npm test --coverage
 * [Edward Silverton](https://github.com/edsilv)
 * [Trey Pendragon](https://github.com/tpendragon)
 * [Theia Wolfe](https://github.com/theiawolfe)
-
+* [Brendan Quinn](https://github.com/bmquinn)
