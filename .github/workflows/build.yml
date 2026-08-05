@@ -24,6 +24,7 @@ jobs:
         run: |
           esbuild_version=$(npm list esbuild | grep esbuild | cut -d '@' -f 2 | head -n 1)
           npm install -g esbuild@${esbuild_version}
+      - uses: aws-actions/setup-sam@v3
       - name: Build
         run: ./bin/build build
       - name: Verify Build
