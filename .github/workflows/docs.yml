@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build with Next.js
-        run: npx --no-install next build
+        run: npx --no-install next build --webpack
         env:
           NEXTJS_BASE_PATH: "/serverless-iiif"
       - name: Deploy to GitHub Pages
