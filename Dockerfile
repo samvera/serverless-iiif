@@ -2,9 +2,15 @@
 # build stage (Debian/glibc)
 # =========================
 FROM amazonlinux:2023 AS nodejs
-RUN curl -fsSL https://rpm.nodesource.com/setup_24.x | bash - \
- && dnf install -y nodejs \
- && npm install -g npm@latest
+ENV MISE_DATA_DIR="/mise"
+ENV MISE_CONFIG_DIR="/mise"
+ENV MISE_CACHE_DIR="/mise/cache"
+ENV MISE_INSTALL_PATH="/usr/local/bin/mise"
+ENV PATH="/mise/shims:$PATH"
+RUN dnf install -y tar gzip \
+ && curl https://mise.run | sh
+ADD mise.toml .
+RUN mise trust /mise.toml && mise install
 
 FROM nodejs AS build
 
