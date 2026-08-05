@@ -57,7 +57,11 @@ export const getHeaderValue = (
   const headerName = Object.keys(event.headers || {}).find(
     (h) => h.toLowerCase() === header
   );
-  if (headerName) return event.headers[headerName];
+
+  const value = headerName ? event.headers[headerName] : null;
+  if (value && value !== "") {
+    return value;
+  }
   return defaultValue;
 };
 

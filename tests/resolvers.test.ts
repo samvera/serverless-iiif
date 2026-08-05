@@ -148,6 +148,75 @@ describe("resolvers", () => {
         expect(result).toEqual(expected);
       });
     });
+
+    describe("c2paConfigResolver", () => {
+      let savedEnvironment;
+
+      beforeEach(() => {
+        savedEnvironment = { ...process.env };
+      });
+
+      afterEach(() => {
+        process.env = { ...savedEnvironment };
+      });
+
+      it("returns null if C2PA environment variables are missing", async () => {
+        const { c2paConfigResolver } = resolverFactory(
+          mockEvent({ headers: {} }),
+          true,
+        );
+        const result = await c2paConfigResolver({ id: "id" });
+        expect(result).toBeNull();
+      });
+
+      it("returns C2PA configuration if environment variables are set", async () => {
+        const { c2paConfigResolver } = resolverFactory(
+          mockEvent({ headers: {} }),
+          true,
+        );
+
+        process.env.C2PA_CERTIFICATE = "---FAKE CERTIFICATE---";
+        process.env.C2PA_KEY = "---FAKE KEY---";
+        process.env.C2PA_SOFTWARE_AGENT = "Test Agent";
+        process.env.C2PA_TSA_URL = "https://fake-tsa-url.com";
+        const result = await c2paConfigResolver({ id: "id" });
+        const expected = {
+          certificate: "---FAKE CERTIFICATE---",
+          key: "---FAKE KEY---",
+          softwareAgent: "Test Agent",
+          tsaUrl: "https://fake-tsa-url.com",
+        };
+        expect(result).not.toBeNull();
+        for (const key in expected) {
+          expect(result[key]).toBe(expected[key]);
+        }
+      });
+
+      it("returns null if any required C2PA environment variable is missing", async () => {
+        const { c2paConfigResolver } = resolverFactory(
+          mockEvent({ headers: {} }),
+          true,
+        );
+
+        process.env.C2PA_CERTIFICATE = "---FAKE CERTIFICATE---";
+        process.env.C2PA_KEY = "---FAKE KEY---";
+        delete process.env.C2PA_SOFTWARE_AGENT;
+        let result = await c2paConfigResolver({ id: "id" });
+        expect(result).toBeNull();
+
+        delete process.env.C2PA_CERTIFICATE;
+        process.env.C2PA_KEY = "---FAKE KEY---";
+        process.env.C2PA_SOFTWARE_AGENT = "Test Agent";
+        result = await c2paConfigResolver({ id: "id" });
+        expect(result).toBeNull();
+
+        process.env.C2PA_CERTIFICATE = "---FAKE CERTIFICATE---";
+        delete process.env.C2PA_KEY;
+        process.env.C2PA_SOFTWARE_AGENT = "Test Agent";
+        result = await c2paConfigResolver({ id: "id" });
+        expect(result).toBeNull();
+      });
+    });
   });
 
   describe("preflight resolvers", () => {
@@ -319,6 +388,59 @@ describe("resolvers", () => {
           baseUrl,
         });
         expect(result).toEqual(expected);
+      });
+    });
+
+    describe("c2paConfigResolver", () => {
+      beforeEach(() => {
+        process.env.C2PA_CERTIFICATE = "---FAKE CERTIFICATE---";
+        process.env.C2PA_KEY = "---FAKE KEY---";
+        process.env.C2PA_SOFTWARE_AGENT = "Test Agent";
+        process.env.C2PA_TSA_URL = "https://fake-tsa-url.com";
+      });
+
+      it("returns correct configuration based on C2PA headers", async () => {
+        const { c2paConfigResolver } = resolverFactory(
+          mockEvent({
+            headers: {
+              "x-preflight-c2pa-certificate":
+                "---FAKE CERTIFICATE FROM HEADER---",
+              "x-preflight-c2pa-key": "---FAKE KEY FROM HEADER---",
+              "x-preflight-c2pa-software-agent": "Test Agent From Header",
+              "x-preflight-c2pa-tsa-url": "https://fake-tsa-url.com",
+            },
+          }),
+          true,
+        );
+        const expected = {
+          certificate: "---FAKE CERTIFICATE FROM HEADER---",
+          key: "---FAKE KEY FROM HEADER---",
+          softwareAgent: "Test Agent From Header",
+          tsaUrl: "https://fake-tsa-url.com",
+        };
+        const result = await c2paConfigResolver({ id: "id" });
+        for (const key in expected) {
+          expect(result[key]).toEqual(expected[key]);
+        }
+      });
+
+      it("falls back to environment variable config if headers are missing", async () => {
+        const { c2paConfigResolver } = resolverFactory(
+          mockEvent({
+            headers: {},
+          }),
+          true,
+        );
+        const expected = {
+          certificate: "---FAKE CERTIFICATE---",
+          key: "---FAKE KEY---",
+          softwareAgent: "Test Agent",
+          tsaUrl: "https://fake-tsa-url.com",
+        };
+        const result = await c2paConfigResolver({ id: "id" });
+        for (const key in expected) {
+          expect(result[key]).toEqual(expected[key]);
+        }
       });
     });
   });

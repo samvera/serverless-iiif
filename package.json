@@ -58,7 +58,7 @@
     "docs"
   ],
   "dependencies": {
-    "iiif-processor": "^8.0.4"
+    "iiif-processor": "v8.1.0-rc.0"
   },
   "allowScripts": {
     "@parcel/watcher@2.6.0": true,
@@ -66,6 +66,7 @@
     "esbuild@0.27.7": true,
     "sharp@0.34.5": true,
     "sharp@0.35.3": true,
-    "unrs-resolver@1.12.2": true
+    "unrs-resolver@1.12.2": true,
+    "iiif-processor@v8.1.0-rc.0": true
   }
 }

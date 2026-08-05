@@ -7,8 +7,9 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1066.0",
     "@aws-sdk/credential-providers": "^3.1066.0",
+    "@nulib/c2pa-signing": "^0.1.1",
     "debug": "^4.3.2",
-    "iiif-processor": "^8.0.4",
+    "iiif-processor": "github:samvera/node-iiif#v8.1.0-rc.0",
     "lambda-stream": "^0.4.0",
     "uri-js": "^4.4.1"
   },
@@ -16,5 +17,8 @@
     "@types/node": "^20.19.11",
     "esbuild": "^0.28.1",
     "typescript": "^5.9.2"
+  },
+  "allowScripts": {
+    "@contentauth/c2pa-node@0.7.0": true
   }
 }

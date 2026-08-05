@@ -5,6 +5,7 @@ set -e
 AWS_PACKAGE_BUCKET=${AWS_PACKAGE_BUCKET:-nul-serverless-apps}
 AWS_PACKAGE_PREFIX=${AWS_PACKAGE_PREFIX:-serverless-iiif}
 NODE_BASE_IMAGE_ID_FILE=$(mktemp)
+AWS_C2PA_DIR=${PWD}/c2pa-layer
 AWS_DEPENDENCIES_DIR=${PWD}/dependencies
 AWS_NODEJS_DIR=${AWS_DEPENDENCIES_DIR}/nodejs
 AWS_LIB_DIR=${AWS_DEPENDENCIES_DIR}/lib
@@ -30,7 +31,7 @@ copy_from_container() {
 
 # Remove build artifacts
 clean() {
-  rm -rf .aws-sam dependencies/lib dependencies/nodejs
+  rm -rf .aws-sam ${AWS_DEPENDENCIES_DIR}/lib ${AWS_DEPENDENCIES_DIR}/nodejs ${AWS_C2PA_DIR}/opt
 }
 
 # Build a Docker image that contains the dependencies
@@ -41,11 +42,21 @@ deps-image() {
   docker buildx build ${DOCKER_BUILD_PARAMS} --target deps --iidfile ${NODE_BASE_IMAGE_ID_FILE} ${TAG_ARG} .
 }
 
+c2pa-deps() {
+  c2pa_version=$(cat ./node_modules/@contentauth/c2pa-node/package.json | jq -r '.version')
+  # TMPDIR=$(mktemp -d)
+  # curl -Lso ${TMPDIR}/c2pa-node.zip https://github.com/contentauth/c2pa-js/releases/download/@contentauth/c2pa-node@${c2pa_version}/c2pa-node_x86_64-unknown-linux-gnu-v${c2pa_version}.zip && \
+  # mkdir -p ${AWS_C2PA_DIR}/opt/bin
+  # unzip -o -d ${AWS_C2PA_DIR}/opt/bin ${TMPDIR}/c2pa-node.zip
+  npm install --prefix ${AWS_C2PA_DIR}/nodejs --no-save --cpu=amd64 --os=linux @contentauth/c2pa-node@${c2pa_version}
+}
+
 # Install dependencies into the dependencies directory
 deps() {
   deps-image && \
   copy_from_container ${AWS_NODEJS_DIR} /app node_modules && \
   copy_from_container ${AWS_LIB_DIR} /export/lib .
+  c2pa-deps
 }
 
 # Build the application
@@ -106,6 +117,7 @@ dev() {
 
 case "$1" in
   clean) clean ;;
+  c2pa) c2pa-deps ;;
   deps-image) deps-image ;;
   deps) deps ;;
   build) build ;;

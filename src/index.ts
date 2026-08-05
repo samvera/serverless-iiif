@@ -1,10 +1,9 @@
 import { LambdaEvent, LambdaResponse, LambdaContext } from "./contracts";
 import {
-  GeometryFunction,
   Processor,
-  StreamResolver,
   ContentResult,
   ProcessorResult,
+  C2PAResolver,
 } from "iiif-processor";
 import createDebug from "debug";
 import {
@@ -14,7 +13,7 @@ import {
   inspect,
   isBrowserAutoFetch,
 } from "./helpers";
-import { resolverFactory } from "./resolvers";
+import { resolverFactory, Resolvers } from "./resolvers";
 import { streamifyResponse } from "./streamify";
 import sharp from "sharp";
 
@@ -90,8 +89,7 @@ const handleServiceDiscoveryRequestFunc = () => {
 
 const buildProcessor = (
   uri: string,
-  streamResolver: StreamResolver,
-  geometryFunction: GeometryFunction,
+  { c2paConfigResolver, streamResolver, geometryFunction }: Resolvers,
   density?: number,
   sharpOptions: Record<string, any> = {},
 ) => {
@@ -104,21 +102,20 @@ const buildProcessor = (
     debugBorder,
     pageThreshold,
     sharpOptions,
+    c2pa: c2paConfigResolver as C2PAResolver,
   });
 };
 
 const executeWithJp2Retry = async (
   uri: string,
-  streamResolver: StreamResolver,
-  geometryFunction: GeometryFunction,
+  resolvers: Resolvers,
   density?: number,
   sharpOptions: Record<string, any> = {},
 ) => {
   try {
     return await buildProcessor(
       uri,
-      streamResolver,
-      geometryFunction,
+      resolvers,
       density,
       sharpOptions,
     ).execute();
@@ -130,16 +127,10 @@ const executeWithJp2Retry = async (
       console.warn(
         "Encountered JP2 tile part index error. Trying oneshot load.",
       );
-      return await buildProcessor(
-        uri,
-        streamResolver,
-        geometryFunction,
-        density,
-        {
-          ...sharpOptions,
-          jp2: { ...sharpOptions.jp2, oneshot: true },
-        },
-      ).execute();
+      return await buildProcessor(uri, resolvers, density, {
+        ...sharpOptions,
+        jp2: { ...sharpOptions.jp2, oneshot: true },
+      }).execute();
     }
     throw err;
   }
@@ -151,18 +142,15 @@ const handleImageRequest = async (
 ): Promise<LambdaResponse> => {
   const density = parseDensity(process.env.density as string);
   const preflight = process.env.preflight === "true";
-  const { streamResolver, geometryFunction } = resolverFactory(
-    event,
-    preflight,
-  );
+  const resolvers: Resolvers = resolverFactory(event, preflight);
+
+  if (event.queryStringParameters?.c2pa !== "true") {
+    resolvers.c2paConfigResolver = async () => undefined;
+  }
+
   try {
     const uri = getUri(event);
-    const result = await executeWithJp2Retry(
-      uri,
-      streamResolver,
-      geometryFunction,
-      density,
-    );
+    const result = await executeWithJp2Retry(uri, resolvers, density);
 
     return makeResponse(result);
   } catch (err) {

@@ -31,11 +31,48 @@ Metadata:
           - CorsExposeHeaders
           - CorsMaxAge
       - Label:
+          default: "Content Credentials Configuration"
+        Parameters:
+          - C2PASupport
+          - C2PACertificate
+          - C2PAKey
+          - C2PATSAUrl
+          - C2PAReserveSize
+          - C2PASoftwareAgent
+      - Label:
           default: "Advanced Options"
         Parameters:
           - ForceHost
           - Preflight
 Parameters:
+  C2PASupport:
+    Type: String
+    Description: Indicates whether to deploy with C2PA support enabled (makes deploy package larger).
+    AllowedValues:
+      - false
+      - true
+    Default: false
+  C2PACertificate:
+    Type: String
+    Description: Base64-encoded C2PA certificate to use for signing.
+    Default: ""
+  C2PAKey:
+    Type: String
+    Description: Base64-encoded C2PA private key to use for signing.
+    Default: ""
+  C2PASoftwareAgent:
+    Type: String
+    Description: Software agent to use for C2PA signing.
+    Default: ""
+  C2PATSAUrl:
+    Type: String
+    Description: URL of the C2PA Time Stamping Authority (TSA) to use for signing. Optional; if not provided, no timestamp will be added to the signature.
+    Default: "http://timestamp.digicert.com"
+  C2PAReserveSize:
+    Type: String
+    Description: Size in bytes to reserve for the C2PA signature. Optional; if not provided, the default size will be used.
+    AllowedPattern: "^[0-9]*$"
+    Default: ""
   CorsAllowCredentials:
     Type: String
     Description: >
@@ -120,6 +157,8 @@ Parameters:
 Conditions:
   CreateMetadataFunction:
     Fn::Equals: [!Ref CreateMetadataFunction, "true"]
+  DeployC2PA:
+    Fn::Equals: [!Ref C2PASupport, "true"]
   UseForceHost:
     Fn::Not:
       - Fn::Equals: [!Ref ForceHost, ""]
@@ -130,6 +169,19 @@ Conditions:
     Fn::Not:
       - Fn::Equals: [!Ref PyramidLimit, 0]
 Resources:
+  C2PALayer:
+    Condition: DeployC2PA
+    Type: "AWS::Serverless::LayerVersion"
+    Properties:
+      LayerName:
+        Fn::Sub: "${AWS::StackName}-c2pa"
+      Description: C2PA support for IIIF app
+      ContentUri: ./c2pa-layer
+      CompatibleRuntimes:
+        - nodejs24.x
+      LicenseInfo: "MIT"
+    Metadata:
+      BuildMethod: makefile
   Dependencies:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
@@ -157,6 +209,10 @@ Resources:
       CodeUri: ./src
       Layers:
         - !Ref Dependencies
+        - Fn::If:
+            - DeployC2PA
+            - Ref: C2PALayer
+            - !Ref AWS::NoValue
       Policies:
         - AWSLambdaExecute
         - Version: "2012-10-17"
@@ -204,6 +260,36 @@ Resources:
               - !Ref AWS::NoValue
           resolverTemplate: !Ref ResolverTemplate
           sourceBucket: !Ref SourceBucket
+          C2PA_CERTIFICATE:
+            Fn::If:
+              - DeployC2PA
+              - !Ref C2PACertificate
+              - !Ref AWS::NoValue
+          C2PA_KEY:
+            Fn::If:
+              - DeployC2PA
+              - !Ref C2PAKey
+              - !Ref AWS::NoValue
+          C2PA_TSA_URL:
+            Fn::If:
+              - DeployC2PA
+              - !Ref C2PATSAUrl
+              - !Ref AWS::NoValue
+          C2PA_RESERVE_SIZE:
+            Fn::If:
+              - DeployC2PA
+              - !Ref C2PAReserveSize
+              - !Ref AWS::NoValue
+          C2PA_SOFTWARE_AGENT:
+            Fn::If:
+              - DeployC2PA
+              - !Ref C2PASoftwareAgent
+              - !Ref AWS::NoValue
+          C2PA_LIBRARY_PATH:
+            Fn::If:
+              - DeployC2PA
+              - "/opt/index.node"
+              - !Ref AWS::NoValue
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -213,6 +299,7 @@ Resources:
         SourceMap: false
         Target: es2022
         External:
+          - "@contentauth/c2pa-node"
           - sharp
   MetadataFunction:
     Condition: CreateMetadataFunction

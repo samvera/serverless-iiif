@@ -1,4 +1,5 @@
 import {
+  C2PASignerOptions,
   StreamResolver,
   GeometryFunction,
   IIIFError,
@@ -19,6 +20,7 @@ import * as util from "util";
 const debug = createDebug("serverless-iiif:resolvers");
 
 export interface Resolvers {
+  c2paConfigResolver: ({ id }: { id: string }) => Promise<C2PASignerOptions>;
   streamResolver: StreamResolver;
   geometryFunction: GeometryFunction;
 }
@@ -50,6 +52,32 @@ export const defaultStreamLocation = (id: string) => {
   const result = { Bucket: sourceBucket, Key: key };
   debug(`Resolved default stream location for ID ${id}: ${inspect(result)}`);
   return result;
+};
+
+const getMimeTypeFromS3 = async (location: {
+  Bucket: string;
+  Key: string;
+}): Promise<string | undefined> => {
+  const s3 = new S3Client({});
+  const cmd = new HeadObjectCommand(location);
+  try {
+    const response: HeadObjectCommandOutput = await s3.send(cmd);
+    return response.ContentType;
+  } catch (err) {
+    throw iiifErrorFromS3Error(err, location);
+  }
+};
+
+const defaultC2PAConfig = () => {
+  return {
+    certificate: process.env.C2PA_CERTIFICATE,
+    key: process.env.C2PA_KEY,
+    tsaUrl: process.env.C2PA_TSA_URL,
+    reserveSize: process.env.C2PA_RESERVE_SIZE
+      ? Number(process.env.C2PA_RESERVE_SIZE)
+      : undefined,
+    softwareAgent: process.env.C2PA_SOFTWARE_AGENT,
+  };
 };
 
 const readNumberFromMetadata = (
@@ -167,11 +195,51 @@ const parseDimensionsHeader = (event: LambdaEvent): ImageGeometry | null => {
   return result;
 };
 
+const parseC2PAConfigHeaders = (
+  event: LambdaEvent,
+): C2PASignerOptions | null => {
+  const certHeader = getHeaderValue(event, "x-preflight-c2pa-certificate");
+  const keyHeader = getHeaderValue(event, "x-preflight-c2pa-key");
+  const mimeTypeHeader = getHeaderValue(event, "x-preflight-c2pa-mime-type");
+  const tsaUrlHeader = getHeaderValue(event, "x-preflight-c2pa-tsa-url");
+  const reserveSizeHeader = getHeaderValue(
+    event,
+    "x-preflight-c2pa-reservesize",
+  );
+  const softwareAgent = getHeaderValue(
+    event,
+    "x-preflight-c2pa-software-agent",
+  );
+  if (!certHeader || !keyHeader) return null;
+
+  const result: C2PASignerOptions = {
+    certificate: certHeader,
+    key: keyHeader,
+    softwareAgent: softwareAgent,
+    mimeType: mimeTypeHeader,
+    tsaUrl: tsaUrlHeader,
+    reserveSize: reserveSizeHeader ? Number(reserveSizeHeader) : undefined,
+  };
+  return result;
+};
+
 const preflightResolver = (event: LambdaEvent): Resolvers => {
   const preflightLocation = parseLocationHeader(event);
   const preflightDimensions = parseDimensionsHeader(event);
+  const preflightC2PAConfig = parseC2PAConfigHeaders(event);
 
   return {
+    c2paConfigResolver: async ({ id }: { id: string }) => {
+      const result: C2PASignerOptions =
+        preflightC2PAConfig || defaultC2PAConfig();
+      if (result.certificate && result.key && result.softwareAgent) {
+        result.mimeType = await getMimeTypeFromS3(
+          preflightLocation || defaultStreamLocation(id),
+        );
+        return result;
+      }
+      return null;
+    },
     streamResolver: async ({ id }: { id: string }) => {
       const location = preflightLocation || defaultStreamLocation(id);
       return s3Stream(location);
@@ -190,6 +258,14 @@ const preflightResolver = (event: LambdaEvent): Resolvers => {
 // Standard (non-preflight) resolvers
 const standardResolver = (): Resolvers => {
   return {
+    c2paConfigResolver: async ({ id }: { id: string }) => {
+      const result: C2PASignerOptions = defaultC2PAConfig();
+      if (result.certificate && result.key && result.softwareAgent) {
+        result.mimeType = await getMimeTypeFromS3(defaultStreamLocation(id));
+        return result;
+      }
+      return null;
+    },
     streamResolver: async ({ id }: { id: string }) => {
       return s3Stream(defaultStreamLocation(id));
     },
