@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fdocs\u002Fquick-start\u002Finfrastructure\u002Fcloudformation","\u002Fdocs\u002Fquick-start\u002Finfrastructure\u002Fterraform"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
